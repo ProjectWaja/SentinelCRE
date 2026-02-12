@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@keyframes verdict-flash {
+  0% { opacity: 0; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes shield-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 20px 4px rgba(239, 68, 68, 0.2); }
+}
+
+.animate-verdict { animation: verdict-flash 0.4s ease-out; }
+.animate-slide-in { animation: slide-in 0.3s ease-out; }
+.animate-shield { animation: shield-pulse 2s ease-in-out infinite; }
