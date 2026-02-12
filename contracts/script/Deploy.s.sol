@@ -43,7 +43,9 @@ contract Deploy is Script {
             approvedContracts: approvedContracts,
             blockedFunctions: blockedFunctions,
             requireMultiAiConsensus: true,
-            isActive: true
+            isActive: true,
+            reserveFeed: address(0),
+            minReserveRatio: 0
         });
 
         guardian.registerAgent(tradingAgentId, tradingPolicy);
@@ -63,7 +65,9 @@ contract Deploy is Script {
             approvedContracts: approvedContracts,
             blockedFunctions: noBlocked,
             requireMultiAiConsensus: true,
-            isActive: true
+            isActive: true,
+            reserveFeed: address(0),
+            minReserveRatio: 0
         });
 
         guardian.registerAgent(mintingAgentId, mintingPolicy);

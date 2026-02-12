@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {AgentPolicy, CheckParams, PolicyLib} from "./libraries/PolicyLib.sol";
+import {Severity, ChallengeStatus, ChallengeWindow} from "./interfaces/IChallenge.sol";
 
 /// @notice State of a registered AI agent
 enum AgentState {
@@ -41,6 +42,7 @@ contract SentinelGuardian is AccessControl, Pausable {
     // =========================================================================
 
     bytes32 public constant WORKFLOW_ROLE = keccak256("WORKFLOW_ROLE");
+    bytes32 public constant CHALLENGER_ROLE = keccak256("CHALLENGER_ROLE");
 
     // =========================================================================
     // State
@@ -61,6 +63,14 @@ contract SentinelGuardian is AccessControl, Pausable {
     // Incident history (rolling buffer)
     mapping(bytes32 => IncidentLog[]) internal _incidents;
     uint256 public constant MAX_INCIDENT_HISTORY = 100;
+
+    // Cumulative mint tracking (for Proof of Reserves)
+    mapping(bytes32 => uint256) public cumulativeMints;
+
+    // Challenge windows (time-gapped appeal mechanism)
+    mapping(bytes32 => ChallengeWindow) internal _challenges;
+    uint256 public constant LOW_WINDOW = 3600;    // 1 hour
+    uint256 public constant MEDIUM_WINDOW = 1800; // 30 minutes
 
     // Stats
     mapping(bytes32 => uint256) public totalApproved;
@@ -84,6 +94,9 @@ contract SentinelGuardian is AccessControl, Pausable {
     event AgentUnfrozen(bytes32 indexed agentId, uint256 timestamp);
     event AgentRevoked(bytes32 indexed agentId, uint256 timestamp);
     event PolicyUpdated(bytes32 indexed agentId, uint256 timestamp);
+    event ChallengeCreated(bytes32 indexed agentId, Severity severity, uint64 expiresAt);
+    event ChallengeAppealed(bytes32 indexed agentId, uint256 timestamp);
+    event ChallengeResolved(bytes32 indexed agentId, ChallengeStatus result, uint256 timestamp);
 
     // =========================================================================
     // Constructor
@@ -129,7 +142,8 @@ contract SentinelGuardian is AccessControl, Pausable {
                 mintAmount: mintAmount,
                 actionCount: actionCounts[agentId],
                 windowStart: windowStartTimes[agentId],
-                currentTime: block.timestamp
+                currentTime: block.timestamp,
+                cumulativeMints: cumulativeMints[agentId]
             });
             (bool policyPassed, string memory policyReason) = policy.checkAll(params);
 
@@ -141,7 +155,7 @@ contract SentinelGuardian is AccessControl, Pausable {
                 return;
             }
 
-            _recordApprovedAction(agentId, value);
+            _recordApprovedAction(agentId, value, mintAmount);
             emit ActionApproved(agentId, targetContract, value, block.timestamp);
         } else {
             _triggerCircuitBreaker(
@@ -230,6 +244,52 @@ contract SentinelGuardian is AccessControl, Pausable {
     }
 
     // =========================================================================
+    // Challenge Window (Time-Gapped Appeal)
+    // =========================================================================
+
+    /// @notice Agent owner appeals a denied action during the challenge window
+    function challengeVerdict(bytes32 agentId) external {
+        require(
+            hasRole(CHALLENGER_ROLE, msg.sender) || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+            "Not authorized to challenge"
+        );
+        ChallengeWindow storage cw = _challenges[agentId];
+        require(cw.status == ChallengeStatus.Pending, "No pending challenge");
+        require(block.timestamp < cw.expiresAt, "Challenge window expired");
+
+        cw.status = ChallengeStatus.Appealed;
+        emit ChallengeAppealed(agentId, block.timestamp);
+    }
+
+    /// @notice CRE workflow callback after appeal re-evaluation
+    function resolveChallenge(bytes32 agentId, bool approved, string calldata reason)
+        external
+        onlyRole(WORKFLOW_ROLE)
+    {
+        ChallengeWindow storage cw = _challenges[agentId];
+        require(cw.status == ChallengeStatus.Appealed, "Not in appealed state");
+
+        if (approved) {
+            cw.status = ChallengeStatus.Overturned;
+            agentStates[agentId] = AgentState.Active;
+            emit ChallengeResolved(agentId, ChallengeStatus.Overturned, block.timestamp);
+        } else {
+            cw.status = ChallengeStatus.Upheld;
+            emit ChallengeResolved(agentId, ChallengeStatus.Upheld, block.timestamp);
+        }
+    }
+
+    /// @notice Finalize expired challenges — can be called by anyone (Automation-ready)
+    function finalizeExpiredChallenge(bytes32 agentId) external {
+        ChallengeWindow storage cw = _challenges[agentId];
+        require(cw.status == ChallengeStatus.Pending, "Not pending");
+        require(block.timestamp >= cw.expiresAt, "Window not expired");
+
+        cw.status = ChallengeStatus.Expired;
+        emit ChallengeResolved(agentId, ChallengeStatus.Expired, block.timestamp);
+    }
+
+    // =========================================================================
     // View Functions
     // =========================================================================
 
@@ -243,7 +303,9 @@ contract SentinelGuardian is AccessControl, Pausable {
             uint256 rateLimit,
             uint256 rateLimitWindow,
             bool requireMultiAiConsensus,
-            bool isActive
+            bool isActive,
+            address reserveFeed,
+            uint256 minReserveRatio
         )
     {
         AgentPolicy storage p = _agentPolicies[agentId];
@@ -254,7 +316,9 @@ contract SentinelGuardian is AccessControl, Pausable {
             p.rateLimit,
             p.rateLimitWindow,
             p.requireMultiAiConsensus,
-            p.isActive
+            p.isActive,
+            p.reserveFeed,
+            p.minReserveRatio
         );
     }
 
@@ -291,6 +355,10 @@ contract SentinelGuardian is AccessControl, Pausable {
         return (totalApproved[agentId], totalDenied[agentId], actionCounts[agentId], dailyVolume[agentId]);
     }
 
+    function getChallenge(bytes32 agentId) external view returns (ChallengeWindow memory) {
+        return _challenges[agentId];
+    }
+
     // =========================================================================
     // Internal
     // =========================================================================
@@ -302,14 +370,56 @@ contract SentinelGuardian is AccessControl, Pausable {
         uint256 value,
         IncidentType iType
     ) internal {
+        Severity sev = _classifySeverity(agentId, iType, value);
+
         agentStates[agentId] = AgentState.Frozen;
         totalDenied[agentId]++;
-
         _logIncident(agentId, reason, target, value, iType);
 
         emit ActionDenied(agentId, target, value, reason, block.timestamp);
         emit CircuitBreakerTriggered(agentId, reason, iType, block.timestamp);
         emit AgentFrozen(agentId, block.timestamp);
+
+        if (sev != Severity.Critical) {
+            // Create challenge window — agent can appeal
+            uint256 duration = sev == Severity.Low ? LOW_WINDOW : MEDIUM_WINDOW;
+            _challenges[agentId] = ChallengeWindow({
+                agentId: agentId,
+                createdAt: uint64(block.timestamp),
+                expiresAt: uint64(block.timestamp + duration),
+                status: ChallengeStatus.Pending,
+                severity: sev,
+                originalVerdictData: "",
+                reason: reason
+            });
+            emit ChallengeCreated(agentId, sev, uint64(block.timestamp + duration));
+        }
+    }
+
+    function _classifySeverity(
+        bytes32 agentId,
+        IncidentType iType,
+        uint256 value
+    ) internal view returns (Severity) {
+        AgentPolicy storage policy = _agentPolicies[agentId];
+
+        // Critical: value > 10x limit or any blocked function violation
+        if (iType == IncidentType.PolicyViolation) {
+            if (policy.maxTransactionValue > 0 && value > policy.maxTransactionValue * 10) {
+                return Severity.Critical;
+            }
+        }
+
+        // Medium: consensus failure with elevated value
+        if (iType == IncidentType.ConsensusFailure) {
+            if (policy.maxTransactionValue > 0 && value > policy.maxTransactionValue * 2) {
+                return Severity.Medium;
+            }
+            return Severity.Low;
+        }
+
+        // Low: minor policy violations
+        return Severity.Low;
     }
 
     function _logIncident(
@@ -339,8 +449,13 @@ contract SentinelGuardian is AccessControl, Pausable {
         }
     }
 
-    function _recordApprovedAction(bytes32 agentId, uint256 value) internal {
+    function _recordApprovedAction(bytes32 agentId, uint256 value, uint256 mintAmount) internal {
         totalApproved[agentId]++;
+
+        // Track cumulative mints for Proof of Reserves
+        if (mintAmount > 0) {
+            cumulativeMints[agentId] += mintAmount;
+        }
 
         // Rate limit window management
         AgentPolicy storage policy = _agentPolicies[agentId];
@@ -379,6 +494,8 @@ contract SentinelGuardian is AccessControl, Pausable {
         stored.rateLimitWindow = policy.rateLimitWindow;
         stored.requireMultiAiConsensus = policy.requireMultiAiConsensus;
         stored.isActive = policy.isActive;
+        stored.reserveFeed = policy.reserveFeed;
+        stored.minReserveRatio = policy.minReserveRatio;
 
         // Copy dynamic arrays
         delete stored.approvedContracts;
