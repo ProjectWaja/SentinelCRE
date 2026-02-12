@@ -37,7 +37,7 @@ contract SentinelGuardianTest is Test {
             rateLimitWindow: 60,
             approvedContracts: approved,
             blockedFunctions: blocked,
-            requireMultiAIConsensus: true,
+            requireMultiAiConsensus: true,
             isActive: true
         });
     }
@@ -74,7 +74,7 @@ contract SentinelGuardianTest is Test {
             uint256 maxMint,
             uint256 rateLimit,
             uint256 window,
-            bool requireAI,
+            bool requireAi,
             bool isActive
         ) = guardian.getAgentPolicy(agentId);
 
@@ -83,7 +83,7 @@ contract SentinelGuardianTest is Test {
         assertEq(maxMint, 1_000_000e18);
         assertEq(rateLimit, 5);
         assertEq(window, 60);
-        assertTrue(requireAI);
+        assertTrue(requireAi);
         assertTrue(isActive);
     }
 

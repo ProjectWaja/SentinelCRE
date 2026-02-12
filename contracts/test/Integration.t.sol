@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {SentinelGuardian, AgentState, IncidentType} from "../src/SentinelGuardian.sol";
+import {SentinelGuardian, AgentState} from "../src/SentinelGuardian.sol";
 import {AgentRegistry} from "../src/AgentRegistry.sol";
 import {AgentPolicy} from "../src/libraries/PolicyLib.sol";
 
@@ -34,7 +34,7 @@ contract IntegrationTest is Test {
             rateLimitWindow: 60,
             approvedContracts: approved,
             blockedFunctions: blocked,
-            requireMultiAIConsensus: true,
+            requireMultiAiConsensus: true,
             isActive: true
         });
     }
@@ -52,7 +52,7 @@ contract IntegrationTest is Test {
             rateLimitWindow: 300,
             approvedContracts: approved,
             blockedFunctions: blocked,
-            requireMultiAIConsensus: true,
+            requireMultiAiConsensus: true,
             isActive: true
         });
     }

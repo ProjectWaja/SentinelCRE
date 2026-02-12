@@ -141,7 +141,7 @@ contract SentinelGuardian is AccessControl, Pausable {
                 return;
             }
 
-            _recordApprovedAction(agentId, targetContract, value);
+            _recordApprovedAction(agentId, value);
             emit ActionApproved(agentId, targetContract, value, block.timestamp);
         } else {
             _triggerCircuitBreaker(
@@ -242,7 +242,7 @@ contract SentinelGuardian is AccessControl, Pausable {
             uint256 maxMintAmount,
             uint256 rateLimit,
             uint256 rateLimitWindow,
-            bool requireMultiAIConsensus,
+            bool requireMultiAiConsensus,
             bool isActive
         )
     {
@@ -253,7 +253,7 @@ contract SentinelGuardian is AccessControl, Pausable {
             p.maxMintAmount,
             p.rateLimit,
             p.rateLimitWindow,
-            p.requireMultiAIConsensus,
+            p.requireMultiAiConsensus,
             p.isActive
         );
     }
@@ -339,7 +339,7 @@ contract SentinelGuardian is AccessControl, Pausable {
         }
     }
 
-    function _recordApprovedAction(bytes32 agentId, address target, uint256 value) internal {
+    function _recordApprovedAction(bytes32 agentId, uint256 value) internal {
         totalApproved[agentId]++;
 
         // Rate limit window management
@@ -368,9 +368,6 @@ contract SentinelGuardian is AccessControl, Pausable {
             }
             dailyVolume[agentId] += value;
         }
-
-        // Suppress unused variable warning
-        target;
     }
 
     function _setPolicy(bytes32 agentId, AgentPolicy calldata policy) internal {
@@ -380,7 +377,7 @@ contract SentinelGuardian is AccessControl, Pausable {
         stored.maxMintAmount = policy.maxMintAmount;
         stored.rateLimit = policy.rateLimit;
         stored.rateLimitWindow = policy.rateLimitWindow;
-        stored.requireMultiAIConsensus = policy.requireMultiAIConsensus;
+        stored.requireMultiAiConsensus = policy.requireMultiAiConsensus;
         stored.isActive = policy.isActive;
 
         // Copy dynamic arrays

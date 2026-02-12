@@ -8,16 +8,16 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/) (Feb 2026).
 
 **Tracks:** AI + Web3 | Privacy / Confidential Compute
 
-### Deployed Contracts (Tenderly Virtual TestNet)
+### Deployed Contracts (Tenderly Virtual TestNet — Sepolia Fork)
 
 | Contract | Address |
 |----------|---------|
-| **SentinelGuardian** | `0x3e2D7CE3CcB520f26dE6fe499bAA38A28cfd476f` |
-| **AgentRegistry** | `0xb008CE7EE90C66A219C842E69a4fBAF7E5359bbE` |
+| **SentinelGuardian** | [`0x3e2D7CE3CcB520f26dE6fe499bAA38A28cfd476f`](https://dashboard.tenderly.co/) |
+| **AgentRegistry** | [`0xb008CE7EE90C66A219C842E69a4fBAF7E5359bbE`](https://dashboard.tenderly.co/) |
 
-**Demo Transactions:**
-- [Approved Trade](https://virtual.sepolia.us-west.rpc.tenderly.co/52ca1c81-5b4d-4e46-8aae-810c019f12c4) — 0.5 ETH swap approved
-- [Infinite Mint BLOCKED](https://virtual.sepolia.us-west.rpc.tenderly.co/52ca1c81-5b4d-4e46-8aae-810c019f12c4) — 1B token mint caught, circuit breaker fired, agent frozen
+**Demo Transactions (viewable in Tenderly Dashboard):**
+- **Approved Trade** — 0.5 ETH swap approved, action stats updated
+- **Infinite Mint BLOCKED** — 1B token mint caught by on-chain policy, circuit breaker fired, agent frozen
 
 ---
 
@@ -210,6 +210,21 @@ SentinelCRE uses a **fail-safe** design:
 - On-chain policy cannot be bypassed by AI consensus
 - Circuit breaker is irreversible without admin intervention
 - Incident history is immutable and bounded (rolling buffer, max 100)
+
+## Why SentinelCRE Wins
+
+| Differentiator | Details |
+|---|---|
+| **Real problem, real stakes** | AI agents are executing on-chain today. Infinite mint exploits have drained $180M+ from real protocols. SentinelCRE prevents the next one. |
+| **Two-layer defense** | AI consensus + on-chain policy — even if AI models are wrong, hard-coded guardrails catch what they miss. No single point of failure. |
+| **Deep CRE integration** | Uses 5 CRE capabilities (HTTPClient, EVMClient, CronCapability, Confidential HTTP, ConsensusAggregation) — not a wrapper, a native CRE application. |
+| **Proactive, not reactive** | Unlike kill switches that fire after damage is done, SentinelCRE blocks malicious actions before they execute. |
+| **61 tests, 3 suites** | Production-grade test coverage including infinite mint attack, rate limiting, circuit breaker, freeze/unfreeze lifecycle. |
+| **Confidential Compute ready** | Boundary markers in place — when CC SDK ships, policy thresholds are hidden from AI agents, preventing them from gaming their own limits. |
+
+## Demo Video
+
+> Video link: *Coming soon*
 
 ## Team
 

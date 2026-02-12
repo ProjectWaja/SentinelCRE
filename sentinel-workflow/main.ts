@@ -97,7 +97,7 @@ const GUARDIAN_ABI = [
       { name: 'maxMintAmount', type: 'uint256' },
       { name: 'rateLimit', type: 'uint256' },
       { name: 'rateLimitWindow', type: 'uint256' },
-      { name: 'requireMultiAIConsensus', type: 'bool' },
+      { name: 'requireMultiAiConsensus', type: 'bool' },
       { name: 'isActive', type: 'bool' },
     ],
   },

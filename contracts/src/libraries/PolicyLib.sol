@@ -10,7 +10,7 @@ struct AgentPolicy {
     uint256 rateLimitWindow; // Window duration in seconds
     address[] approvedContracts; // Whitelist of allowed target contracts
     bytes4[] blockedFunctions; // Blacklist of forbidden function selectors
-    bool requireMultiAIConsensus; // Whether multi-AI evaluation is required
+    bool requireMultiAiConsensus; // Whether multi-AI evaluation is required
     bool isActive; // Whether this policy is enabled
 }
 
