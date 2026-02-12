@@ -1,0 +1,24 @@
+{
+  "defaultTradingPolicy": {
+    "maxTransactionValue": "1000000000000000000",
+    "maxDailyVolume": "10000000000000000000",
+    "maxMintAmount": "0",
+    "rateLimit": 10,
+    "rateLimitWindow": 60,
+    "approvedContracts": ["0x000000000000000000000000000000000000AA01"],
+    "blockedFunctions": ["0xff00ff00"],
+    "requireMultiAIConsensus": true,
+    "isActive": true
+  },
+  "defaultMintingPolicy": {
+    "maxTransactionValue": "0",
+    "maxDailyVolume": "0",
+    "maxMintAmount": "1000000000000000000000000",
+    "rateLimit": 5,
+    "rateLimitWindow": 300,
+    "approvedContracts": ["0x000000000000000000000000000000000000AA01"],
+    "blockedFunctions": [],
+    "requireMultiAIConsensus": true,
+    "isActive": true
+  }
+}

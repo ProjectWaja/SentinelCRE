@@ -1,0 +1,8 @@
+{
+  "schedule": "*/5 * * * *",
+  "evmChainSelectorName": "ethereum-testnet-sepolia",
+  "guardianContractAddress": "0x0000000000000000000000000000000000000000",
+  "registryContractAddress": "0x0000000000000000000000000000000000000000",
+  "aiEndpoint1": "https://api.anthropic.com/v1/messages",
+  "aiEndpoint2": "https://api.anthropic.com/v1/messages"
+}

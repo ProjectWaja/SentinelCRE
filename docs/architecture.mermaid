@@ -1,0 +1,72 @@
+%% SentinelCRE — Architecture Diagram
+
+graph TB
+    subgraph "AI Agent Layer"
+        Normal[Normal Agent<br/>Trading / Minting]
+        Rogue[Rogue Agent<br/>Compromised / Malicious]
+    end
+
+    subgraph "CRE Workflow (DON)"
+        HTTP[HTTP Trigger<br/>Receives Proposals]
+        Parse[Parse & Validate<br/>Action Proposal]
+        ReadPolicy[EVMClient.callContract<br/>Read Agent Policy]
+
+        subgraph "Multi-AI Consensus"
+            AI1[AI Model 1<br/>Claude]
+            AI2[AI Model 2<br/>Secondary]
+            Consensus{Both<br/>APPROVE?}
+        end
+
+        WriteVerdict[EVMClient.writeReport<br/>Submit Verdict On-Chain]
+
+        Cron[Cron Trigger<br/>Health Check ∕ 5min]
+    end
+
+    subgraph "On-Chain (Sepolia / Tenderly)"
+        Guardian[SentinelGuardian.sol<br/>AccessControl + Pausable]
+        PolicyCheck[PolicyLib.checkAll<br/>Value / Target / Function<br/>Rate Limit / Mint Cap]
+
+        Approve[ACTION APPROVED<br/>Forward to Target]
+        CircuitBreaker[CIRCUIT BREAKER<br/>Agent Frozen]
+        IncidentLog[Incident Logged<br/>Immutably On-Chain]
+
+        Registry[AgentRegistry.sol<br/>Agent Metadata]
+    end
+
+    Normal -->|POST action proposal| HTTP
+    Rogue -->|POST attack action| HTTP
+
+    HTTP --> Parse
+    Parse --> ReadPolicy
+    ReadPolicy --> AI1
+    ReadPolicy --> AI2
+    AI1 --> Consensus
+    AI2 --> Consensus
+
+    Consensus -->|Both approve| WriteVerdict
+    Consensus -->|Any deny| WriteVerdict
+
+    WriteVerdict -->|processVerdict| Guardian
+    Guardian --> PolicyCheck
+
+    PolicyCheck -->|Pass| Approve
+    PolicyCheck -->|Fail| CircuitBreaker
+    CircuitBreaker --> IncidentLog
+
+    Cron -->|Read states| Guardian
+
+    Guardian -.->|Registered agents| Registry
+
+    classDef safe fill:#27ae60,color:#fff,stroke:#1e8449
+    classDef danger fill:#c0392b,color:#fff,stroke:#922b21
+    classDef workflow fill:#2980b9,color:#fff,stroke:#1f618d
+    classDef contract fill:#8e44ad,color:#fff,stroke:#6c3483
+    classDef warning fill:#f39c12,color:#fff,stroke:#d68910
+
+    class Normal safe
+    class Rogue danger
+    class HTTP,Parse,ReadPolicy,WriteVerdict,Cron,AI1,AI2 workflow
+    class Guardian,PolicyCheck,Registry contract
+    class Approve safe
+    class CircuitBreaker,IncidentLog danger
+    class Consensus warning
