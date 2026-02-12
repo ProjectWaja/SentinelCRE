@@ -35,7 +35,9 @@ contract IntegrationTest is Test {
             approvedContracts: approved,
             blockedFunctions: blocked,
             requireMultiAiConsensus: true,
-            isActive: true
+            isActive: true,
+            reserveFeed: address(0),
+            minReserveRatio: 0
         });
     }
 
@@ -53,7 +55,9 @@ contract IntegrationTest is Test {
             approvedContracts: approved,
             blockedFunctions: blocked,
             requireMultiAiConsensus: true,
-            isActive: true
+            isActive: true,
+            reserveFeed: address(0),
+            minReserveRatio: 0
         });
     }
 

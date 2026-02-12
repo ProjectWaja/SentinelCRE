@@ -53,12 +53,38 @@ Respond with ONLY valid JSON:
         ? 'APPROVED'
         : 'DENIED'
 
+    // Compute severity for denied verdicts (mirrors on-chain classification)
+    let severity: 'LOW' | 'MEDIUM' | 'CRITICAL' | undefined
+    let challengeWindowExpiry: number | undefined
+    if (consensus === 'DENIED') {
+      const value = BigInt(proposal.value || '0')
+      const maxValue = BigInt('1000000000000000000') // 1 ETH
+      const mint = BigInt(proposal.mintAmount || '0')
+      const maxMint = BigInt('1000000000000000000000000') // 1M tokens
+
+      if (
+        (maxValue > 0n && value > maxValue * 10n) ||
+        (maxMint > 0n && mint > maxMint * 100n)
+      ) {
+        severity = 'CRITICAL'
+      } else if (maxValue > 0n && value > maxValue * 2n) {
+        severity = 'MEDIUM'
+        challengeWindowExpiry = Date.now() + 1800 * 1000 // 30 min
+      } else {
+        severity = 'LOW'
+        challengeWindowExpiry = Date.now() + 3600 * 1000 // 1 hour
+      }
+    }
+
     return NextResponse.json({
       model1: v1,
       model2: v2,
       consensus,
       proposal,
       timestamp: Date.now(),
+      severity,
+      challengeWindowExpiry,
+      challengeStatus: severity && severity !== 'CRITICAL' ? 'PENDING' : undefined,
     })
   } catch (err) {
     return NextResponse.json(

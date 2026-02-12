@@ -99,6 +99,8 @@ const GUARDIAN_ABI = [
       { name: 'rateLimitWindow', type: 'uint256' },
       { name: 'requireMultiAiConsensus', type: 'bool' },
       { name: 'isActive', type: 'bool' },
+      { name: 'reserveFeed', type: 'address' },
+      { name: 'minReserveRatio', type: 'uint256' },
     ],
   },
   {
@@ -113,6 +115,17 @@ const GUARDIAN_ABI = [
     type: 'function',
     stateMutability: 'nonpayable',
     inputs: [{ name: 'reportData', type: 'bytes' }],
+    outputs: [],
+  },
+  {
+    name: 'resolveChallenge',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'agentId', type: 'bytes32' },
+      { name: 'approved', type: 'bool' },
+      { name: 'reason', type: 'string' },
+    ],
     outputs: [],
   },
 ] as const

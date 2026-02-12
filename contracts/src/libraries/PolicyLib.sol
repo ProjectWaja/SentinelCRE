@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import {IAggregatorV3} from "../interfaces/IAggregatorV3.sol";
+
 /// @notice Policy configuration for an AI agent registered with SentinelGuardian
 struct AgentPolicy {
     uint256 maxTransactionValue; // Max value per single tx (wei)
@@ -12,6 +14,8 @@ struct AgentPolicy {
     bytes4[] blockedFunctions; // Blacklist of forbidden function selectors
     bool requireMultiAiConsensus; // Whether multi-AI evaluation is required
     bool isActive; // Whether this policy is enabled
+    address reserveFeed; // Chainlink AggregatorV3 for Proof of Reserves (address(0) = skip)
+    uint256 minReserveRatio; // Required collateralization in basis points (10000 = 100%)
 }
 
 /// @notice Parameters for a full policy check
@@ -23,6 +27,7 @@ struct CheckParams {
     uint256 actionCount;
     uint256 windowStart;
     uint256 currentTime;
+    uint256 cumulativeMints; // Total mints so far (for PoR check)
 }
 
 /// @title PolicyLib — Pure policy validation logic for SentinelGuardian
@@ -101,6 +106,37 @@ library PolicyLib {
         return (true, "");
     }
 
+    /// @notice Check if reserves are sufficient to back the proposed mint (Chainlink PoR)
+    function checkReserves(
+        AgentPolicy storage policy,
+        uint256 mintAmount,
+        uint256 cumulativeMints
+    ) internal view returns (bool, string memory) {
+        if (policy.reserveFeed == address(0)) {
+            return (true, ""); // No reserve feed configured — skip
+        }
+        if (mintAmount == 0) {
+            return (true, ""); // Not a mint operation — skip
+        }
+
+        IAggregatorV3 feed = IAggregatorV3(policy.reserveFeed);
+        (, int256 reserves,,,) = feed.latestRoundData();
+
+        if (reserves <= 0) {
+            return (false, "Reserve feed returned non-positive value");
+        }
+
+        // Check: reserves >= (cumulativeMints + mintAmount) * minReserveRatio / 10000
+        uint256 totalAfterMint = cumulativeMints + mintAmount;
+        uint256 requiredReserves = (totalAfterMint * policy.minReserveRatio) / 10000;
+
+        if (uint256(reserves) < requiredReserves) {
+            return (false, "Insufficient reserves to back mint");
+        }
+
+        return (true, "");
+    }
+
     /// @notice Run all policy checks in sequence. Returns on first failure.
     function checkAll(
         AgentPolicy storage policy,
@@ -119,6 +155,9 @@ library PolicyLib {
         if (!passed) return (false, reason);
 
         (passed, reason) = checkMintAmount(policy, p.mintAmount);
+        if (!passed) return (false, reason);
+
+        (passed, reason) = checkReserves(policy, p.mintAmount, p.cumulativeMints);
         if (!passed) return (false, reason);
 
         return (true, "");

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useSentinelData } from '@/hooks/useSentinelData'
 import { useVerdictHistory } from '@/hooks/useVerdictHistory'
 import TabNavigation from '@/components/TabNavigation'
@@ -10,11 +10,26 @@ import IncidentLogPanel from '@/components/IncidentLogPanel'
 import DemoControlPanel from '@/components/DemoControlPanel'
 import VerdictFeedPanel from '@/components/VerdictFeedPanel'
 import ArchitecturePanel from '@/components/ArchitecturePanel'
+import ChainlinkActivityPanel, { type PipelineRun } from '@/components/ChainlinkActivityPanel'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('guardian')
   const { data } = useSentinelData()
   const { verdicts, addVerdict, clearVerdicts } = useVerdictHistory()
+  const [currentRun, setCurrentRun] = useState<PipelineRun | null>(null)
+
+  const handlePipelineStart = useCallback((description: string) => {
+    setCurrentRun({
+      id: crypto.randomUUID(),
+      description,
+      consensus: null,
+      startedAt: Date.now(),
+    })
+  }, [])
+
+  const handlePipelineComplete = useCallback((consensus: 'APPROVED' | 'DENIED') => {
+    setCurrentRun((prev) => prev ? { ...prev, consensus } : null)
+  }, [])
 
   return (
     <div>
@@ -70,9 +85,20 @@ export default function Home() {
         </div>
 
         <div className={activeTab === 'demo' ? '' : 'hidden'}>
-          <div className="space-y-6">
-            <DemoControlPanel onVerdictReceived={addVerdict} />
-            <VerdictFeedPanel verdicts={verdicts} onClear={clearVerdicts} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <DemoControlPanel
+                onVerdictReceived={addVerdict}
+                onPipelineStart={handlePipelineStart}
+                onPipelineComplete={handlePipelineComplete}
+              />
+              <VerdictFeedPanel verdicts={verdicts} onClear={clearVerdicts} />
+            </div>
+            <div className="lg:col-span-1">
+              <div className="lg:sticky lg:top-6">
+                <ChainlinkActivityPanel currentRun={currentRun} />
+              </div>
+            </div>
           </div>
         </div>
 
