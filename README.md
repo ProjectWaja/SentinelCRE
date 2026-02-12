@@ -38,10 +38,14 @@ SentinelCRE acts as a **decentralized middleware layer** between AI agents and o
 AI Agent proposes action
     → CRE HTTP Trigger receives proposal
     → Policy pre-check (value limits, whitelists, rate limits, mint caps)
+    → Proof of Reserves check (Chainlink Data Feed verifies reserve backing)
     → Multi-AI consensus (2 models must BOTH approve)
     → On-chain verdict via EVMClient
         → APPROVED: action forwarded to target contract
-        → DENIED: circuit breaker fires, agent frozen, incident logged
+        → DENIED: severity classified (Low / Medium / Critical)
+            → Critical: instant freeze, no appeal
+            → Low/Medium: challenge window opens (1hr / 30min)
+                → Appeal via CRE re-evaluation → unfreeze or uphold
 ```
 
 ### Two-Layer Defense
@@ -74,20 +78,32 @@ graph TB
     style Consensus fill:#f39c12,color:#fff
 ```
 
-## Demo Scenarios
+## Demo Scenarios (11 Interactive Buttons)
 
-### 1. Rogue DeFi Trading Agent
-A compromised trading agent attempts:
-- **100 ETH swap** (limit: 1 ETH) → BLOCKED
-- **Call to unapproved contract** → BLOCKED
-- **50 rapid-fire transactions** → BLOCKED by on-chain rate limit
-- **Blocked function signature** → BLOCKED
+### Safe Operations
+| Scenario | Description | Expected |
+|----------|-------------|----------|
+| Normal Trade | 0.5 ETH swap on approved DEX | APPROVED |
+| Small Mint | 500K tokens within 1M cap | APPROVED |
 
-### 2. Infinite Stablecoin Mint Attack
-A hijacked minting agent attempts to mint **1 billion stablecoins** (cap: 1M tokens):
-- AI models flag anomalous mint volume → DENIED
-- On-chain policy catches value exceeding mint cap → Circuit breaker fires
-- Agent frozen before a single token is minted
+### Common Attacks
+| Scenario | Description | Expected |
+|----------|-------------|----------|
+| Infinite Mint | 1 BILLION token mint attempt | DENIED (Critical) |
+| Massive Swap | 100 ETH value violation | DENIED (Medium) |
+| Unapproved Contract | Call to unknown contract | DENIED (Low) |
+| Blocked Function | Destructive function selector | DENIED (Low) |
+
+### Advanced Attacks
+| Scenario | Description | Expected |
+|----------|-------------|----------|
+| Hacker Exploit | Treasury drain via delegatecall + selfdestruct | DENIED (Critical) |
+| Rogue Chatbot | AI hijacked via prompt injection ("IGNORE PREVIOUS INSTRUCTIONS") | DENIED (Critical) |
+| Flash Loan Attack | Oracle manipulation via 10,000 ETH flash loan | DENIED (Critical) |
+| Insider Threat | Gradual limit pushing — near-limit value + over-cap mint | DENIED (Low) |
+| Social Engineering | Admin `upgradeTo` disguised as routine maintenance | DENIED (Low) |
+
+Low/Medium denials open a **challenge window** where the action can be appealed via CRE re-evaluation. Critical denials are permanent freezes with no appeal.
 
 ## Chainlink Services Used
 
@@ -97,6 +113,8 @@ A hijacked minting agent attempts to mint **1 billion stablecoins** (cap: 1M tok
 | **CRE HTTPClient** | Calls 2 AI models with `ConsensusAggregationByFields` (identical verdict consensus) | Real |
 | **CRE EVMClient** | Reads agent policies, writes verdicts to SentinelGuardian contract | Real |
 | **CRE CronCapability** | Periodic health checks — auto-freeze anomalous agents | Real |
+| **Data Feeds** | AggregatorV3Interface for Proof of Reserves — verifies reserve backing before mints | Real |
+| **Automation** | `finalizeExpiredChallenge()` is Automation-ready (checkUpkeep/performUpkeep pattern) | Interface ready |
 | **Confidential HTTP** | Hides API keys and guardrail thresholds from DON nodes | Real (SDK alpha) |
 | **Confidential Compute** | Hide policy parameters from AI agents (prevent gaming) | Boundary markers |
 
@@ -111,18 +129,27 @@ CRE provides exactly what SentinelCRE needs:
 ## Smart Contracts
 
 ### SentinelGuardian.sol
-Core guardian with AccessControl + Pausable. Receives CRE verdicts, enforces policy, triggers circuit breakers.
+Core guardian with AccessControl + Pausable. Receives CRE verdicts, enforces policy, triggers circuit breakers, manages challenge windows.
 
-**Policy struct** includes: `maxTransactionValue`, `maxDailyVolume`, `maxMintAmount`, `rateLimit`, `rateLimitWindow`, `approvedContracts[]`, `blockedFunctions[]`
+**Policy struct** includes: `maxTransactionValue`, `maxDailyVolume`, `maxMintAmount`, `rateLimit`, `rateLimitWindow`, `approvedContracts[]`, `blockedFunctions[]`, `reserveFeed`, `minReserveRatio`
+
+**Challenge system**: Denied actions are classified by severity (Low/Medium/Critical). Low and Medium denials open a time-gapped challenge window where the verdict can be appealed via CRE re-evaluation. Critical denials freeze the agent permanently.
+
+**Proof of Reserves**: Minting actions are checked against a Chainlink Data Feed to verify reserve backing. Cumulative mints are tracked to prevent gradual reserve depletion.
 
 ### AgentRegistry.sol
 Simple registry mapping agent IDs to metadata (name, description, owner).
 
+### PolicyLib.sol
+Validation library with `checkAll()` pipeline: value limits → daily volume → mint caps → rate limits → contract whitelist → function blocklist → reserve verification.
+
 ### Test Coverage
-**61 tests across 3 test suites**, all passing:
+**85 tests across 5 test suites**, all passing:
 - `SentinelGuardian.t.sol` — 45 tests (registration, verdicts, policy enforcement, circuit breaker, freeze/unfreeze/revoke, rate limits, infinite mint)
 - `AgentRegistry.t.sol` — 8 tests
 - `Integration.t.sol` — 8 tests (full lifecycle including infinite mint blocked)
+- `ProofOfReserves.t.sol` — 10 tests (reserve verification, cumulative tracking, feed manipulation, collateral ratios)
+- `Challenge.t.sol` — 14 tests (severity classification, challenge windows, appeals, expiry, authorization)
 
 ## Tech Stack
 
@@ -198,9 +225,9 @@ SentinelCRE/
 │   ├── src/
 │   │   ├── SentinelGuardian.sol  # Core guardian (policy + circuit breaker)
 │   │   ├── AgentRegistry.sol     # Agent registration
-│   │   ├── interfaces/           # ISentinelGuardian
-│   │   └── libraries/            # PolicyLib (validation logic)
-│   ├── test/                     # 61 Foundry tests
+│   │   ├── interfaces/           # ISentinelGuardian, IChallenge, IAggregatorV3
+│   │   └── libraries/            # PolicyLib (validation + PoR logic)
+│   ├── test/                     # 85 Foundry tests (5 suites)
 │   └── script/                   # Deploy.s.sol
 ├── sentinel-workflow/            # CRE TypeScript workflow
 │   └── main.ts                   # HTTP + Cron handlers
@@ -212,7 +239,7 @@ SentinelCRE/
 │   └── src/hooks/                # useSentinelData, useVerdictHistory
 ├── agent-simulator/              # Demo agents
 │   ├── normal-agent.ts           # Well-behaved agent
-│   └── rogue-agent.ts            # 5 attack scenarios
+│   └── rogue-agent.ts            # 10 attack scenarios
 ├── config/                       # CRE configs + fixtures
 └── docs/                         # Architecture, demo script, security model
 ```
@@ -223,7 +250,8 @@ SentinelCRE uses a **fail-safe** design:
 - Any error in the pipeline defaults to **DENY**
 - AI models must unanimously approve (both or neither)
 - On-chain policy cannot be bypassed by AI consensus
-- Circuit breaker is irreversible without admin intervention
+- Severity-based response: Critical → instant permanent freeze, Low/Medium → time-gapped challenge window with appeal
+- Proof of Reserves prevents unbacked minting — cumulative mint tracking catches gradual depletion
 - Incident history is immutable and bounded (rolling buffer, max 100)
 
 ## Why SentinelCRE Wins
@@ -232,9 +260,12 @@ SentinelCRE uses a **fail-safe** design:
 |---|---|
 | **Real problem, real stakes** | AI agents are executing on-chain today. Infinite mint exploits have drained $180M+ from real protocols. SentinelCRE prevents the next one. |
 | **Two-layer defense** | AI consensus + on-chain policy — even if AI models are wrong, hard-coded guardrails catch what they miss. No single point of failure. |
-| **Deep CRE integration** | Uses 5 CRE capabilities (HTTPClient, EVMClient, CronCapability, Confidential HTTP, ConsensusAggregation) — not a wrapper, a native CRE application. |
+| **Proof of Reserves** | Chainlink Data Feed verifies reserve backing before any mint. Cumulative tracking prevents gradual reserve depletion — no more infinite mint exploits. |
+| **Challenge windows** | Severity-based appeal system. Low/Medium denials get a time-gapped challenge window (like CEX verification delays). Critical threats are frozen permanently. |
+| **Deep CRE integration** | Uses 5 CRE capabilities (HTTPClient, EVMClient, CronCapability, Confidential HTTP, ConsensusAggregation) + Data Feeds + Automation-ready hooks. |
+| **11 attack scenarios** | Prompt injection, flash loans, delegatecall exploits, insider threats, social engineering — all detected and blocked in the interactive demo. |
 | **Proactive, not reactive** | Unlike kill switches that fire after damage is done, SentinelCRE blocks malicious actions before they execute. |
-| **61 tests, 3 suites** | Production-grade test coverage including infinite mint attack, rate limiting, circuit breaker, freeze/unfreeze lifecycle. |
+| **85 tests, 5 suites** | Production-grade test coverage including PoR verification, challenge windows, infinite mint attack, rate limiting, circuit breaker, freeze/unfreeze lifecycle. |
 | **Confidential Compute ready** | Boundary markers in place — when CC SDK ships, policy thresholds are hidden from AI agents, preventing them from gaming their own limits. |
 
 ## Demo Video
