@@ -42,7 +42,7 @@ contract Deploy is Script {
             rateLimitWindow: 60,
             approvedContracts: approvedContracts,
             blockedFunctions: blockedFunctions,
-            requireMultiAIConsensus: true,
+            requireMultiAiConsensus: true,
             isActive: true
         });
 
@@ -62,7 +62,7 @@ contract Deploy is Script {
             rateLimitWindow: 300,
             approvedContracts: approvedContracts,
             blockedFunctions: noBlocked,
-            requireMultiAIConsensus: true,
+            requireMultiAiConsensus: true,
             isActive: true
         });
 

@@ -7,7 +7,7 @@
     "rateLimitWindow": 60,
     "approvedContracts": ["0x000000000000000000000000000000000000AA01"],
     "blockedFunctions": ["0xff00ff00"],
-    "requireMultiAIConsensus": true,
+    "requireMultiAiConsensus": true,
     "isActive": true
   },
   "defaultMintingPolicy": {
@@ -18,7 +18,7 @@
     "rateLimitWindow": 300,
     "approvedContracts": ["0x000000000000000000000000000000000000AA01"],
     "blockedFunctions": [],
-    "requireMultiAIConsensus": true,
+    "requireMultiAiConsensus": true,
     "isActive": true
   }
 }
