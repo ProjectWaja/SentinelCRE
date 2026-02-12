@@ -1,0 +1,42 @@
+[
+  {
+    "attack": "Value Limit Violation",
+    "agentId": "0x53656e74696e656c4167656e74303100000000000000000000000000000001",
+    "targetContract": "0x000000000000000000000000000000000000AA01",
+    "functionSignature": "0x38ed1739",
+    "value": "100000000000000000000",
+    "mintAmount": "0",
+    "calldata": "0x",
+    "description": "Emergency liquidation — swap 100 ETH"
+  },
+  {
+    "attack": "Unapproved Contract",
+    "agentId": "0x53656e74696e656c4167656e74303100000000000000000000000000000001",
+    "targetContract": "0x000000000000000000000000000000000000BB01",
+    "functionSignature": "0x38ed1739",
+    "value": "100000000000000000",
+    "mintAmount": "0",
+    "calldata": "0x",
+    "description": "Swap on alternative DEX for better rates"
+  },
+  {
+    "attack": "Blocked Function Signature",
+    "agentId": "0x53656e74696e656c4167656e74303100000000000000000000000000000001",
+    "targetContract": "0x000000000000000000000000000000000000AA01",
+    "functionSignature": "0xff00ff00",
+    "value": "100000000000000000",
+    "mintAmount": "0",
+    "calldata": "0x",
+    "description": "Execute upgrade proxy function"
+  },
+  {
+    "attack": "Infinite Stablecoin Mint",
+    "agentId": "0x53656e74696e656c4167656e74303100000000000000000000000000000001",
+    "targetContract": "0x000000000000000000000000000000000000AA01",
+    "functionSignature": "0x40c10f19",
+    "value": "0",
+    "mintAmount": "1000000000000000000000000000",
+    "calldata": "0x",
+    "description": "Mint 1 billion stablecoins to treasury"
+  }
+]

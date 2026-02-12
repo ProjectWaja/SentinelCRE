@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+dist/
+
+# Foundry
+contracts/out/
+contracts/cache/
+
+# Environment & secrets
+.env
+.env.*
+config/secrets.json
+secrets.yaml
+
+# Deployments (keep template, ignore actual)
+deployments/*.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts
+*.wasm
+sentinelcre-build-prompt.md

@@ -1,0 +1,29 @@
+[
+  {
+    "agentId": "0x53656e74696e656c4167656e74303100000000000000000000000000000001",
+    "targetContract": "0x000000000000000000000000000000000000AA01",
+    "functionSignature": "0x38ed1739",
+    "value": "500000000000000000",
+    "mintAmount": "0",
+    "calldata": "0x",
+    "description": "Swap 0.5 ETH for USDC on approved DEX"
+  },
+  {
+    "agentId": "0x53656e74696e656c4167656e74303100000000000000000000000000000001",
+    "targetContract": "0x000000000000000000000000000000000000AA01",
+    "functionSignature": "0x095ea7b3",
+    "value": "0",
+    "mintAmount": "0",
+    "calldata": "0x",
+    "description": "Approve DEX to spend 1000 USDC"
+  },
+  {
+    "agentId": "0x53656e74696e656c4167656e74303100000000000000000000000000000001",
+    "targetContract": "0x000000000000000000000000000000000000AA01",
+    "functionSignature": "0x38ed1739",
+    "value": "200000000000000000",
+    "mintAmount": "0",
+    "calldata": "0x",
+    "description": "Swap 0.2 ETH for DAI on approved DEX"
+  }
+]
