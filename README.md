@@ -153,7 +153,18 @@ forge build
 forge test -v
 ```
 
-### Run Demo
+### Run Dashboard
+```bash
+# Terminal 1: Start mock AI evaluation server
+bun run mock-api
+
+# Terminal 2: Start the interactive dashboard
+bun run dashboard
+# Open http://localhost:3000 — Guardian Dashboard
+# Open http://localhost:3000/presentation — Slide Deck
+```
+
+### Run CLI Demo
 ```bash
 # Terminal 1: Start mock AI evaluation server
 bun run mock-api
@@ -195,6 +206,10 @@ SentinelCRE/
 │   └── main.ts                   # HTTP + Cron handlers
 ├── api-server/                   # Mock AI evaluation server
 │   └── server.ts
+├── dashboard/                    # Next.js 15 interactive dashboard
+│   ├── src/app/                  # Routes: /, /presentation
+│   ├── src/components/           # UI + 10 presentation slides
+│   └── src/hooks/                # useSentinelData, useVerdictHistory
 ├── agent-simulator/              # Demo agents
 │   ├── normal-agent.ts           # Well-behaved agent
 │   └── rogue-agent.ts            # 5 attack scenarios

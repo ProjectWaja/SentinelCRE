@@ -26,3 +26,7 @@ Thumbs.db
 # Build artifacts
 *.wasm
 sentinelcre-build-prompt.md
+
+# Next.js
+dashboard/.next/
+dashboard/out/

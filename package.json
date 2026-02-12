@@ -10,7 +10,9 @@
     "deploy:contracts": "bun run scripts/deploy-guardian.ts",
     "mock-api": "bun run api-server/server.ts",
     "demo:normal": "bun run agent-simulator/normal-agent.ts",
-    "demo:rogue": "bun run agent-simulator/rogue-agent.ts"
+    "demo:rogue": "bun run agent-simulator/rogue-agent.ts",
+    "dashboard": "cd dashboard && bun run dev",
+    "dashboard:build": "cd dashboard && bun run build"
   },
   "dependencies": {
     "@chainlink/cre-sdk": "^1.0.7",
