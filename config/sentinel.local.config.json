@@ -1,8 +1,8 @@
 {
   "schedule": "*/5 * * * *",
   "evmChainSelectorName": "ethereum-testnet-sepolia",
-  "guardianContractAddress": "0x0000000000000000000000000000000000000000",
-  "registryContractAddress": "0x0000000000000000000000000000000000000000",
+  "guardianContractAddress": "0x3e2D7CE3CcB520f26dE6fe499bAA38A28cfd476f",
+  "registryContractAddress": "0xb008CE7EE90C66A219C842E69a4fBAF7E5359bbE",
   "aiEndpoint1": "http://localhost:3002/evaluate/model1",
   "aiEndpoint2": "http://localhost:3002/evaluate/model2"
 }

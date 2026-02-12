@@ -8,6 +8,17 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/) (Feb 2026).
 
 **Tracks:** AI + Web3 | Privacy / Confidential Compute
 
+### Deployed Contracts (Tenderly Virtual TestNet)
+
+| Contract | Address |
+|----------|---------|
+| **SentinelGuardian** | `0x3e2D7CE3CcB520f26dE6fe499bAA38A28cfd476f` |
+| **AgentRegistry** | `0xb008CE7EE90C66A219C842E69a4fBAF7E5359bbE` |
+
+**Demo Transactions:**
+- [Approved Trade](https://virtual.sepolia.us-west.rpc.tenderly.co/52ca1c81-5b4d-4e46-8aae-810c019f12c4) — 0.5 ETH swap approved
+- [Infinite Mint BLOCKED](https://virtual.sepolia.us-west.rpc.tenderly.co/52ca1c81-5b4d-4e46-8aae-810c019f12c4) — 1B token mint caught, circuit breaker fired, agent frozen
+
 ---
 
 ## The Problem
