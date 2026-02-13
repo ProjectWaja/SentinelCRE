@@ -60,8 +60,9 @@ contract SentinelGuardian is AccessControl, Pausable {
     mapping(bytes32 => uint256) public dailyVolume;
     mapping(bytes32 => uint256) public dailyVolumeWindowStart;
 
-    // Incident history (rolling buffer)
+    // Incident history (circular buffer)
     mapping(bytes32 => IncidentLog[]) internal _incidents;
+    mapping(bytes32 => uint256) internal _incidentHead; // next write index
     uint256 public constant MAX_INCIDENT_HISTORY = 100;
 
     // Cumulative mint tracking (for Proof of Reserves)
@@ -143,7 +144,8 @@ contract SentinelGuardian is AccessControl, Pausable {
                 actionCount: actionCounts[agentId],
                 windowStart: windowStartTimes[agentId],
                 currentTime: block.timestamp,
-                cumulativeMints: cumulativeMints[agentId]
+                cumulativeMints: cumulativeMints[agentId],
+                dailyVolume: dailyVolume[agentId]
             });
             (bool policyPassed, string memory policyReason) = policy.checkAll(params);
 
@@ -305,7 +307,8 @@ contract SentinelGuardian is AccessControl, Pausable {
             bool requireMultiAiConsensus,
             bool isActive,
             address reserveFeed,
-            uint256 minReserveRatio
+            uint256 minReserveRatio,
+            uint256 maxStaleness
         )
     {
         AgentPolicy storage p = _agentPolicies[agentId];
@@ -318,7 +321,8 @@ contract SentinelGuardian is AccessControl, Pausable {
             p.requireMultiAiConsensus,
             p.isActive,
             p.reserveFeed,
-            p.minReserveRatio
+            p.minReserveRatio,
+            p.maxStaleness
         );
     }
 
@@ -438,14 +442,12 @@ contract SentinelGuardian is AccessControl, Pausable {
             attemptedValue: value
         });
 
-        if (_incidents[agentId].length >= MAX_INCIDENT_HISTORY) {
-            // Shift array for rolling buffer
-            for (uint256 i = 0; i < MAX_INCIDENT_HISTORY - 1; i++) {
-                _incidents[agentId][i] = _incidents[agentId][i + 1];
-            }
-            _incidents[agentId][MAX_INCIDENT_HISTORY - 1] = log;
-        } else {
+        if (_incidents[agentId].length < MAX_INCIDENT_HISTORY) {
             _incidents[agentId].push(log);
+        } else {
+            // Circular buffer: overwrite oldest entry in O(1)
+            _incidents[agentId][_incidentHead[agentId]] = log;
+            _incidentHead[agentId] = (_incidentHead[agentId] + 1) % MAX_INCIDENT_HISTORY;
         }
     }
 
@@ -496,6 +498,7 @@ contract SentinelGuardian is AccessControl, Pausable {
         stored.isActive = policy.isActive;
         stored.reserveFeed = policy.reserveFeed;
         stored.minReserveRatio = policy.minReserveRatio;
+        stored.maxStaleness = policy.maxStaleness;
 
         // Copy dynamic arrays
         delete stored.approvedContracts;

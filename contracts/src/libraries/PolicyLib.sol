@@ -16,6 +16,7 @@ struct AgentPolicy {
     bool isActive; // Whether this policy is enabled
     address reserveFeed; // Chainlink AggregatorV3 for Proof of Reserves (address(0) = skip)
     uint256 minReserveRatio; // Required collateralization in basis points (10000 = 100%)
+    uint256 maxStaleness; // Max age of reserve feed data in seconds (0 = no check)
 }
 
 /// @notice Parameters for a full policy check
@@ -28,6 +29,7 @@ struct CheckParams {
     uint256 windowStart;
     uint256 currentTime;
     uint256 cumulativeMints; // Total mints so far (for PoR check)
+    uint256 dailyVolume; // Accumulated daily volume so far
 }
 
 /// @title PolicyLib — Pure policy validation logic for SentinelGuardian
@@ -92,6 +94,21 @@ library PolicyLib {
         return (true, "");
     }
 
+    /// @notice Check if daily volume would exceed the agent's limit
+    function checkDailyVolume(
+        AgentPolicy storage policy,
+        uint256 currentDailyVolume,
+        uint256 value
+    ) internal view returns (bool, string memory) {
+        if (policy.maxDailyVolume == 0) {
+            return (true, ""); // No daily volume limit configured
+        }
+        if (currentDailyVolume + value > policy.maxDailyVolume) {
+            return (false, "Daily volume limit exceeded");
+        }
+        return (true, "");
+    }
+
     /// @notice Check if mint amount is within the agent's cap
     function checkMintAmount(
         AgentPolicy storage policy,
@@ -120,10 +137,15 @@ library PolicyLib {
         }
 
         IAggregatorV3 feed = IAggregatorV3(policy.reserveFeed);
-        (, int256 reserves,,,) = feed.latestRoundData();
+        (, int256 reserves,, uint256 updatedAt,) = feed.latestRoundData();
 
         if (reserves <= 0) {
             return (false, "Reserve feed returned non-positive value");
+        }
+
+        // Staleness check — reject if feed data is too old
+        if (policy.maxStaleness > 0 && block.timestamp > updatedAt + policy.maxStaleness) {
+            return (false, "Reserve feed data is stale");
         }
 
         // Check: reserves >= (cumulativeMints + mintAmount) * minReserveRatio / 10000
@@ -152,6 +174,9 @@ library PolicyLib {
         if (!passed) return (false, reason);
 
         (passed, reason) = checkRateLimit(policy, p.actionCount, p.windowStart, p.currentTime);
+        if (!passed) return (false, reason);
+
+        (passed, reason) = checkDailyVolume(policy, p.dailyVolume, p.value);
         if (!passed) return (false, reason);
 
         (passed, reason) = checkMintAmount(policy, p.mintAmount);

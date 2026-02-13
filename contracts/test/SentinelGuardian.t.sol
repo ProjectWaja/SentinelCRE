@@ -40,7 +40,8 @@ contract SentinelGuardianTest is Test {
             requireMultiAiConsensus: true,
             isActive: true,
             reserveFeed: address(0),
-            minReserveRatio: 0
+            minReserveRatio: 0,
+            maxStaleness: 0
         });
     }
 
@@ -74,23 +75,25 @@ contract SentinelGuardianTest is Test {
             uint256 maxTx,
             uint256 maxDaily,
             uint256 maxMint,
-            uint256 rateLimit,
+            uint256 rl,
             uint256 window,
             bool requireAi,
             bool isActive,
             address reserveFeed,
-            uint256 minReserveRatio
+            uint256 minReserveRatio,
+            uint256 maxStaleness
         ) = guardian.getAgentPolicy(agentId);
 
         assertEq(maxTx, 1 ether);
         assertEq(maxDaily, 10 ether);
         assertEq(maxMint, 1_000_000e18);
-        assertEq(rateLimit, 5);
+        assertEq(rl, 5);
         assertEq(window, 60);
         assertTrue(requireAi);
         assertTrue(isActive);
         assertEq(reserveFeed, address(0));
         assertEq(minReserveRatio, 0);
+        assertEq(maxStaleness, 0);
     }
 
     function testRegisterAgentApprovedContracts() public view {
@@ -132,7 +135,7 @@ contract SentinelGuardianTest is Test {
         newPolicy.maxTransactionValue = 5 ether;
         guardian.updatePolicy(agentId, newPolicy);
 
-        (uint256 maxTx,,,,,,,,) = guardian.getAgentPolicy(agentId);
+        (uint256 maxTx,,,,,,,,,) = guardian.getAgentPolicy(agentId);
         assertEq(maxTx, 5 ether);
     }
 
