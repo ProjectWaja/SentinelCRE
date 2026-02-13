@@ -7,13 +7,14 @@ import TabNavigation from '@/components/TabNavigation'
 import StatsOverview from '@/components/StatsOverview'
 import AgentRegistryPanel from '@/components/AgentRegistryPanel'
 import IncidentLogPanel from '@/components/IncidentLogPanel'
-import DemoControlPanel from '@/components/DemoControlPanel'
+import ScenarioDemoPanel from '@/components/ScenarioDemoPanel'
 import VerdictFeedPanel from '@/components/VerdictFeedPanel'
 import ArchitecturePanel from '@/components/ArchitecturePanel'
 import ChainlinkActivityPanel, { type PipelineRun } from '@/components/ChainlinkActivityPanel'
+import TransactionSimulatorPanel from '@/components/TransactionSimulatorPanel'
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('guardian')
+  const [activeTab, setActiveTab] = useState('demo')
   const { data } = useSentinelData()
   const { verdicts, addVerdict, clearVerdicts } = useVerdictHistory()
   const [currentRun, setCurrentRun] = useState<PipelineRun | null>(null)
@@ -33,26 +34,26 @@ export default function Home() {
 
   return (
     <div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="w-full px-6 xl:px-10 py-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="text-4xl font-black text-white">
               Guardian Dashboard
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-xl text-gray-500 mt-1">
               Monitor AI agent activity and security incidents
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <span
-              className={`flex items-center gap-2 text-xs px-2.5 py-1 rounded-full ${
+              className={`flex items-center gap-2.5 text-base px-4 py-2 rounded-full font-semibold ${
                 data.apiHealthy
                   ? 'text-green-400 bg-green-400/10'
                   : 'text-red-400 bg-red-400/10'
               }`}
             >
               <span
-                className={`w-2 h-2 rounded-full ${
+                className={`w-3 h-3 rounded-full ${
                   data.apiHealthy
                     ? 'bg-green-400 animate-pulse'
                     : 'bg-red-400'
@@ -61,7 +62,7 @@ export default function Home() {
               {data.apiHealthy ? 'API Online' : 'API Offline'}
             </span>
             <span
-              className={`text-xs px-2.5 py-1 rounded-full ${
+              className={`text-base px-4 py-2 rounded-full font-semibold ${
                 data.isLive
                   ? 'text-blue-400 bg-blue-400/10'
                   : 'text-gray-400 bg-gray-400/10'
@@ -75,31 +76,39 @@ export default function Home() {
 
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className={activeTab === 'guardian' ? '' : 'hidden'}>
-          <div className="space-y-6">
-            <StatsOverview data={data} />
-            <AgentRegistryPanel agents={data.agents} />
-            <IncidentLogPanel agents={data.agents} />
-          </div>
-        </div>
-
-        <div className={activeTab === 'demo' ? '' : 'hidden'}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <DemoControlPanel
+      {/* Demo tab uses near-fullscreen layout for video readability */}
+      <div className={activeTab === 'demo' ? '' : 'hidden'}>
+        <div className="w-full px-6 xl:px-10 py-6">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            <div className="xl:col-span-8 space-y-6">
+              <ScenarioDemoPanel
                 onVerdictReceived={addVerdict}
                 onPipelineStart={handlePipelineStart}
                 onPipelineComplete={handlePipelineComplete}
               />
-              <VerdictFeedPanel verdicts={verdicts} onClear={clearVerdicts} />
             </div>
-            <div className="lg:col-span-1">
-              <div className="lg:sticky lg:top-6">
+            <div className="xl:col-span-4">
+              <div className="xl:sticky xl:top-20 space-y-6">
                 <ChainlinkActivityPanel currentRun={currentRun} />
+                <VerdictFeedPanel verdicts={verdicts} onClear={clearVerdicts} />
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Other tabs use full-width layout */}
+      <div className="w-full px-6 xl:px-10 py-6">
+        <div className={activeTab === 'guardian' ? '' : 'hidden'}>
+          <div className="space-y-6">
+            <StatsOverview data={data} sessionVerdicts={verdicts} />
+            <AgentRegistryPanel agents={data.agents} sessionVerdicts={verdicts} />
+            <IncidentLogPanel agents={data.agents} sessionVerdicts={verdicts} />
+          </div>
+        </div>
+
+        <div className={activeTab === 'simulator' ? '' : 'hidden'}>
+          <TransactionSimulatorPanel />
         </div>
 
         <div className={activeTab === 'architecture' ? '' : 'hidden'}>

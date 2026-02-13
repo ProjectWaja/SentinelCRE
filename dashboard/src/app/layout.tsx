@@ -16,11 +16,11 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-gray-950 text-gray-100 min-h-screen antialiased">
         <nav className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-sm sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-red-600 to-orange-500 flex items-center justify-center animate-shield">
+          <div className="w-full px-6 xl:px-10 h-20 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-orange-500 flex items-center justify-center animate-shield">
                 <svg
-                  className="w-5 h-5 text-white"
+                  className="w-7 h-7 text-white"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -31,23 +31,21 @@ export default function RootLayout({
                   />
                 </svg>
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-white tracking-tight">
-                  SentinelCRE
-                </h1>
-                <p className="text-xs text-gray-500 -mt-0.5">
-                  AI Guardian Protocol
-                </p>
-              </div>
+              <h1 className="text-2xl font-black text-white tracking-tight">
+                SentinelCRE
+              </h1>
+              <span className="text-lg text-gray-500 font-medium">
+                AI Guardian Protocol
+              </span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-5">
               <a
                 href="/presentation"
-                className="text-sm text-gray-400 hover:text-white transition-colors"
+                className="text-lg text-gray-400 hover:text-white transition-colors font-semibold"
               >
                 Presentation
               </a>
-              <span className="text-xs text-purple-400 bg-purple-400/10 px-2.5 py-1 rounded-full">
+              <span className="text-base text-purple-400 bg-purple-400/10 px-4 py-1.5 rounded-full font-bold">
                 Tenderly TestNet
               </span>
             </div>
