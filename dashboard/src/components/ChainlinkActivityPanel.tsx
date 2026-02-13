@@ -38,7 +38,7 @@ const PIPELINE_STEPS = [
     service: 'HTTPClient',
     action: 'sendRequest()',
     label: 'AI Model 2',
-    desc: 'Call secondary model for independent evaluation',
+    desc: 'Call GPT-4 (Model 2) for independent evaluation',
     color: 'purple',
     delay: 1000,
   },
@@ -90,22 +90,18 @@ export default function ChainlinkActivityPanel({
     if (!currentRun || currentRun.id === prevRunId.current) return
     prevRunId.current = currentRun.id
 
-    // Reset
     setActiveStep(-1)
     setCompletedSteps([])
 
-    // Animate through steps
     PIPELINE_STEPS.forEach((step, i) => {
       setTimeout(() => {
         setActiveStep(i)
         setCompletedSteps((prev) => [...prev.filter((s) => s < i)])
       }, step.delay)
 
-      // Mark as completed after brief highlight
       setTimeout(() => {
         setCompletedSteps((prev) => [...prev, i])
         if (i === PIPELINE_STEPS.length - 1) {
-          // Final step — keep it active briefly then mark done
           setTimeout(() => setActiveStep(-1), 600)
         }
       }, step.delay + 350)
@@ -115,20 +111,20 @@ export default function ChainlinkActivityPanel({
   const isIdle = !currentRun || activeStep === -1
 
   return (
-    <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-white uppercase tracking-wider">
+    <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-black text-white uppercase tracking-widest">
           Chainlink Pipeline
         </h2>
         {!isIdle && (
-          <span className="flex items-center gap-1.5 text-xs text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+          <span className="flex items-center gap-2 text-base text-yellow-400 bg-yellow-400/10 px-4 py-1.5 rounded-full font-bold">
+            <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" />
             Processing
           </span>
         )}
         {isIdle && currentRun?.consensus && (
           <span
-            className={`text-xs px-2 py-0.5 rounded-full ${
+            className={`text-lg px-4 py-1.5 rounded-full font-black ${
               currentRun.consensus === 'APPROVED'
                 ? 'text-green-400 bg-green-400/10'
                 : 'text-red-400 bg-red-400/10'
@@ -139,7 +135,7 @@ export default function ChainlinkActivityPanel({
         )}
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-0">
         {PIPELINE_STEPS.map((step, i) => {
           const colors = COLOR_MAP[step.color]
           const isActive = activeStep === i
@@ -149,7 +145,7 @@ export default function ChainlinkActivityPanel({
           return (
             <div
               key={i}
-              className={`flex items-start gap-3 rounded-lg p-2.5 transition-all duration-300 ${
+              className={`flex items-start gap-3 rounded-lg px-3 py-2 transition-all duration-300 ${
                 isActive
                   ? `${colors.bg} border ${colors.border} shadow-lg ${colors.glow}`
                   : isCompleted
@@ -158,19 +154,19 @@ export default function ChainlinkActivityPanel({
               }`}
             >
               {/* Step indicator */}
-              <div className="flex flex-col items-center mt-0.5">
+              <div className="flex flex-col items-center mt-1">
                 <div
                   className={`w-3 h-3 rounded-full transition-all duration-300 ${
                     isActive
                       ? `${colors.dot} animate-pulse scale-125`
                       : isCompleted
                         ? 'bg-gray-600'
-                        : 'bg-gray-800 border border-gray-700'
+                        : 'bg-gray-800 border-2 border-gray-700'
                   }`}
                 />
                 {i < PIPELINE_STEPS.length - 1 && (
                   <div
-                    className={`w-0.5 h-4 mt-0.5 transition-colors duration-300 ${
+                    className={`w-0.5 h-3 mt-0.5 transition-colors duration-300 ${
                       isCompleted ? 'bg-gray-700' : 'bg-gray-800'
                     }`}
                   />
@@ -181,19 +177,19 @@ export default function ChainlinkActivityPanel({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <span
-                    className={`text-xs font-semibold transition-colors duration-300 ${
+                    className={`text-base font-bold transition-colors duration-300 ${
                       isActive
                         ? colors.text
                         : isCompleted
-                          ? 'text-gray-400'
+                          ? 'text-gray-200'
                           : 'text-gray-600'
                     }`}
                   >
                     {step.label}
                   </span>
                   <span
-                    className={`font-mono text-[10px] transition-colors duration-300 ${
-                      isActive ? colors.text : 'text-gray-700'
+                    className={`font-mono text-sm transition-colors duration-300 ${
+                      isActive ? colors.text : 'text-gray-600'
                     }`}
                   >
                     {step.service}
@@ -201,8 +197,8 @@ export default function ChainlinkActivityPanel({
                 </div>
                 {(isActive || isCompleted) && (
                   <p
-                    className={`text-[11px] mt-0.5 transition-colors duration-300 ${
-                      isActive ? 'text-gray-300' : 'text-gray-600'
+                    className={`text-sm mt-0.5 transition-colors duration-300 ${
+                      isActive ? 'text-gray-300' : 'text-gray-500'
                     }`}
                   >
                     {isPending ? '' : step.desc}
@@ -210,7 +206,7 @@ export default function ChainlinkActivityPanel({
                 )}
                 {isActive && (
                   <code
-                    className={`text-[10px] ${colors.text} mt-0.5 block font-mono`}
+                    className={`text-sm ${colors.text} mt-0.5 block font-mono font-bold`}
                   >
                     {step.action}
                   </code>
@@ -223,8 +219,8 @@ export default function ChainlinkActivityPanel({
 
       {/* Confidential compute badge */}
       <div className="mt-3 pt-3 border-t border-gray-800">
-        <div className="flex items-center gap-2 text-[11px] text-orange-400/60">
-          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+        <div className="flex items-center gap-3 text-sm text-orange-400/70 font-medium">
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
               d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"

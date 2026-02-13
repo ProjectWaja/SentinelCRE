@@ -19,3 +19,30 @@
 .animate-verdict { animation: verdict-flash 0.4s ease-out; }
 .animate-slide-in { animation: slide-in 0.3s ease-out; }
 .animate-shield { animation: shield-pulse 2s ease-in-out infinite; }
+
+/* Drop zone glow animations for drag-and-drop simulator */
+@keyframes drop-zone-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  50% { box-shadow: 0 0 30px 8px rgba(59, 130, 246, 0.2); }
+}
+
+@keyframes drop-zone-glow-attack {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 30px 8px rgba(239, 68, 68, 0.3); }
+}
+
+@keyframes drop-zone-glow-safe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  50% { box-shadow: 0 0 30px 8px rgba(34, 197, 94, 0.3); }
+}
+
+@keyframes result-slam {
+  0% { opacity: 0; transform: scale(1.3); }
+  60% { opacity: 1; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-drop-glow { animation: drop-zone-glow 1.5s ease-in-out infinite; }
+.animate-drop-glow-attack { animation: drop-zone-glow-attack 1.5s ease-in-out infinite; }
+.animate-drop-glow-safe { animation: drop-zone-glow-safe 1.5s ease-in-out infinite; }
+.animate-result-slam { animation: result-slam 0.35s ease-out; }

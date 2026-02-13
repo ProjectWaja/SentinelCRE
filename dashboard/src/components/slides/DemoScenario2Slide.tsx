@@ -24,13 +24,13 @@ export default function DemoScenario2Slide() {
             <p className="text-sm text-gray-400 mb-2">Layer 1: AI Consensus</p>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-300">Model 1</span>
+                <span className="text-gray-300">Claude</span>
                 <span className="text-red-400 font-semibold">
                   DENIED (99%)
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-300">Model 2</span>
+                <span className="text-gray-300">GPT-4</span>
                 <span className="text-red-400 font-semibold">
                   DENIED (99%)
                 </span>

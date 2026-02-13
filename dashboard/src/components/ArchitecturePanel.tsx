@@ -72,20 +72,20 @@ const CONTRACTS = [
 export default function ArchitecturePanel() {
   return (
     <div className="space-y-6">
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">
+      <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8">
+        <h2 className="text-2xl font-black text-white mb-6">
           Chainlink Services
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {SERVICES.map((s) => (
             <div
               key={s.name}
-              className={`${s.bg} rounded-lg p-4 border ${s.border}`}
+              className={`${s.bg} rounded-xl p-5 border ${s.border}`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <h3 className={`font-medium ${s.color}`}>{s.name}</h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className={`text-lg font-bold ${s.color}`}>{s.name}</h3>
                 <span
-                  className={`text-xs px-1.5 py-0.5 rounded ${
+                  className={`text-sm px-2.5 py-1 rounded-full font-semibold ${
                     s.status === 'Real'
                       ? 'text-green-400 bg-green-400/10'
                       : 'text-yellow-400 bg-yellow-400/10'
@@ -94,79 +94,79 @@ export default function ArchitecturePanel() {
                   {s.status}
                 </span>
               </div>
-              <p className="text-xs text-gray-400">{s.desc}</p>
+              <p className="text-base text-gray-400">{s.desc}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">
+      <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8">
+        <h2 className="text-2xl font-black text-white mb-6">
           Smart Contracts
         </h2>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {CONTRACTS.map((c) => (
             <div
               key={c.name}
-              className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50 flex items-center justify-between"
+              className="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50 flex items-center justify-between"
             >
               <div>
-                <h3 className="font-mono text-sm text-white">{c.name}</h3>
-                <p className="text-xs text-gray-400">{c.desc}</p>
+                <h3 className="font-mono text-lg text-white font-semibold">{c.name}</h3>
+                <p className="text-base text-gray-400">{c.desc}</p>
               </div>
               {c.tests > 0 && (
-                <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded">
+                <span className="text-sm text-green-400 bg-green-400/10 px-3 py-1.5 rounded-full font-semibold">
                   {c.tests} tests
                 </span>
               )}
             </div>
           ))}
         </div>
-        <div className="mt-4 text-center">
-          <span className="text-sm font-semibold text-green-400">
+        <div className="mt-5 text-center">
+          <span className="text-lg font-bold text-green-400">
             61 tests passing
           </span>
-          <span className="text-sm text-gray-500"> across 3 test suites</span>
+          <span className="text-lg text-gray-500"> across 3 test suites</span>
         </div>
       </div>
 
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">
+      <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8">
+        <h2 className="text-2xl font-black text-white mb-6">
           Verdict Pipeline
         </h2>
-        <div className="font-mono text-xs text-gray-400 leading-relaxed space-y-1">
+        <div className="font-mono text-base text-gray-400 leading-relaxed space-y-2">
           <p>
-            <span className="text-blue-400">1.</span> AI Agent proposes action
+            <span className="text-blue-400 font-bold">1.</span> AI Agent proposes action
           </p>
-          <p className="text-gray-600">{'   ↓'}</p>
+          <p className="text-gray-600 pl-4">{'↓'}</p>
           <p>
-            <span className="text-blue-400">2.</span> CRE HTTP Trigger receives
+            <span className="text-blue-400 font-bold">2.</span> CRE HTTP Trigger receives
             proposal
           </p>
-          <p className="text-gray-600">{'   ↓'}</p>
+          <p className="text-gray-600 pl-4">{'↓'}</p>
           <p>
-            <span className="text-cyan-400">3.</span> EVMClient reads agent
+            <span className="text-cyan-400 font-bold">3.</span> EVMClient reads agent
             policy from SentinelGuardian
           </p>
-          <p className="text-gray-600">{'   ↓'}</p>
+          <p className="text-gray-600 pl-4">{'↓'}</p>
           <p>
-            <span className="text-purple-400">4.</span> HTTPClient calls AI
-            Model 1 + AI Model 2
+            <span className="text-purple-400 font-bold">4.</span> HTTPClient calls AI
+            Claude + GPT-4
           </p>
-          <p className="text-gray-600">{'   ↓'}</p>
+          <p className="text-gray-600 pl-4">{'↓'}</p>
           <p>
-            <span className="text-yellow-400">5.</span> Consensus: Both models
+            <span className="text-yellow-400 font-bold">5.</span> Consensus: Both models
             must APPROVE
           </p>
-          <p className="text-gray-600">{'   ↓'}</p>
+          <p className="text-gray-600 pl-4">{'↓'}</p>
           <p>
-            <span className="text-green-400">6a.</span>{' '}
-            <span className="text-green-400">APPROVED</span> → On-chain policy
+            <span className="text-green-400 font-bold">6a.</span>{' '}
+            <span className="text-green-400 font-bold">APPROVED</span> → On-chain policy
             check → forward action
           </p>
           <p>
-            <span className="text-red-400">6b.</span>{' '}
-            <span className="text-red-400">DENIED</span> → Circuit breaker →
+            <span className="text-red-400 font-bold">6b.</span>{' '}
+            <span className="text-red-400 font-bold">DENIED</span> → Circuit breaker →
             agent frozen → incident logged
           </p>
         </div>
