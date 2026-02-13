@@ -38,7 +38,8 @@ contract ChallengeTest is Test {
             requireMultiAiConsensus: true,
             isActive: true,
             reserveFeed: address(0),
-            minReserveRatio: 0
+            minReserveRatio: 0,
+            maxStaleness: 0
         });
     }
 

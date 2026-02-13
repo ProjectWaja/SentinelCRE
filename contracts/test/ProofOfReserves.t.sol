@@ -36,7 +36,8 @@ contract ProofOfReservesTest is Test {
             requireMultiAiConsensus: true,
             isActive: true,
             reserveFeed: feed,
-            minReserveRatio: 10000 // 100% collateralization
+            minReserveRatio: 10000, // 100% collateralization
+            maxStaleness: 0
         });
     }
 

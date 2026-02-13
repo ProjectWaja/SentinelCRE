@@ -45,7 +45,8 @@ contract Deploy is Script {
             requireMultiAiConsensus: true,
             isActive: true,
             reserveFeed: address(0),
-            minReserveRatio: 0
+            minReserveRatio: 0,
+            maxStaleness: 0
         });
 
         guardian.registerAgent(tradingAgentId, tradingPolicy);
@@ -67,7 +68,8 @@ contract Deploy is Script {
             requireMultiAiConsensus: true,
             isActive: true,
             reserveFeed: address(0),
-            minReserveRatio: 0
+            minReserveRatio: 0,
+            maxStaleness: 0
         });
 
         guardian.registerAgent(mintingAgentId, mintingPolicy);
