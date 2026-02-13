@@ -1,17 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity 0.8.24;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {AgentPolicy, CheckParams, PolicyLib} from "./libraries/PolicyLib.sol";
 import {Severity, ChallengeStatus, ChallengeWindow} from "./interfaces/IChallenge.sol";
-
-/// @notice State of a registered AI agent
-enum AgentState {
-    Active,
-    Frozen,
-    Revoked
-}
+import {AgentState, ISentinelGuardian} from "./interfaces/ISentinelGuardian.sol";
 
 /// @notice Classification of security incidents
 enum IncidentType {
@@ -34,7 +28,7 @@ struct IncidentLog {
 
 /// @title SentinelGuardian — AI agent guardian with policy enforcement and circuit breakers
 /// @notice Receives verdicts from CRE workflows and either approves or blocks agent actions
-contract SentinelGuardian is AccessControl, Pausable {
+contract SentinelGuardian is AccessControl, Pausable, ISentinelGuardian {
     using PolicyLib for AgentPolicy;
 
     // =========================================================================
@@ -384,8 +378,8 @@ contract SentinelGuardian is AccessControl, Pausable {
         emit CircuitBreakerTriggered(agentId, reason, iType, block.timestamp);
         emit AgentFrozen(agentId, block.timestamp);
 
-        if (sev != Severity.Critical) {
-            // Create challenge window — agent can appeal
+        if (sev != Severity.Critical && _challenges[agentId].status != ChallengeStatus.Appealed) {
+            // Create challenge window — agent can appeal (skip if active appeal in progress)
             uint256 duration = sev == Severity.Low ? LOW_WINDOW : MEDIUM_WINDOW;
             _challenges[agentId] = ChallengeWindow({
                 agentId: agentId,
