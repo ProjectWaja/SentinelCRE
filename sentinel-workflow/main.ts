@@ -36,6 +36,7 @@ import {
   type HandlerEntry,
 } from '@chainlink/cre-sdk'
 
+import { analyzeAll, getDefaultContext, type BehaviorContext, type BehavioralAnalysisResult } from './behavioral'
 import { z } from 'zod'
 import {
   type Address,
@@ -73,6 +74,11 @@ interface ActionProposal {
   mintAmount: string // token units as string
   calldata: string // full calldata hex
   description: string // human-readable action description
+  // Behavioral context (optional, provided by caller for stateful analysis)
+  recentValues?: number[] // recent tx values in ETH
+  recentTimestamps?: number[] // recent tx timestamps in ms
+  knownContracts?: string[] // contracts agent has used before
+  commonFunctions?: string[] // function sigs agent commonly uses
 }
 
 interface AIVerdict {
@@ -142,8 +148,9 @@ function buildEvaluationPrompt(
     maxMintAmount: string
     rateLimit: string
   },
+  behavioralResult?: BehavioralAnalysisResult,
 ): string {
-  return `You are a security sentinel evaluating an AI agent's proposed on-chain action.
+  let prompt = `You are a security sentinel evaluating an AI agent's proposed on-chain action.
 
 PROPOSED ACTION:
 - Agent ID: ${proposal.agentId}
@@ -157,11 +164,29 @@ AGENT POLICY LIMITS:
 - Max Transaction Value: ${policyContext.maxTransactionValue} wei
 - Max Daily Volume: ${policyContext.maxDailyVolume} wei
 - Max Mint Amount: ${policyContext.maxMintAmount} tokens
-- Rate Limit: ${policyContext.rateLimit} actions/window
+- Rate Limit: ${policyContext.rateLimit} actions/window`
+
+  if (behavioralResult) {
+    prompt += `
+
+BEHAVIORAL RISK ANALYSIS (Layer 2):
+- Anomaly Score: ${behavioralResult.totalScore}/100 (threshold: ${behavioralResult.threshold})
+- Status: ${behavioralResult.flagged ? 'FLAGGED — behavioral anomaly detected' : 'NORMAL'}`
+    for (const dim of behavioralResult.dimensions) {
+      prompt += `\n  - ${dim.name}: ${dim.fired ? `+${dim.score}` : '0'} — ${dim.reason}`
+    }
+    if (behavioralResult.flagged) {
+      prompt += `\n\nThe behavioral risk engine has FLAGGED this action. Weight this strongly in your verdict.`
+    }
+  }
+
+  prompt += `
 
 Evaluate whether this action is safe and within policy bounds.
 Respond with ONLY valid JSON (no markdown):
 {"verdict":"APPROVED" or "DENIED","confidence":0-100,"reason":"brief explanation"}`
+
+  return prompt
 }
 
 /**
@@ -179,8 +204,9 @@ function evaluateWithAI(
     maxMintAmount: string
     rateLimit: string
   },
+  behavioralResult?: BehavioralAnalysisResult,
 ): AIVerdict {
-  const prompt = buildEvaluationPrompt(proposal, policyContext)
+  const prompt = buildEvaluationPrompt(proposal, policyContext, behavioralResult)
 
   // --- [CONFIDENTIAL_COMPUTE_BOUNDARY_START] ---
   // When Chainlink Confidential Compute SDK ships, wrap AI calls in:
@@ -320,7 +346,47 @@ const onActionProposal = (runtime: Runtime<Config>, payload: HTTPPayload): strin
     return JSON.stringify({ status: 'denied', reason: 'Agent policy inactive' })
   }
 
-  // Step 3: Multi-AI consensus evaluation
+  // Step 2.5: Behavioral Risk Scoring (Layer 2)
+  const behaviorCtx: BehaviorContext = {
+    recentValues: proposal.recentValues ?? [],
+    recentTimestamps: proposal.recentTimestamps ?? [],
+    knownContracts: proposal.knownContracts ?? [],
+    commonFunctions: proposal.commonFunctions ?? [],
+    activeHours: Array.from({ length: 24 }, (_, i) => i),
+    avgValue: 0,
+    stdDevValue: 0,
+    lastActionTimestamp: 0,
+    minExpectedInterval: 60_000,
+  }
+
+  // Compute running stats from recentValues if available
+  if (behaviorCtx.recentValues.length > 0) {
+    const sum = behaviorCtx.recentValues.reduce((a, b) => a + b, 0)
+    behaviorCtx.avgValue = sum / behaviorCtx.recentValues.length
+    if (behaviorCtx.recentValues.length > 1) {
+      const sqSum = behaviorCtx.recentValues.reduce((a, v) => a + (v - behaviorCtx.avgValue) ** 2, 0)
+      behaviorCtx.stdDevValue = Math.sqrt(sqSum / behaviorCtx.recentValues.length)
+    }
+  }
+
+  if (behaviorCtx.recentTimestamps.length > 0) {
+    behaviorCtx.lastActionTimestamp = behaviorCtx.recentTimestamps[behaviorCtx.recentTimestamps.length - 1]
+  }
+
+  const behavioralResult = analyzeAll(proposal, behaviorCtx, now.getTime(), 50)
+
+  runtime.log(`[SentinelCRE] Behavioral Score: ${behavioralResult.totalScore}/100 (threshold: ${behavioralResult.threshold})`)
+  for (const dim of behavioralResult.dimensions) {
+    if (dim.fired) {
+      runtime.log(`[SentinelCRE]   +${dim.score} ${dim.name}: ${dim.reason}`)
+    }
+  }
+
+  if (behavioralResult.flagged) {
+    runtime.log(`[SentinelCRE] FLAGGED by behavioral analysis — biasing toward denial`)
+  }
+
+  // Step 3: Multi-AI consensus evaluation (enriched with behavioral context)
   const httpClient = new HTTPClient()
   const policyContext = {
     maxTransactionValue: maxTxValue.toString(),
@@ -333,7 +399,7 @@ const onActionProposal = (runtime: Runtime<Config>, payload: HTTPPayload): strin
     .sendRequest(
       runtime,
       (sendRequester: HTTPSendRequester) =>
-        evaluateWithAI(sendRequester, config, proposal, policyContext),
+        evaluateWithAI(sendRequester, config, proposal, policyContext, behavioralResult),
       ConsensusAggregationByFields<AIVerdict>({
         verdict: identical,
         confidence: median,
@@ -385,6 +451,9 @@ const onActionProposal = (runtime: Runtime<Config>, payload: HTTPPayload): strin
     verdict: aiVerdict.verdict,
     confidence: aiVerdict.confidence,
     reason: aiVerdict.reason,
+    anomalyScore: behavioralResult.totalScore,
+    anomalyFlagged: behavioralResult.flagged,
+    anomalyDimensions: behavioralResult.dimensions,
   })
 }
 

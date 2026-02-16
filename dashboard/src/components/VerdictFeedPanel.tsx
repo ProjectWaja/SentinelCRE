@@ -119,6 +119,17 @@ export default function VerdictFeedPanel({
                             {sevStyle.label} Severity
                           </span>
                         )}
+                        {v.anomalyScore != null && (
+                          <span
+                            className={`px-3 py-1 rounded border font-bold ${
+                              v.anomalyFlagged
+                                ? 'bg-orange-400/10 text-orange-400 border-orange-400/30'
+                                : 'bg-gray-700/50 text-gray-400 border-gray-600/30'
+                            }`}
+                          >
+                            Risk: {v.anomalyScore}/100
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-gray-500 mt-2">
                         {v.model1.reason}

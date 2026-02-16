@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { DEMO_SCENARIOS, SAFE_SCENARIO, type DemoScenario, type VerdictResult } from '@/lib/demo-scenarios'
+import { DEMO_SCENARIOS, SAFE_SCENARIOS, type DemoScenario, type VerdictResult } from '@/lib/demo-scenarios'
 import { evaluateAction } from '@/lib/mock-api'
 
 type RunState = 'idle' | 'running' | 'done' | 'waiting'
@@ -30,7 +30,7 @@ export default function ScenarioDemoPanel({
   const [nextScenarioName, setNextScenarioName] = useState<string | null>(null)
   const continueRef = useRef<(() => void) | null>(null)
 
-  const allScenarios = [SAFE_SCENARIO, ...DEMO_SCENARIOS]
+  const allScenarios = [...SAFE_SCENARIOS, ...DEMO_SCENARIOS]
 
   const runScenario = useCallback(async (scenario: DemoScenario) => {
     setActiveScenario(scenario)
@@ -74,7 +74,7 @@ export default function ScenarioDemoPanel({
     setRunningAll(true)
     setCompletedIds(new Set())
 
-    const all = [SAFE_SCENARIO, ...DEMO_SCENARIOS]
+    const all = [...SAFE_SCENARIOS, ...DEMO_SCENARIOS]
 
     for (let idx = 0; idx < all.length; idx++) {
       await runScenario(all[idx])
@@ -95,9 +95,9 @@ export default function ScenarioDemoPanel({
       <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-4xl font-black text-white">Attack Scenarios</h2>
+            <h2 className="text-4xl font-black text-white">Live Defense Demo</h2>
             <p className="text-2xl text-gray-400 mt-2">
-              5 real-world attack vectors — each blocked by SentinelCRE&apos;s defense layers
+              3 baseline operations train the system, then 11 escalating attacks test it
             </p>
           </div>
           {runningAll && runState === 'waiting' ? (
@@ -134,29 +134,84 @@ export default function ScenarioDemoPanel({
         </div>
       </div>
 
-      {/* Scenario Cards */}
+      {/* Scenario Cards with Phase Dividers */}
       <div className="space-y-5">
-        {allScenarios.map((scenario) => {
+        {allScenarios.map((scenario, idx) => {
           const isActive = activeScenario?.id === scenario.id
           const isCompleted = completedIds.has(scenario.id)
-          const isBaseline = scenario.id === 0
+          const isBaseline = scenario.id <= 0
           const sev = SEVERITY_BADGE[scenario.severity]
 
           return (
-            <div
-              key={scenario.id}
-              className={`bg-gray-900 rounded-2xl border-2 transition-all duration-300 ${
-                isActive && runState === 'running'
-                  ? 'border-yellow-500/50 shadow-2xl shadow-yellow-500/10'
-                  : isActive && (runState === 'done' || runState === 'waiting')
-                    ? verdict?.consensus === 'APPROVED'
-                      ? 'border-green-500/50 shadow-2xl shadow-green-500/10'
-                      : 'border-red-500/50 shadow-2xl shadow-red-500/10'
-                    : isCompleted
-                      ? 'border-gray-700'
-                      : 'border-gray-800'
-              }`}
-            >
+            <div key={scenario.id}>
+              {/* Phase 1 header — before first baseline */}
+              {idx === 0 && (
+                <div className="bg-green-900/20 rounded-2xl border border-green-500/20 p-5 mb-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-green-400/20 flex items-center justify-center shrink-0">
+                      <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-green-400 uppercase tracking-widest">Phase 1: Training Baseline</h3>
+                      <p className="text-lg text-green-400/60 mt-0.5">
+                        Normal operations establish what &quot;good behavior&quot; looks like — the system learns each agent&apos;s patterns
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Phase 2 header — before first attack */}
+              {scenario.id === 1 && (
+                <div className="bg-red-900/20 rounded-2xl border border-red-500/20 p-5 mb-5 mt-3">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-red-400/20 flex items-center justify-center shrink-0">
+                      <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-red-400 uppercase tracking-widest">Phase 2: Attack Escalation</h3>
+                      <p className="text-lg text-red-400/60 mt-0.5">
+                        Attacks escalate from obvious policy violations to sophisticated behavioral exploits that bypass traditional security
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tier sub-headers within attacks */}
+              {scenario.id === 5 && (
+                <div className="flex items-center gap-3 px-4 py-2 mb-3">
+                  <div className="flex-1 h-px bg-orange-400/20" />
+                  <span className="text-sm font-black text-orange-400/60 uppercase tracking-widest">Subtle Attacks — Pass Policy, Caught by Behavior</span>
+                  <div className="flex-1 h-px bg-orange-400/20" />
+                </div>
+              )}
+              {scenario.id === 9 && (
+                <div className="flex items-center gap-3 px-4 py-2 mb-3">
+                  <div className="flex-1 h-px bg-purple-400/20" />
+                  <span className="text-sm font-black text-purple-400/60 uppercase tracking-widest">Advanced Attacks — Would Fool Traditional Security</span>
+                  <div className="flex-1 h-px bg-purple-400/20" />
+                </div>
+              )}
+
+              {/* Scenario Card */}
+              <div
+                className={`bg-gray-900 rounded-2xl border-2 transition-all duration-300 ${
+                  isActive && runState === 'running'
+                    ? 'border-yellow-500/50 shadow-2xl shadow-yellow-500/10'
+                    : isActive && (runState === 'done' || runState === 'waiting')
+                      ? verdict?.consensus === 'APPROVED'
+                        ? 'border-green-500/50 shadow-2xl shadow-green-500/10'
+                        : 'border-red-500/50 shadow-2xl shadow-red-500/10'
+                      : isCompleted
+                        ? 'border-gray-700'
+                        : 'border-gray-800'
+                }`}
+              >
               <div className="p-6">
                 <div className="flex items-start justify-between gap-8">
                   <div className="flex-1">
@@ -343,10 +398,60 @@ export default function ScenarioDemoPanel({
                             <p className="text-sm text-gray-400 leading-snug">{verdict.model2.reason}</p>
                           </div>
                         </div>
+
+                        {/* Behavioral Risk Analysis (Layer 2) */}
+                        {verdict.anomalyScore != null && (
+                          <div className="mt-3 pt-3 border-t border-gray-700/50">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-3">
+                                <span className="text-base font-black text-orange-400 uppercase tracking-widest">
+                                  Behavioral Risk
+                                </span>
+                                <span className={`text-base px-3 py-1 rounded-full font-bold ${
+                                  verdict.anomalyFlagged
+                                    ? 'bg-red-400/10 text-red-400 border border-red-400/30'
+                                    : 'bg-green-400/10 text-green-400 border border-green-400/30'
+                                }`}>
+                                  {verdict.anomalyFlagged ? 'FLAGGED' : 'NORMAL'}
+                                </span>
+                              </div>
+                              <span className={`text-2xl font-black ${
+                                verdict.anomalyScore >= 50 ? 'text-red-400' : verdict.anomalyScore >= 25 ? 'text-orange-400' : 'text-green-400'
+                              }`}>
+                                {verdict.anomalyScore}/100
+                              </span>
+                            </div>
+                            {verdict.anomalyDimensions && verdict.anomalyDimensions.length > 0 && (
+                              <div className="space-y-1.5">
+                                {verdict.anomalyDimensions.map((dim, idx) => (
+                                  <div key={idx} className="flex items-center gap-3">
+                                    <div className="w-28 shrink-0">
+                                      <span className={`text-sm font-semibold ${dim.fired ? 'text-orange-400' : 'text-gray-600'}`}>
+                                        {dim.name}
+                                      </span>
+                                    </div>
+                                    <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+                                      <div
+                                        className={`h-full rounded-full transition-all duration-500 ${
+                                          dim.fired ? 'bg-orange-400' : 'bg-gray-700'
+                                        }`}
+                                        style={{ width: `${(dim.score / dim.maxWeight) * 100}%` }}
+                                      />
+                                    </div>
+                                    <span className={`text-sm font-bold w-10 text-right ${dim.fired ? 'text-orange-400' : 'text-gray-700'}`}>
+                                      {dim.fired ? `+${dim.score}` : '0'}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 )}
+                </div>
               </div>
             </div>
           )
