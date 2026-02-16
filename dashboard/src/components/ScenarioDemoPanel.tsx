@@ -105,8 +105,9 @@ export default function ScenarioDemoPanel({
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-4xl font-black text-white">Live Defense Demo</h2>
-            <p className="text-2xl text-gray-400 mt-2">
-              3 baselines train the system, 5 obvious attacks test policy, then 6 edge cases prove behavioral analysis
+            <p className="text-xl text-gray-400 mt-2">
+              3 baselines train the system, 5 obvious attacks test policy, then 6 edge cases prove behavioral analysis.
+              Every verdict flows through the Chainlink CRE pipeline in real-time.
             </p>
           </div>
           {runningAll && runState === 'waiting' ? (
@@ -395,7 +396,7 @@ export default function ScenarioDemoPanel({
                               </span>
                               <span className="text-sm text-gray-500 font-bold">{verdict.model1.confidence}%</span>
                             </div>
-                            <p className="text-sm text-gray-400 leading-snug">{verdict.model1.reason}</p>
+                            <p className="text-base text-gray-400 leading-snug">{verdict.model1.reason}</p>
                           </div>
                           <div className={`p-3 rounded-lg ${
                             verdict.model2.verdict === 'APPROVED' ? 'bg-green-400/5' : 'bg-red-400/5'
@@ -407,7 +408,7 @@ export default function ScenarioDemoPanel({
                               </span>
                               <span className="text-sm text-gray-500 font-bold">{verdict.model2.confidence}%</span>
                             </div>
-                            <p className="text-sm text-gray-400 leading-snug">{verdict.model2.reason}</p>
+                            <p className="text-base text-gray-400 leading-snug">{verdict.model2.reason}</p>
                           </div>
                         </div>
 

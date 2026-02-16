@@ -14,7 +14,7 @@ import BehavioralTrainingPanel from '@/components/simulator/BehavioralTrainingPa
 import type { VerdictResult } from '@/lib/demo-scenarios'
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('architecture')
+  const [activeTab, setActiveTab] = useState('demo')
   const { data } = useSentinelData()
   const { verdicts, addVerdict, clearVerdicts } = useVerdictHistory()
   const [currentRun, setCurrentRun] = useState<PipelineRun | null>(null)
@@ -75,14 +75,19 @@ export default function Home() {
       <div className="w-full px-6 xl:px-10 py-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-4xl font-black text-white">
-              Guardian Dashboard
-            </h1>
-            <p className="text-xl text-gray-500 mt-1">
-              Monitor AI agent activity and security incidents
+            <div className="flex items-center gap-4 mb-1">
+              <h1 className="text-4xl font-black text-white">
+                SentinelCRE
+              </h1>
+              <span className="text-base font-bold text-blue-400 bg-blue-400/10 px-4 py-1.5 rounded-full border border-blue-400/30">
+                Built on Chainlink CRE
+              </span>
+            </div>
+            <p className="text-xl text-gray-400 mt-1">
+              Decentralized AI guardian that blocks autonomous agent exploits before they execute &mdash; 3-layer defense, dual-AI consensus, 7-dimension behavioral scoring
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 shrink-0">
             <span
               className={`flex items-center gap-2.5 text-base px-4 py-2 rounded-full font-semibold ${
                 data.apiHealthy

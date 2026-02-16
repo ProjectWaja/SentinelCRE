@@ -3,22 +3,15 @@
 interface Tab {
   id: string
   label: string
+  desc: string
   icon: React.ReactNode
 }
 
 const TABS: Tab[] = [
   {
-    id: 'architecture',
-    label: 'Architecture',
-    icon: (
-      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
-      </svg>
-    ),
-  },
-  {
     id: 'demo',
-    label: 'Demo',
+    label: 'Live Demo',
+    desc: '14 attack scenarios',
     icon: (
       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path
@@ -30,8 +23,19 @@ const TABS: Tab[] = [
     ),
   },
   {
+    id: 'architecture',
+    label: 'Architecture',
+    desc: '3-layer defense',
+    icon: (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+      </svg>
+    ),
+  },
+  {
     id: 'guardian',
     label: 'Guardian',
+    desc: 'Agent monitoring',
     icon: (
       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path
@@ -45,6 +49,7 @@ const TABS: Tab[] = [
   {
     id: 'simulator',
     label: 'Simulator',
+    desc: 'Training ground',
     icon: (
       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path
@@ -67,7 +72,7 @@ export default function TabNavigation({
   return (
     <div className="sticky top-20 z-40 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800">
       <div className="w-full px-6 xl:px-10">
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -80,6 +85,11 @@ export default function TabNavigation({
             >
               <span className="w-5 h-5">{tab.icon}</span>
               {tab.label}
+              <span className={`text-sm font-normal ${
+                activeTab === tab.id ? 'text-red-400/50' : 'text-gray-600'
+              }`}>
+                {tab.desc}
+              </span>
               {activeTab === tab.id && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500 rounded-full" />
               )}

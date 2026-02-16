@@ -52,7 +52,7 @@ function getBarColor(score: number): string {
 function BehavioralSparkline({ verdicts }: { verdicts: VerdictEntry[] }) {
   if (verdicts.length === 0) {
     return (
-      <div className="flex items-center justify-center h-24 text-sm text-gray-600">
+      <div className="flex items-center justify-center h-24 text-base text-gray-600">
         Run demo scenarios to see behavioral trend
       </div>
     )
@@ -78,8 +78,8 @@ function BehavioralSparkline({ verdicts }: { verdicts: VerdictEntry[] }) {
         })}
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-xs text-green-400/60">Trusted</span>
-        <span className="text-xs text-red-400/60">Compromised</span>
+        <span className="text-sm text-green-400/60">Trusted</span>
+        <span className="text-sm text-red-400/60">Compromised</span>
       </div>
     </div>
   )
@@ -97,7 +97,7 @@ function ScenarioBadge({ scenarioId }: { scenarioId: number }) {
 
   return (
     <span
-      className={`inline-flex text-xs px-2 py-0.5 rounded-full border font-medium ${colors.text} ${colors.bg} ${colors.border}`}
+      className={`inline-flex text-sm px-2 py-0.5 rounded-full border font-medium ${colors.text} ${colors.bg} ${colors.border}`}
     >
       {shortTitle}
     </span>
@@ -131,13 +131,13 @@ function AgentCard({
       {/* 1. Header */}
       <div className="mb-4">
         <h3 className="text-2xl font-bold text-white">{profile.name}</h3>
-        <p className={`text-sm font-semibold ${profile.colorScheme.primary}`}>
+        <p className={`text-base font-semibold ${profile.colorScheme.primary}`}>
           {profile.role}
         </p>
       </div>
 
       {/* 2. Description */}
-      <p className="text-sm text-gray-400 leading-relaxed mb-4">
+      <p className="text-base text-gray-400 leading-relaxed mb-4">
         {profile.description}
       </p>
 
@@ -161,9 +161,9 @@ function AgentCard({
                 : 'bg-gray-800/50'
             }`}
           >
-            <p className="text-xs text-gray-500 mb-0.5">{item.label}</p>
+            <p className="text-sm text-gray-500 mb-0.5">{item.label}</p>
             <p
-              className={`text-sm ${
+              className={`text-base ${
                 item.emphasis
                   ? `${profile.colorScheme.primary} font-bold`
                   : 'text-gray-300'
@@ -193,7 +193,7 @@ function AgentCard({
 
       {/* 6. Behavioral Score Trend Sparkline */}
       <div className="mb-4">
-        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">
+        <p className="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-2">
           Behavioral Score Trend
         </p>
         <div className="bg-gray-800/40 rounded-lg p-3 border border-gray-700/50">
@@ -204,7 +204,7 @@ function AgentCard({
       {/* 7. Scenario Badges */}
       {profile.targetedScenarios.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">
+          <p className="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-2">
             Targeted Scenarios
           </p>
           <div className="flex flex-wrap gap-1.5">

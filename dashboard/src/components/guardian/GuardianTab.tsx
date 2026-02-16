@@ -33,13 +33,13 @@ function WalletInfoBar() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
           </div>
-          <h2 className="text-sm font-black text-white uppercase tracking-widest">
+          <h2 className="text-base font-black text-white uppercase tracking-widest">
             On-Chain Deployment
           </h2>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-xs font-bold text-purple-400 bg-purple-400/10 px-3 py-1 rounded-full border border-purple-400/30">
+          <span className="text-sm font-bold text-purple-400 bg-purple-400/10 px-3 py-1 rounded-full border border-purple-400/30">
             Tenderly Virtual Sepolia
           </span>
         </div>
@@ -53,10 +53,10 @@ function WalletInfoBar() {
             rel="noopener noreferrer"
             className="flex flex-col p-3 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:border-purple-500/30 transition-colors group"
           >
-            <span className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">
+            <span className="text-sm text-gray-500 font-bold uppercase tracking-wider mb-1">
               {w.label}
             </span>
-            <code className={`text-xs font-mono ${w.color} truncate group-hover:text-purple-400 transition-colors`}>
+            <code className={`text-sm font-mono ${w.color} truncate group-hover:text-purple-400 transition-colors`}>
               {w.address}
             </code>
           </a>
@@ -124,7 +124,7 @@ function SessionPerformance({ verdicts }: { verdicts: VerdictEntry[] }) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
         </div>
-        <h2 className="text-sm font-black text-white uppercase tracking-widest">
+        <h2 className="text-base font-black text-white uppercase tracking-widest">
           Session Performance
         </h2>
       </div>
@@ -133,10 +133,10 @@ function SessionPerformance({ verdicts }: { verdicts: VerdictEntry[] }) {
           <div key={m.label} className="bg-gray-800/50 rounded-lg border border-gray-700/50 p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className={m.color}>{m.icon}</span>
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{m.label}</span>
+              <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">{m.label}</span>
             </div>
             <p className={`text-2xl font-black ${m.color} leading-none mb-1`}>{m.value}</p>
-            <p className="text-xs text-gray-500">{m.sub}</p>
+            <p className="text-sm text-gray-500">{m.sub}</p>
           </div>
         ))}
       </div>
