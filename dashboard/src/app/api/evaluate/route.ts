@@ -20,6 +20,7 @@ export async function POST(request: Request) {
           targetContract: proposal.targetContract,
           functionSignature: proposal.functionSignature,
           value: proposal.value,
+          mintAmount: proposal.mintAmount,
           recentValues: proposal.recentValues,
         }),
       })
