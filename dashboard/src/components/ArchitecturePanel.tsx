@@ -385,7 +385,7 @@ function Section({
   return (
     <section
       id={id}
-      className={`bg-gray-900 rounded-2xl border border-gray-800 ${borderColor} border-l-4 p-6 sm:p-8 scroll-mt-20`}
+      className={`bg-gray-900 rounded-2xl border border-gray-800 ${borderColor} border-l-4 p-6 sm:p-8 scroll-mt-48`}
     >
       {children}
     </section>
@@ -415,7 +415,7 @@ export default function ArchitecturePanel() {
   return (
     <div className="space-y-6">
       {/* ─── Table of Contents ─── */}
-      <nav className="bg-gray-900/80 backdrop-blur-sm rounded-xl border border-gray-800 px-4 py-3 sticky top-0 z-10">
+      <nav className="bg-gray-900/80 backdrop-blur-sm rounded-xl border border-gray-800 px-4 py-3 sticky top-36 z-30">
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           <span className="text-gray-600 text-xs font-mono uppercase tracking-wider mr-2 shrink-0">Jump to:</span>
           {TOC.map((t) => (
