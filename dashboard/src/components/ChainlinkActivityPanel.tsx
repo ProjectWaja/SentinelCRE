@@ -27,20 +27,28 @@ const PIPELINE_STEPS = [
     delay: 400,
   },
   {
+    service: 'BehavioralEngine',
+    action: 'analyzeAll()',
+    label: 'Behavioral Risk Scoring',
+    desc: '6-dimension anomaly detection — probing, velocity, deviation',
+    color: 'orange',
+    delay: 700,
+  },
+  {
     service: 'HTTPClient',
     action: 'sendRequest()',
     label: 'AI Model 1',
-    desc: 'Call Claude (Model 1) for security evaluation',
+    desc: 'Call Claude (Model 1) with behavioral context injected',
     color: 'purple',
-    delay: 800,
+    delay: 1000,
   },
   {
     service: 'HTTPClient',
     action: 'sendRequest()',
     label: 'AI Model 2',
-    desc: 'Call GPT-4 (Model 2) for independent evaluation',
+    desc: 'Call GPT-4 (Model 2) with behavioral context injected',
     color: 'purple',
-    delay: 1000,
+    delay: 1200,
   },
   {
     service: 'ConsensusAggregation',
@@ -48,7 +56,7 @@ const PIPELINE_STEPS = [
     label: 'DON Consensus',
     desc: 'BFT consensus — all DON nodes must agree on verdict',
     color: 'yellow',
-    delay: 1400,
+    delay: 1600,
   },
   {
     service: 'EVMClient',
@@ -56,7 +64,7 @@ const PIPELINE_STEPS = [
     label: 'Write Verdict',
     desc: 'Submit signed verdict report to SentinelGuardian',
     color: 'green',
-    delay: 1800,
+    delay: 2000,
   },
   {
     service: 'SentinelGuardian',
@@ -64,13 +72,14 @@ const PIPELINE_STEPS = [
     label: 'On-Chain Policy',
     desc: 'PolicyLib.checkAll() — value, target, function, rate, mint',
     color: 'red',
-    delay: 2200,
+    delay: 2400,
   },
 ]
 
 const COLOR_MAP: Record<string, { dot: string; text: string; bg: string; border: string; glow: string }> = {
   blue: { dot: 'bg-blue-400', text: 'text-blue-400', bg: 'bg-blue-400/10', border: 'border-blue-400/30', glow: 'shadow-blue-400/20' },
   cyan: { dot: 'bg-cyan-400', text: 'text-cyan-400', bg: 'bg-cyan-400/10', border: 'border-cyan-400/30', glow: 'shadow-cyan-400/20' },
+  orange: { dot: 'bg-orange-400', text: 'text-orange-400', bg: 'bg-orange-400/10', border: 'border-orange-400/30', glow: 'shadow-orange-400/20' },
   purple: { dot: 'bg-purple-400', text: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/30', glow: 'shadow-purple-400/20' },
   yellow: { dot: 'bg-yellow-400', text: 'text-yellow-400', bg: 'bg-yellow-400/10', border: 'border-yellow-400/30', glow: 'shadow-yellow-400/20' },
   green: { dot: 'bg-green-400', text: 'text-green-400', bg: 'bg-green-400/10', border: 'border-green-400/30', glow: 'shadow-green-400/20' },

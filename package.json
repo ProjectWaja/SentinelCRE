@@ -11,6 +11,9 @@
     "mock-api": "bun run api-server/server.ts",
     "demo:normal": "bun run agent-simulator/normal-agent.ts",
     "demo:rogue": "bun run agent-simulator/rogue-agent.ts",
+    "demo:probing": "bun run agent-simulator/probing-agent.ts",
+    "demo:drift": "bun run agent-simulator/drift-agent.ts",
+    "behavioral:reset": "curl -X DELETE http://localhost:3002/behavioral/reset",
     "dashboard": "cd dashboard && bun run dev",
     "dashboard:build": "cd dashboard && bun run build"
   },

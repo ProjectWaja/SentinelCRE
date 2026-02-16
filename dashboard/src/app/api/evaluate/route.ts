@@ -9,7 +9,27 @@ export async function POST(request: Request) {
   try {
     const { proposal } = await request.json()
 
-    const prompt = `You are a security sentinel evaluating an AI agent's proposed on-chain action.
+    // Step 1: Behavioral analysis (Layer 2)
+    let behavioral: any = null
+    try {
+      const behavioralRes = await fetch(`${MOCK_API}/behavioral/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentId: proposal.agentId,
+          targetContract: proposal.targetContract,
+          functionSignature: proposal.functionSignature,
+          value: proposal.value,
+          recentValues: proposal.recentValues,
+        }),
+      })
+      behavioral = await behavioralRes.json()
+    } catch {
+      // Behavioral analysis is non-blocking — proceed without it
+    }
+
+    // Step 2: Build prompt with behavioral context
+    let prompt = `You are a security sentinel evaluating an AI agent's proposed on-chain action.
 
 PROPOSED ACTION:
 - Agent ID: ${proposal.agentId}
@@ -17,11 +37,28 @@ PROPOSED ACTION:
 - Function: ${proposal.functionSignature}
 - Value (wei): ${proposal.value}
 - Mint Amount: ${proposal.mintAmount}
-- Description: ${proposal.description}
+- Description: ${proposal.description}`
+
+    if (behavioral) {
+      prompt += `
+
+BEHAVIORAL RISK ANALYSIS (Layer 2):
+- Anomaly Score: ${behavioral.totalScore}/100 (threshold: ${behavioral.threshold})
+- Status: ${behavioral.flagged ? 'FLAGGED — behavioral anomaly detected' : 'NORMAL'}`
+      for (const dim of behavioral.dimensions ?? []) {
+        prompt += `\n  - ${dim.name}: ${dim.fired ? `+${dim.score}` : '0'} — ${dim.reason}`
+      }
+      if (behavioral.flagged) {
+        prompt += `\n\nThe behavioral risk engine has FLAGGED this action. Weight this strongly in your verdict.`
+      }
+    }
+
+    prompt += `
 
 Respond with ONLY valid JSON:
 {"verdict":"APPROVED" or "DENIED","confidence":0-100,"reason":"brief explanation"}`
 
+    // Step 3: Evaluate with both AI models
     const body = JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 300,
@@ -45,15 +82,30 @@ Respond with ONLY valid JSON:
     const r1 = await res1.json()
     const r2 = await res2.json()
 
-    const v1 = JSON.parse(r1.content[0].text)
-    const v2 = JSON.parse(r2.content[0].text)
+    const v1 = JSON.parse((r1 as any).content[0].text)
+    const v2 = JSON.parse((r2 as any).content[0].text)
 
     const consensus =
       v1.verdict === 'APPROVED' && v2.verdict === 'APPROVED'
         ? 'APPROVED'
         : 'DENIED'
 
-    // Compute severity for denied verdicts (mirrors on-chain classification)
+    // Step 4: Update behavioral profile
+    try {
+      await fetch(`${MOCK_API}/behavioral/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentId: proposal.agentId,
+          proposal,
+          verdict: consensus,
+        }),
+      })
+    } catch {
+      // Non-blocking
+    }
+
+    // Compute severity for denied verdicts
     let severity: 'LOW' | 'MEDIUM' | 'CRITICAL' | undefined
     let challengeWindowExpiry: number | undefined
     if (consensus === 'DENIED') {
@@ -67,12 +119,15 @@ Respond with ONLY valid JSON:
         (maxMint > 0n && mint > maxMint * 100n)
       ) {
         severity = 'CRITICAL'
-      } else if (maxValue > 0n && value > maxValue * 2n) {
+      } else if (
+        (maxValue > 0n && value > maxValue * 2n) ||
+        (behavioral?.flagged && behavioral?.totalScore >= 60)
+      ) {
         severity = 'MEDIUM'
-        challengeWindowExpiry = Date.now() + 1800 * 1000 // 30 min
+        challengeWindowExpiry = Date.now() + 1800 * 1000
       } else {
         severity = 'LOW'
-        challengeWindowExpiry = Date.now() + 3600 * 1000 // 1 hour
+        challengeWindowExpiry = Date.now() + 3600 * 1000
       }
     }
 
@@ -85,6 +140,9 @@ Respond with ONLY valid JSON:
       severity,
       challengeWindowExpiry,
       challengeStatus: severity && severity !== 'CRITICAL' ? 'PENDING' : undefined,
+      anomalyScore: behavioral?.totalScore ?? null,
+      anomalyFlagged: behavioral?.flagged ?? false,
+      anomalyDimensions: behavioral?.dimensions ?? null,
     })
   } catch (err) {
     return NextResponse.json(

@@ -68,6 +68,11 @@ async function simulateNormalAgent() {
   console.log(`Target DEX: ${APPROVED_DEX}`)
   console.log(`API: ${API_URL}\n`)
 
+  // Reset behavioral profiles for clean demo
+  await fetch(`${API_URL}/behavioral/reset`, { method: 'DELETE' }).catch(() => {})
+
+  const recentValues: number[] = []
+
   for (let i = 0; i < normalActions.length; i++) {
     const action = normalActions[i]
     console.log(`--- Action ${i + 1}/${normalActions.length} ---`)
@@ -75,42 +80,49 @@ async function simulateNormalAgent() {
     console.log(`Value: ${action.value} wei | Mint: ${action.mintAmount}`)
 
     try {
-      // Send to both evaluation models
+      // Step 1: Behavioral analysis
+      const behavioralRes = await fetch(`${API_URL}/behavioral/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentId: action.agentId,
+          targetContract: action.targetContract,
+          functionSignature: action.functionSignature,
+          value: action.value,
+          recentValues,
+        }),
+      }).catch(() => null)
+      const behavioral = behavioralRes ? await behavioralRes.json() as any : null
+
+      if (behavioral) {
+        console.log(`Behavioral Score: ${behavioral.totalScore}/100 ${behavioral.flagged ? '*** FLAGGED ***' : ''}`)
+      }
+
+      // Step 2: Build prompt with behavioral context
+      let prompt = `You are a security sentinel evaluating an AI agent's proposed on-chain action.\n\nPROPOSED ACTION:\n- Agent ID: ${action.agentId}\n- Target Contract: ${action.targetContract}\n- Function: ${action.functionSignature}\n- Value (wei): ${action.value}\n- Mint Amount: ${action.mintAmount}\n- Description: ${action.description}`
+
+      if (behavioral) {
+        prompt += `\n\nBEHAVIORAL RISK ANALYSIS (Layer 2):\n- Anomaly Score: ${behavioral.totalScore}/100 (threshold: ${behavioral.threshold})\n- Status: ${behavioral.flagged ? 'FLAGGED' : 'NORMAL'}`
+      }
+
+      prompt += `\n\nRespond with ONLY valid JSON:\n{"verdict":"APPROVED" or "DENIED","confidence":0-100,"reason":"brief explanation"}`
+
+      // Step 3: Send to both evaluation models
       const [res1, res2] = await Promise.all([
         fetch(`${API_URL}/evaluate/model1`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 300,
-            temperature: 0,
-            messages: [
-              {
-                role: 'user',
-                content: `You are a security sentinel evaluating an AI agent's proposed on-chain action.\n\nPROPOSED ACTION:\n- Agent ID: ${action.agentId}\n- Target Contract: ${action.targetContract}\n- Function: ${action.functionSignature}\n- Value (wei): ${action.value}\n- Mint Amount: ${action.mintAmount}\n- Description: ${action.description}\n\nRespond with ONLY valid JSON:\n{"verdict":"APPROVED" or "DENIED","confidence":0-100,"reason":"brief explanation"}`,
-              },
-            ],
-          }),
+          body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 300, temperature: 0, messages: [{ role: 'user', content: prompt }] }),
         }),
         fetch(`${API_URL}/evaluate/model2`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 300,
-            temperature: 0,
-            messages: [
-              {
-                role: 'user',
-                content: `You are a security sentinel evaluating an AI agent's proposed on-chain action.\n\nPROPOSED ACTION:\n- Agent ID: ${action.agentId}\n- Target Contract: ${action.targetContract}\n- Function: ${action.functionSignature}\n- Value (wei): ${action.value}\n- Mint Amount: ${action.mintAmount}\n- Description: ${action.description}\n\nRespond with ONLY valid JSON:\n{"verdict":"APPROVED" or "DENIED","confidence":0-100,"reason":"brief explanation"}`,
-              },
-            ],
-          }),
+          body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 300, temperature: 0, messages: [{ role: 'user', content: prompt }] }),
         }),
       ])
 
-      const result1 = await res1.json()
-      const result2 = await res2.json()
+      const result1 = await res1.json() as any
+      const result2 = await res2.json() as any
 
       const v1 = JSON.parse(result1.content[0].text)
       const v2 = JSON.parse(result2.content[0].text)
@@ -120,6 +132,18 @@ async function simulateNormalAgent() {
       console.log(`Model 1: ${v1.verdict} (${v1.confidence}%) — ${v1.reason}`)
       console.log(`Model 2: ${v2.verdict} (${v2.confidence}%) — ${v2.reason}`)
       console.log(`Consensus: ${consensus ? 'APPROVED' : 'DENIED'}`)
+
+      // Step 4: Update behavioral profile
+      if (consensus) {
+        const ethValue = Number(BigInt(action.value || '0')) / 1e18
+        if (ethValue > 0) recentValues.push(ethValue)
+        await fetch(`${API_URL}/behavioral/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agentId: action.agentId, proposal: action, verdict: 'APPROVED' }),
+        }).catch(() => {})
+      }
+
       console.log()
     } catch (err) {
       console.log(`ERROR: ${err}`)

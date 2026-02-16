@@ -5,14 +5,229 @@
  * Same input always produces same output (required for DON consensus).
  *
  * Endpoints:
- *   POST /evaluate/model1 — Mock Claude evaluation
- *   POST /evaluate/model2 — Mock second model evaluation
- *   GET  /health           — Server health check
+ *   POST /evaluate/model1        — Mock Claude evaluation
+ *   POST /evaluate/model2        — Mock second model evaluation
+ *   POST /challenge/evaluate     — Challenge re-evaluation (lenient)
+ *   POST /behavioral/analyze     — Compute anomaly scores for a proposal
+ *   POST /behavioral/update      — Update profile after verdict
+ *   GET  /behavioral/profile/:id — Get agent behavior profile
+ *   DELETE /behavioral/reset     — Reset all behavior profiles
+ *   GET  /health                 — Server health check
  *
  * Usage: bun run api-server/server.ts
  */
 
 const PORT = Number(process.env.MOCK_API_PORT ?? 3002)
+
+// ── Behavioral Profile Store ─────────────────────────────────────────
+
+interface BehaviorProfile {
+  avgValue: number
+  stdDevValue: number
+  knownContracts: string[]
+  commonFunctions: string[]
+  minExpectedInterval: number
+  activeHours: number[]
+  recentValues: number[]
+  lastActionTimestamp: number
+  actionCount: number
+  valueSum: number
+  valueSumSquares: number
+  /** Frozen origin baseline — set after first N actions, never updated */
+  originAvgValue: number
+  originStdDevValue: number
+  originFrozen: boolean
+  /** How many actions to observe before freezing origin */
+  originWindowSize: number
+}
+
+const agentProfiles = new Map<string, BehaviorProfile>()
+
+function getOrCreateProfile(agentId: string): BehaviorProfile {
+  if (!agentProfiles.has(agentId)) {
+    agentProfiles.set(agentId, {
+      avgValue: 0,
+      stdDevValue: 0,
+      knownContracts: [],
+      commonFunctions: [],
+      minExpectedInterval: 60_000,
+      activeHours: Array.from({ length: 24 }, (_, i) => i),
+      recentValues: [],
+      lastActionTimestamp: 0,
+      actionCount: 0,
+      valueSum: 0,
+      valueSumSquares: 0,
+      originAvgValue: 0,
+      originStdDevValue: 0,
+      originFrozen: false,
+      originWindowSize: 5,
+    })
+  }
+  return agentProfiles.get(agentId)!
+}
+
+interface AnomalyDim {
+  name: string
+  score: number
+  maxWeight: number
+  fired: boolean
+  reason: string
+}
+
+function computeBehavioralAnalysis(
+  agentId: string,
+  targetContract: string,
+  functionSig: string,
+  valueWei: string,
+  recentValuesOverride?: number[],
+): { totalScore: number; threshold: number; flagged: boolean; dimensions: AnomalyDim[] } {
+  const profile = getOrCreateProfile(agentId)
+  const currentValue = Number(BigInt(valueWei || '0')) / 1e18
+  const threshold = 50
+  const dims: AnomalyDim[] = []
+
+  // Dim 1: Value Deviation (+[REDACTED])
+  if (profile.avgValue === 0 && profile.stdDevValue === 0) {
+    dims.push({ name: 'Value Deviation', score: 0, maxWeight: 25, fired: false, reason: 'No baseline — first action' })
+  } else {
+    const sd = profile.stdDevValue > 0 ? profile.stdDevValue : profile.avgValue * 0.25
+    const z = sd > 0 ? Math.abs(currentValue - profile.avgValue) / sd : 0
+    if (z > 2.5) {
+      dims.push({ name: 'Value Deviation', score: 0, /* REDACTED */ maxWeight: 25, fired: true, reason: `Value ${currentValue.toFixed(2)} ETH is ${z.toFixed(1)}σ from mean ${profile.avgValue.toFixed(2)} ETH` })
+    } else if (z > 1.5) {
+      dims.push({ name: 'Value Deviation', score: 0, /* REDACTED */ maxWeight: 25, fired: true, reason: `Value ${currentValue.toFixed(2)} ETH is ${z.toFixed(1)}σ from mean (elevated)` })
+    } else {
+      dims.push({ name: 'Value Deviation', score: 0, maxWeight: 25, fired: false, reason: `Value within normal range (${z.toFixed(1)}σ)` })
+    }
+  }
+
+  // Dim 2: Contract Diversity (+[REDACTED])
+  const target = targetContract.toLowerCase()
+  if (profile.knownContracts.length === 0) {
+    dims.push({ name: 'Contract Diversity', score: 0, /* REDACTED */ maxWeight: 20, fired: true, reason: 'New agent — no contract history yet' })
+  } else if (!profile.knownContracts.includes(target)) {
+    dims.push({ name: 'Contract Diversity', score: 0, /* REDACTED */ maxWeight: 20, fired: true, reason: `First interaction with ${target.slice(0, 10)}...` })
+  } else {
+    dims.push({ name: 'Contract Diversity', score: 0, maxWeight: 20, fired: false, reason: 'Known contract' })
+  }
+
+  // Dim 3: Velocity (+[REDACTED]) — use timestamps, default to safe
+  const now = Date.now()
+  if (profile.lastActionTimestamp === 0) {
+    dims.push({ name: 'Velocity', score: 0, maxWeight: 15, fired: false, reason: 'First action — no interval' })
+  } else {
+    const interval = now - profile.lastActionTimestamp
+    if (interval < profile.minExpectedInterval * 0 /* REDACTED */) {
+      dims.push({ name: 'Velocity', score: 0, /* REDACTED */ maxWeight: 15, fired: true, reason: `Action ${(interval / 1000).toFixed(1)}s after previous` })
+    } else if (interval < profile.minExpectedInterval * 0 /* REDACTED */) {
+      dims.push({ name: 'Velocity', score: 0, /* REDACTED */ maxWeight: 15, fired: true, reason: `Interval elevated (${(interval / 1000).toFixed(1)}s)` })
+    } else {
+      dims.push({ name: 'Velocity', score: 0, maxWeight: 15, fired: false, reason: 'Normal interval' })
+    }
+  }
+
+  // Dim 4: Function Pattern (+[REDACTED])
+  const sig = functionSig.toLowerCase()
+  if (profile.commonFunctions.length === 0) {
+    dims.push({ name: 'Function Pattern', score: 0, maxWeight: 30, fired: false, reason: 'New agent — no function history' })
+  } else if (!profile.commonFunctions.includes(sig)) {
+    dims.push({ name: 'Function Pattern', score: 0, /* REDACTED */ maxWeight: 30, fired: true, reason: `Unusual function ${functionSig}` })
+  } else {
+    dims.push({ name: 'Function Pattern', score: 0, maxWeight: 30, fired: false, reason: 'Known function' })
+  }
+
+  // Dim 5: Time-of-Day (+[REDACTED])
+  const hour = new Date().getUTCHours()
+  if (profile.activeHours.length === 24 || profile.activeHours.includes(hour)) {
+    dims.push({ name: 'Time-of-Day', score: 0, maxWeight: 10, fired: false, reason: 'Within active hours' })
+  } else {
+    dims.push({ name: 'Time-of-Day', score: 0, /* REDACTED */ maxWeight: 10, fired: true, reason: `Action at ${hour}:00 UTC outside normal window` })
+  }
+
+  // Dim 6: Sequential Probing (+[REDACTED]) — the hero
+  const vals = [...(recentValuesOverride ?? profile.recentValues), currentValue]
+  if (vals.length < 2) {
+    dims.push({ name: 'Sequential Probing', score: 0, maxWeight: 35, fired: false, reason: 'Insufficient history' })
+  } else if (vals.length === 2) {
+    if (vals[1] > vals[0]) {
+      dims.push({ name: 'Sequential Probing', score: 0, /* REDACTED */ maxWeight: 35, fired: true, reason: `Two increasing: [${vals.map((v) => v.toFixed(1)).join(', ')}] — monitoring` })
+    } else {
+      dims.push({ name: 'Sequential Probing', score: 0, maxWeight: 35, fired: false, reason: 'No escalation' })
+    }
+  } else {
+    const w = vals.slice(-Math.min(vals.length, 5))
+    let mono = true
+    for (let i = 1; i < w.length; i++) {
+      if (w[i] <= w[i - 1]) { mono = false; break }
+    }
+    if (mono && w.length >= 3) {
+      const ratios = []
+      let geo = true
+      for (let i = 1; i < w.length; i++) {
+        const r = w[i] / w[i - 1]
+        ratios.push(r)
+        if (r < 1.5 || r > 3.0) geo = false
+      }
+      const vStr = w.map((v) => v.toFixed(1)).join(', ')
+      const reason = geo
+        ? `Binary search: [${vStr}] (ratios: ${ratios.map((r) => r.toFixed(1)).join(', ')})`
+        : `Monotonically increasing: [${vStr}] — probing detected`
+      dims.push({ name: 'Sequential Probing', score: 0, /* REDACTED */ maxWeight: 35, fired: true, reason })
+    } else {
+      dims.push({ name: 'Sequential Probing', score: 0, maxWeight: 35, fired: false, reason: 'No sequential pattern' })
+    }
+  }
+
+  // Dim 7: Cumulative Drift (+[REDACTED]) — the "boiling frog" defense
+  if (!profile.originFrozen || profile.originAvgValue === 0) {
+    dims.push({ name: 'Cumulative Drift', score: 0, maxWeight: 20, fired: false, reason: 'Origin baseline not yet established' })
+  } else {
+    const osd = profile.originStdDevValue > 0 ? profile.originStdDevValue : profile.originAvgValue * 0.25
+    const drift = Math.abs(profile.avgValue - profile.originAvgValue)
+    const driftRatio = osd > 0 ? drift / osd : 0
+    const pctDrift = profile.originAvgValue > 0 ? ((profile.avgValue - profile.originAvgValue) / profile.originAvgValue) * 100 : 0
+    const sign = pctDrift > 0 ? '+' : ''
+    if (driftRatio > 0 /* REDACTED */) {
+      dims.push({ name: 'Cumulative Drift', score: 0, /* REDACTED */ maxWeight: 20, fired: true, reason: `Rolling avg ${profile.avgValue.toFixed(2)} ETH drifted ${driftRatio.toFixed(1)}σ from origin ${profile.originAvgValue.toFixed(2)} ETH (${sign}${pctDrift.toFixed(0)}%)` })
+    } else if (driftRatio > 0 /* REDACTED */) {
+      dims.push({ name: 'Cumulative Drift', score: 0, /* REDACTED */ maxWeight: 20, fired: true, reason: `Gradual drift: avg ${profile.avgValue.toFixed(2)} ETH vs origin ${profile.originAvgValue.toFixed(2)} ETH (${sign}${pctDrift.toFixed(0)}%)` })
+    } else {
+      dims.push({ name: 'Cumulative Drift', score: 0, maxWeight: 20, fired: false, reason: `Stable — avg near origin ${profile.originAvgValue.toFixed(2)} ETH` })
+    }
+  }
+
+  const totalScore = dims.reduce((s, d) => s + d.score, 0)
+  return { totalScore, threshold, flagged: totalScore >= threshold, dimensions: dims }
+}
+
+function updateProfile(agentId: string, target: string, funcSig: string, valueWei: string) {
+  const profile = getOrCreateProfile(agentId)
+  const ethValue = Number(BigInt(valueWei || '0')) / 1e18
+
+  profile.actionCount++
+  profile.valueSum += ethValue
+  profile.valueSumSquares += ethValue * ethValue
+  profile.avgValue = profile.valueSum / profile.actionCount
+  profile.stdDevValue = profile.actionCount > 1
+    ? Math.sqrt((profile.valueSumSquares / profile.actionCount) - profile.avgValue ** 2)
+    : 0
+  profile.recentValues.push(ethValue)
+  if (profile.recentValues.length > 10) profile.recentValues.shift()
+  profile.lastActionTimestamp = Date.now()
+
+  // Freeze origin baseline after N actions — never updated after this
+  if (!profile.originFrozen && profile.actionCount >= profile.originWindowSize) {
+    profile.originAvgValue = profile.avgValue
+    profile.originStdDevValue = profile.stdDevValue
+    profile.originFrozen = true
+  }
+
+  const lTarget = target.toLowerCase()
+  if (!profile.knownContracts.includes(lTarget)) profile.knownContracts.push(lTarget)
+
+  const lSig = funcSig.toLowerCase()
+  if (!profile.commonFunctions.includes(lSig)) profile.commonFunctions.push(lSig)
+}
 
 // Thresholds for rogue detection (matches the default policy in tests)
 const ROGUE_THRESHOLDS = {
@@ -175,6 +390,20 @@ function evaluateAction(prompt: string): EvalResponse {
     }
   }
 
+  // Check for behavioral analysis flags in the prompt
+  if (lower.includes('behavioral risk analysis') && lower.includes('flagged')) {
+    // Extract anomaly score if present
+    const scoreMatch = prompt.match(/Anomaly Score:\s*(\d+)/i)
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : 60
+    if (score >= 50) {
+      return {
+        verdict: 'DENIED',
+        confidence: Math.min(90, 70 + Math.floor(score / 5)),
+        reason: `Behavioral anomaly detected — risk score ${score}/100 exceeds threshold`,
+      }
+    }
+  }
+
   // Normal action — approved
   return {
     verdict: 'APPROVED',
@@ -296,12 +525,61 @@ const server = Bun.serve({
       })
     }
 
+    // ── Behavioral Endpoints ────────────────────────────────────────
+
+    // Compute anomaly scores for a proposal
+    if (method === 'POST' && url.pathname === '/behavioral/analyze') {
+      const body = await req.json() as any
+      const result = computeBehavioralAnalysis(
+        body.agentId ?? '',
+        body.targetContract ?? '',
+        body.functionSignature ?? '',
+        body.value ?? '0',
+        body.recentValues,
+      )
+      return Response.json(result)
+    }
+
+    // Update profile after verdict (only approved actions update baseline)
+    if (method === 'POST' && url.pathname === '/behavioral/update') {
+      const body = await req.json() as any
+      const { agentId, proposal, verdict } = body
+      if (verdict === 'APPROVED' && proposal) {
+        updateProfile(
+          agentId ?? proposal.agentId ?? '',
+          proposal.targetContract ?? '',
+          proposal.functionSignature ?? '',
+          proposal.value ?? '0',
+        )
+      }
+      const profile = getOrCreateProfile(agentId ?? proposal?.agentId ?? '')
+      return Response.json({ updated: verdict === 'APPROVED', profile })
+    }
+
+    // Get agent behavior profile
+    if (method === 'GET' && url.pathname.startsWith('/behavioral/profile/')) {
+      const agentId = url.pathname.replace('/behavioral/profile/', '')
+      const profile = agentProfiles.get(agentId) ?? null
+      return Response.json({ agentId, exists: !!profile, profile })
+    }
+
+    // Reset all behavior profiles
+    if (method === 'DELETE' && url.pathname === '/behavioral/reset') {
+      const count = agentProfiles.size
+      agentProfiles.clear()
+      return Response.json({ reset: true, profilesCleared: count })
+    }
+
     return Response.json({ error: 'Not found' }, { status: 404 })
   },
 })
 
 console.log(`[SentinelCRE Mock API] Running on http://localhost:${server.port}`)
-console.log(`  POST /evaluate/model1     — Mock Claude evaluation`)
-console.log(`  POST /evaluate/model2     — Mock second model evaluation`)
-console.log(`  POST /challenge/evaluate  — Challenge re-evaluation (lenient)`)
-console.log(`  GET  /health              — Server health check`)
+console.log(`  POST /evaluate/model1        — Mock Claude evaluation`)
+console.log(`  POST /evaluate/model2        — Mock second model evaluation`)
+console.log(`  POST /challenge/evaluate     — Challenge re-evaluation (lenient)`)
+console.log(`  POST /behavioral/analyze     — Compute anomaly scores`)
+console.log(`  POST /behavioral/update      — Update profile after verdict`)
+console.log(`  GET  /behavioral/profile/:id — Get agent profile`)
+console.log(`  DELETE /behavioral/reset     — Reset all profiles`)
+console.log(`  GET  /health                 — Server health check`)
