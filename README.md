@@ -154,18 +154,18 @@ CRE's `ConsensusAggregationByFields` is the critical enabler. It ensures the dua
 
 ## Attack Coverage
 
-### Dashboard Demo: 3 Training Baselines + 11 Escalating Attacks
+### Dashboard Demo: 3 Phases — Train, Test, Prove
 
-The demo follows a narrative arc — safe operations train the behavioral engine, then attacks escalate from obvious to advanced:
+The demo follows a narrative arc across three phases — baseline operations train the system, obvious attacks validate policy enforcement, then edge cases prove behavioral analysis catches what traditional security misses:
 
-**Phase 1 — Training Baseline** (all APPROVED, establishes behavioral profile):
+**Phase 1 — Training Baseline** (all APPROVED — the system learns what "normal" looks like):
 | # | Scenario | Purpose |
 |---|----------|---------|
 | 1 | Normal Trade (0.5 ETH swap) | Establishes value baseline |
 | 2 | Normal Mint (500K tokens) | Establishes mint baseline |
 | 3 | Token Approval | Establishes contract interaction baseline |
 
-**Phase 2 — Attack Escalation** (all DENIED, showing detection depth):
+**Phase 2 — Policy Violations** (all DENIED — obvious attacks any risk system should catch):
 | # | Attack | Detection Method |
 |---|--------|-----------------|
 | 1 | Compromised Wallet Drain (100 ETH) | Value policy violation |
@@ -173,12 +173,19 @@ The demo follows a narrative arc — safe operations train the behavioral engine
 | 3 | Prompt Injection | Dual-AI independently detects injection |
 | 4 | Flash Loan + Oracle Manipulation | Target whitelist + value limit + AI |
 | 5 | Stealth Proxy Upgrade | Function blocklist (defense-in-depth) |
-| 6 | Sequential Probing (2→4→8 ETH) | Behavioral: Sequential Probing +35 |
-| 7 | Off-Hours Emergency Drain | Behavioral: Time-of-Day +10 |
-| 8 | Velocity Burst (16 rapid txns) | Behavioral: Velocity +15 |
-| 9 | Multi-Contract Scatter | Behavioral: Contract Diversity +20 |
-| 10 | Sybil Coordination (900K of 1M cap) | Behavioral: Value Deviation + AI |
-| 11 | Slow Drift Injection (0.5→2.5 ETH) | Behavioral: Cumulative Drift +20 |
+
+**Phase 3 — Edge Cases: Would Slip Traditional Security** (all DENIED — only behavioral risk scoring catches these):
+
+These attacks pass every policy check. Values are within limits, targets are approved, functions are whitelisted. Traditional rule-based systems would approve them all.
+
+| # | Attack | Why Traditional Security Misses It | How Behavioral Analysis Catches It |
+|---|--------|-----------------------------------|-----------------------------------|
+| 6 | Sequential Probing (2→4→8 ETH) | Each value is within the 1 ETH policy limit individually | Sequential Probing +35 — detects monotonically increasing binary search pattern |
+| 7 | Off-Hours Emergency Drain | 0.8 ETH on approved DEX with whitelisted function | Time-of-Day +10 — agent has never operated at 3 AM before |
+| 8 | Velocity Burst (16 rapid txns) | Each 0.1 ETH transaction passes all policy checks | Velocity +15 — action interval is 5x faster than agent's baseline |
+| 9 | Multi-Contract Scatter | Small 0.3 ETH value, legitimate function signature | Contract Diversity +20 — first-ever interaction with unknown contract |
+| 10 | Sybil Coordination (900K mint) | 900K is under the 1M policy cap | Value Deviation +25 — near-max value is statistically anomalous for this agent |
+| 11 | Slow Drift Injection (0.5→2.5 ETH) | Each step is within 1σ of the rolling average | Cumulative Drift +20 — rolling avg has drifted 400% from frozen origin baseline |
 
 ### CLI Simulators
 
