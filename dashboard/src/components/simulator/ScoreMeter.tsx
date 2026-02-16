@@ -65,9 +65,9 @@ export default function ScoreMeter({ score, maxScore = 100 }: ScoreMeterProps) {
       {/* Score Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-bold text-gray-300">Behavioral Risk Score</h3>
+          <h3 className="text-xl font-bold text-gray-300">Behavioral Risk Score</h3>
           <span
-            className={`px-3 py-1 rounded-full text-sm font-bold ${getStatusColor(score)} ${getStatusBg(score)}`}
+            className={`px-3 py-1 rounded-full text-base font-bold ${getStatusColor(score)} ${getStatusBg(score)}`}
           >
             {status}
           </span>
@@ -136,7 +136,7 @@ export default function ScoreMeter({ score, maxScore = 100 }: ScoreMeterProps) {
       </div>
 
       {/* Scale labels */}
-      <div className="flex justify-between mt-2 text-xs font-semibold">
+      <div className="flex justify-between mt-2 text-sm font-semibold">
         <span className="text-green-500">0</span>
         <span className="text-yellow-500">25</span>
         <span className="text-white/50 relative" style={{ left: '0%' }}>

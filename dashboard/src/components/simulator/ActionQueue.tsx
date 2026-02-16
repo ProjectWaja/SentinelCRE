@@ -120,8 +120,8 @@ export default function ActionQueue({
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800/50">
         <div>
-          <h3 className="text-lg font-bold text-gray-300">Action Queue</h3>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h3 className="text-xl font-bold text-gray-300">Action Queue</h3>
+          <p className="text-base text-gray-500 mt-0.5">
             {allDone
               ? 'All actions completed'
               : `${actions.filter((a) => a.status === 'done').length} of ${actions.length} completed`}
@@ -134,14 +134,14 @@ export default function ActionQueue({
               <button
                 onClick={handleRunNext}
                 disabled={isRunning || nextPending === -1}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 text-white text-sm font-bold rounded-xl transition-colors"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 text-white text-base font-bold rounded-xl transition-colors"
               >
                 Run Next
               </button>
               <button
                 onClick={handleRunAll}
                 disabled={isRunning || nextPending === -1}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white text-sm font-bold rounded-xl transition-colors"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white text-base font-bold rounded-xl transition-colors"
               >
                 Run All
               </button>
@@ -150,7 +150,7 @@ export default function ActionQueue({
           {isRunningAll && (
             <button
               onClick={handleStop}
-              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-xl transition-colors"
+              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-base font-bold rounded-xl transition-colors"
             >
               Stop
             </button>
@@ -191,7 +191,7 @@ export default function ActionQueue({
               <div className="flex items-start gap-4">
                 {/* Index + Status Icon */}
                 <div className="flex items-center gap-2 pt-0.5 shrink-0">
-                  <span className="text-xs text-gray-600 font-mono w-5 text-right">
+                  <span className="text-sm text-gray-600 font-mono w-5 text-right">
                     {index + 1}.
                   </span>
                   <StatusIcon
@@ -218,22 +218,22 @@ export default function ActionQueue({
                       {action.title}
                     </span>
                     {action.isSafe ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 font-semibold">
+                      <span className="text-sm px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 font-semibold">
                         SAFE
                       </span>
                     ) : (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 font-semibold">
+                      <span className="text-sm px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 font-semibold">
                         ATTACK
                       </span>
                     )}
                     {isCurrentlyRunning && (
-                      <span className="text-xs text-blue-400 font-semibold animate-pulse">
+                      <span className="text-sm text-blue-400 font-semibold animate-pulse">
                         Evaluating...
                       </span>
                     )}
                   </div>
                   <p
-                    className={`text-sm ${
+                    className={`text-base ${
                       isDone ? 'text-gray-500' : 'text-gray-400'
                     } truncate`}
                   >
@@ -268,7 +268,7 @@ export default function ActionQueue({
                   )}
                   {isDone && action.verdict && (
                     <span
-                      className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
+                      className={`text-sm font-bold px-2.5 py-1 rounded-lg ${
                         action.verdict === 'APPROVED'
                           ? 'bg-green-500/10 text-green-400'
                           : 'bg-red-500/10 text-red-400'

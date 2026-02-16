@@ -93,7 +93,7 @@ export default function VerdictFeedPanel({
                       <p className="text-base text-gray-300 mb-2 font-semibold">
                         {v.proposal?.description ?? 'Unknown action'}
                       </p>
-                      <div className="flex flex-wrap gap-2 text-sm">
+                      <div className="flex flex-wrap gap-2 text-base">
                         <span
                           className={`px-3 py-1 rounded font-bold ${
                             v.model1.verdict === 'APPROVED'
@@ -131,7 +131,7 @@ export default function VerdictFeedPanel({
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500 mt-2">
+                      <p className="text-base text-gray-500 mt-2">
                         {v.model1.reason}
                       </p>
                     </div>
@@ -143,7 +143,7 @@ export default function VerdictFeedPanel({
                       >
                         {v.consensus}
                       </span>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-base text-gray-600">
                         {new Date(v.timestamp).toLocaleTimeString()}
                       </p>
                     </div>
@@ -153,7 +153,7 @@ export default function VerdictFeedPanel({
                   {isDenied && severity && (
                     <div className="mt-3 pt-3 border-t border-gray-700/50">
                       {severity === 'CRITICAL' ? (
-                        <div className="flex items-center gap-2 text-sm text-red-400/70 font-semibold">
+                        <div className="flex items-center gap-2 text-base text-red-400/70 font-semibold">
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                           </svg>
@@ -161,7 +161,7 @@ export default function VerdictFeedPanel({
                         </div>
                       ) : appealResult ? (
                         <div
-                          className={`flex items-center justify-between text-sm rounded p-3 font-semibold ${
+                          className={`flex items-center justify-between text-base rounded p-3 font-semibold ${
                             appealResult.verdict === 'APPROVED'
                               ? 'bg-green-400/10 text-green-400'
                               : 'bg-red-400/10 text-red-400'
@@ -176,13 +176,13 @@ export default function VerdictFeedPanel({
                         </div>
                       ) : (
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500">
+                          <span className="text-base text-gray-500">
                             Challenge window open — {severity === 'LOW' ? '1 hour' : '30 min'} to appeal
                           </span>
                           <button
                             onClick={() => handleAppeal(v)}
                             disabled={isAppealing}
-                            className="text-sm bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-700 text-white px-4 py-1.5 rounded transition-colors flex items-center gap-2 font-bold"
+                            className="text-base bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-700 text-white px-4 py-1.5 rounded transition-colors flex items-center gap-2 font-bold"
                           >
                             {isAppealing ? (
                               <>

@@ -74,13 +74,13 @@ export default function GuardianStatsBar({ sessionVerdicts }: Props) {
           key={i}
           className="bg-gray-900 rounded-xl border border-gray-800 p-4"
         >
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+          <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">
             {s.label}
           </p>
           <p className={`text-2xl font-black ${s.color} leading-none mb-1`}>
             {s.value}
           </p>
-          <p className="text-xs text-gray-500">{s.sub}</p>
+          <p className="text-sm text-gray-500">{s.sub}</p>
           {'barApproved' in s && total > 0 && (
             <div className="flex h-1.5 rounded-full overflow-hidden mt-2 bg-gray-800">
               <div

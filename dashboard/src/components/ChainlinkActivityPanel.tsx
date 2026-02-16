@@ -189,8 +189,8 @@ export default function ChainlinkActivityPanel({
   return (
     <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-black text-white uppercase tracking-widest">
-          Chainlink Pipeline
+        <h2 className="text-xl font-black text-white uppercase tracking-widest">
+          CRE Pipeline
         </h2>
         {isPending && (
           <span className="flex items-center gap-2 text-base text-yellow-400 bg-yellow-400/10 px-4 py-1.5 rounded-full font-bold">
@@ -318,7 +318,7 @@ export default function ChainlinkActivityPanel({
                 </div>
                 {(isActive || isCompleted || isBlocked) && (
                   <p
-                    className={`text-sm mt-0.5 transition-colors duration-300 ${
+                    className={`text-base mt-0.5 transition-colors duration-300 ${
                       isBlocked
                         ? 'text-red-300/80 font-semibold'
                         : isActive
@@ -346,7 +346,7 @@ export default function ChainlinkActivityPanel({
 
       {/* Confidential compute badge */}
       <div className="mt-3 pt-3 border-t border-gray-800">
-        <div className="flex items-center gap-3 text-sm text-orange-400/70 font-medium">
+        <div className="flex items-center gap-3 text-base text-orange-400/70 font-medium">
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"

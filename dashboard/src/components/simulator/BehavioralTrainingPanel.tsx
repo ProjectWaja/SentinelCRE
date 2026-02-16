@@ -212,10 +212,10 @@ export default function BehavioralTrainingPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black text-white">
+          <h2 className="text-3xl font-black text-white">
             Behavioral Training Ground
           </h2>
-          <p className="text-base text-gray-500 mt-1">
+          <p className="text-lg text-gray-500 mt-1">
             Train the sentinel by running safe actions, then test with attacks
           </p>
         </div>
@@ -223,12 +223,12 @@ export default function BehavioralTrainingPanel() {
         {/* Stats badges */}
         <div className="flex items-center gap-3">
           {completedCount > 0 && (
-            <span className="text-sm text-gray-400 bg-gray-800 px-3 py-1.5 rounded-lg font-semibold">
+            <span className="text-base text-gray-400 bg-gray-800 px-3 py-1.5 rounded-lg font-semibold">
               {completedCount}/{actions.length} actions
             </span>
           )}
           {attacksBlocked > 0 && (
-            <span className="text-sm text-red-400 bg-red-400/10 px-3 py-1.5 rounded-lg font-bold">
+            <span className="text-base text-red-400 bg-red-400/10 px-3 py-1.5 rounded-lg font-bold">
               {attacksBlocked} attacks blocked
             </span>
           )}
@@ -267,14 +267,14 @@ export default function BehavioralTrainingPanel() {
               </div>
               <div className="text-left">
                 <span
-                  className={`text-lg font-bold block ${
+                  className={`text-xl font-bold block ${
                     isSelected ? 'text-white' : 'text-gray-400'
                   }`}
                 >
                   {agent.name}
                 </span>
                 <span
-                  className={`text-sm ${
+                  className={`text-base ${
                     isSelected ? 'text-gray-400' : 'text-gray-600'
                   }`}
                 >

@@ -23,7 +23,7 @@ function VerdictDistribution({ verdicts }: { verdicts: VerdictEntry[] }) {
 
   return (
     <div className="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50">
-      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+      <h3 className="text-base font-semibold text-gray-400 uppercase tracking-wider mb-4">
         Verdict Distribution
       </h3>
       <div className="flex flex-col items-center gap-3">
@@ -81,7 +81,7 @@ function VerdictDistribution({ verdicts }: { verdicts: VerdictEntry[] }) {
             {total}
           </text>
         </svg>
-        <div className="flex items-center gap-4 text-xs text-gray-300">
+        <div className="flex items-center gap-4 text-sm text-gray-300">
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
             Approved ({approved})
@@ -113,13 +113,13 @@ function SeverityBreakdown({ verdicts }: { verdicts: VerdictEntry[] }) {
 
   return (
     <div className="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50">
-      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+      <h3 className="text-base font-semibold text-gray-400 uppercase tracking-wider mb-4">
         Severity Breakdown
       </h3>
       <div className="space-y-3">
         {rows.map((row) => (
           <div key={row.label} className="flex items-center gap-3">
-            <span className="text-xs text-gray-400 w-16 shrink-0 font-mono">
+            <span className="text-sm text-gray-400 w-16 shrink-0 font-mono">
               {row.label}
             </span>
             <div className="flex-1 bg-gray-700/50 rounded-full h-5 overflow-hidden">
@@ -134,7 +134,7 @@ function SeverityBreakdown({ verdicts }: { verdicts: VerdictEntry[] }) {
                 }}
               />
             </div>
-            <span className="text-xs text-gray-300 w-6 text-right font-mono">
+            <span className="text-sm text-gray-300 w-6 text-right font-mono">
               {row.count}
             </span>
           </div>
@@ -167,7 +167,7 @@ function BehavioralRiskHistogram({ verdicts }: { verdicts: VerdictEntry[] }) {
 
   return (
     <div className="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50">
-      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+      <h3 className="text-base font-semibold text-gray-400 uppercase tracking-wider mb-4">
         Behavioral Risk Histogram
       </h3>
       <div className="flex items-end justify-center gap-2 h-28">
@@ -185,14 +185,14 @@ function BehavioralRiskHistogram({ verdicts }: { verdicts: VerdictEntry[] }) {
                 }}
               />
             </div>
-            <span className="text-[10px] text-gray-500 font-mono">
+            <span className="text-xs text-gray-500 font-mono">
               {bin.range}
             </span>
           </div>
         ))}
       </div>
       <div className="text-center mt-1">
-        <span className="text-[10px] text-gray-600">Anomaly Score Range</span>
+        <span className="text-xs text-gray-600">Anomaly Score Range</span>
       </div>
     </div>
   )
@@ -239,7 +239,7 @@ function DefenseLayerEffectiveness({
 
   return (
     <div className="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50">
-      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+      <h3 className="text-base font-semibold text-gray-400 uppercase tracking-wider mb-4">
         Defense Layer Effectiveness
       </h3>
       {/* Stacked horizontal bar */}
@@ -264,7 +264,7 @@ function DefenseLayerEffectiveness({
         {layers.map((layer) => (
           <div
             key={layer.label}
-            className="flex items-center justify-between text-xs"
+            className="flex items-center justify-between text-sm"
           >
             <span className="flex items-center gap-2">
               <span className={`w-2.5 h-2.5 rounded-full ${layer.dot}`} />
@@ -288,7 +288,7 @@ export default function DefenseAnalyticsCharts({
 }: DefenseAnalyticsChartsProps) {
   return (
     <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6">
-      <h2 className="text-sm font-bold text-gray-300 uppercase tracking-widest mb-6">
+      <h2 className="text-lg font-bold text-gray-300 uppercase tracking-widest mb-6">
         Defense Analytics
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -84,17 +84,17 @@ export default function TenderlyFeedPanel() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
             </svg>
           </div>
-          <h2 className="text-lg font-black text-white uppercase tracking-widest">
+          <h2 className="text-xl font-black text-white uppercase tracking-widest">
             Tenderly
           </h2>
         </div>
         <div className="flex items-center gap-2">
           {loading && !data ? (
-            <span className="text-xs text-gray-500">Loading...</span>
+            <span className="text-sm text-gray-500">Loading...</span>
           ) : (
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" title={secondsAgo !== null ? `Updated ${secondsAgo}s ago` : ''} />
           )}
-          <span className="text-xs font-bold text-purple-400 bg-purple-400/10 px-3 py-1 rounded-full border border-purple-400/30">
+          <span className="text-sm font-bold text-purple-400 bg-purple-400/10 px-3 py-1 rounded-full border border-purple-400/30">
             Virtual Sepolia
           </span>
         </div>
@@ -111,17 +111,17 @@ export default function TenderlyFeedPanel() {
             className="block p-3 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:border-purple-500/30 hover:bg-gray-800 transition-all group"
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors">
+              <span className="text-base font-bold text-white group-hover:text-purple-400 transition-colors">
                 {c.name}
               </span>
-              <span className="text-xs font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded border border-green-400/20">
+              <span className="text-sm font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded border border-green-400/20">
                 {getTxCount(c.key)} txs
               </span>
             </div>
-            <code className="text-xs text-purple-400/70 font-mono block truncate group-hover:text-purple-400 transition-colors">
+            <code className="text-sm text-purple-400/70 font-mono block truncate group-hover:text-purple-400 transition-colors">
               {c.address}
             </code>
-            <p className="text-xs text-gray-500 mt-1">{c.role}</p>
+            <p className="text-sm text-gray-500 mt-1">{c.role}</p>
           </a>
         ))}
       </div>
@@ -130,12 +130,12 @@ export default function TenderlyFeedPanel() {
       {data && data.recentTxs.length > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-800">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Recent Transactions</span>
-            <span className="text-xs text-gray-600">Block {data.latestBlock.toLocaleString()}</span>
+            <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">Recent Transactions</span>
+            <span className="text-sm text-gray-600">Block {data.latestBlock.toLocaleString()}</span>
           </div>
           <div className="space-y-1">
             {data.recentTxs.map((tx) => (
-              <div key={tx.fullHash} className="flex items-center justify-between text-xs py-1 px-2 rounded bg-gray-800/30">
+              <div key={tx.fullHash} className="flex items-center justify-between text-sm py-1 px-2 rounded bg-gray-800/30">
                 <div className="flex items-center gap-2">
                   <span className={`font-mono font-bold ${FN_COLORS[tx.fn] ?? 'text-gray-400'}`}>
                     {tx.fn}
@@ -153,7 +153,7 @@ export default function TenderlyFeedPanel() {
           href={TENDERLY_EXPLORER}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 text-sm text-purple-400/70 hover:text-purple-400 transition-colors font-medium"
+          className="flex items-center gap-2 text-base text-purple-400/70 hover:text-purple-400 transition-colors font-medium"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

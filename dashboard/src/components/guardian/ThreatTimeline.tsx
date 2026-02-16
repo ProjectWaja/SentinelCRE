@@ -45,7 +45,7 @@ function PhaseDivider({ label }: PhaseDividerProps) {
     <div className="relative flex items-center py-4">
       <div className="absolute left-[5px] w-3 h-3 rounded-full bg-gray-600 border-2 border-gray-500 z-10" />
       <div className="ml-10 flex items-center gap-3 w-full">
-        <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 whitespace-nowrap">
+        <span className="text-sm font-black uppercase tracking-[0.2em] text-gray-500 whitespace-nowrap">
           {label}
         </span>
         <div className="flex-1 h-px bg-gray-700" />
@@ -108,15 +108,20 @@ export default function ThreatTimeline({
 
   return (
     <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6">
-      <h2 className="text-xl font-black text-white uppercase tracking-widest mb-6">
+      <h2 className="text-2xl font-black text-white uppercase tracking-widest mb-6">
         Threat Timeline
       </h2>
 
       {sessionVerdicts.length === 0 ? (
-        <p className="text-center text-gray-500 py-12 text-sm">
-          No events recorded. Run scenarios from the Demo tab to populate the
-          threat timeline.
-        </p>
+        <div className="text-center py-12 space-y-4">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gray-800/50 border border-gray-700/50 flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p className="text-lg text-gray-500">No events recorded yet</p>
+          <p className="text-base text-gray-600">Run the Live Demo to see threats detected in real-time</p>
+        </div>
       ) : (
         <div className="relative">
           {/* Vertical timeline line */}
@@ -159,10 +164,10 @@ export default function ThreatTimeline({
                     >
                       {/* Title row */}
                       <div className="flex items-start justify-between gap-3 mb-2">
-                        <p className="text-sm font-bold text-white leading-tight">
+                        <p className="text-base font-bold text-white leading-tight">
                           {title}
                         </p>
-                        <span className="text-xs text-gray-500 whitespace-nowrap font-mono">
+                        <span className="text-sm text-gray-500 whitespace-nowrap font-mono">
                           {formatTime(v.timestamp)}
                         </span>
                       </div>
@@ -170,7 +175,7 @@ export default function ThreatTimeline({
                       {/* Badges row */}
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span
-                          className={`px-2 py-0.5 rounded text-xs font-bold ${
+                          className={`px-2 py-0.5 rounded text-sm font-bold ${
                             isDenied
                               ? 'bg-red-400/10 text-red-400'
                               : 'bg-green-400/10 text-green-400'
@@ -180,7 +185,7 @@ export default function ThreatTimeline({
                         </span>
                         {isDenied && sevStyle && v.severity && (
                           <span
-                            className={`px-2 py-0.5 rounded border text-xs font-bold ${sevStyle.bg} ${sevStyle.text} ${sevStyle.border}`}
+                            className={`px-2 py-0.5 rounded border text-sm font-bold ${sevStyle.bg} ${sevStyle.text} ${sevStyle.border}`}
                           >
                             {v.severity}
                           </span>
@@ -188,7 +193,7 @@ export default function ThreatTimeline({
                       </div>
 
                       {/* Agent name */}
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm text-gray-500">
                         Agent: <span className="text-gray-400 font-semibold">{agentName}</span>
                       </p>
 
@@ -197,7 +202,7 @@ export default function ThreatTimeline({
                         <div className="mt-3">
                           <button
                             onClick={() => toggleExpanded(v.id)}
-                            className="text-xs text-gray-500 hover:text-gray-300 transition-colors font-semibold flex items-center gap-1"
+                            className="text-sm text-gray-500 hover:text-gray-300 transition-colors font-semibold flex items-center gap-1"
                           >
                             <svg
                               className={`w-3 h-3 transition-transform ${
@@ -216,7 +221,7 @@ export default function ThreatTimeline({
                           </button>
 
                           {isExpanded && (
-                            <div className="mt-3 space-y-2 text-xs">
+                            <div className="mt-3 space-y-2 text-sm">
                               {/* Defense layer */}
                               {(() => {
                                 const layer = getDefenseLayer(v)
