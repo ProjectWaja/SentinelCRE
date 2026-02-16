@@ -150,6 +150,7 @@ async function setup() {
       isActive: true,
       reserveFeed: getAddress('0x0000000000000000000000000000000000000000'),
       minReserveRatio: 0n,
+      maxStaleness: 3600n,
     },
   ])
 
@@ -170,6 +171,7 @@ async function setup() {
       isActive: true,
       reserveFeed: getAddress('0x0000000000000000000000000000000000000000'),
       minReserveRatio: 0n,
+      maxStaleness: 3600n,
     },
   ])
 

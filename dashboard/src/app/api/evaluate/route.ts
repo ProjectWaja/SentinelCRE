@@ -1,9 +1,108 @@
 import { NextResponse } from 'next/server'
+import {
+  createWalletClient,
+  createPublicClient,
+  http,
+  encodeAbiParameters,
+  parseAbiParameters,
+  getAddress,
+  type Hex,
+} from 'viem'
+import { privateKeyToAccount } from 'viem/accounts'
+import { sepolia } from 'viem/chains'
 
 export const dynamic = 'force-dynamic'
 
 const MOCK_API =
   process.env.NEXT_PUBLIC_MOCK_API_URL ?? 'http://localhost:3002'
+
+// On-chain verdict recording — sends real tx to Tenderly Virtual TestNet
+const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL
+const DEPLOYER_KEY = process.env.DEPLOYER_PRIVATE_KEY as Hex | undefined
+const GUARDIAN_ADDRESS = process.env.NEXT_PUBLIC_GUARDIAN_ADDRESS as Hex | undefined
+
+const PROCESS_VERDICT_ABI = [
+  {
+    name: 'processVerdict',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'reportData', type: 'bytes' }],
+    outputs: [],
+  },
+  {
+    name: 'unfreezeAgent',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'agentId', type: 'bytes32' }],
+    outputs: [],
+  },
+] as const
+
+async function submitVerdictOnChain(
+  agentId: string,
+  approved: boolean,
+  reason: string,
+  targetContract: string,
+  functionSig: string,
+  value: string,
+  mintAmount: string,
+) {
+  if (!RPC_URL || !DEPLOYER_KEY || !GUARDIAN_ADDRESS) return
+
+  try {
+    const account = privateKeyToAccount(DEPLOYER_KEY)
+    const walletClient = createWalletClient({
+      account,
+      chain: sepolia,
+      transport: http(RPC_URL),
+    })
+    const publicClient = createPublicClient({
+      chain: sepolia,
+      transport: http(RPC_URL),
+    })
+
+    // Encode the verdict report data
+    const fnSig = (functionSig || '0x00000000').slice(0, 10).padEnd(10, '0') as Hex
+    const reportData = encodeAbiParameters(
+      parseAbiParameters('bytes32, bool, string, address, bytes4, uint256, uint256'),
+      [
+        agentId as Hex,
+        approved,
+        reason.slice(0, 200),
+        getAddress(targetContract || '0x000000000000000000000000000000000000AA01'),
+        fnSig,
+        BigInt(value || '0'),
+        BigInt(mintAmount || '0'),
+      ],
+    )
+
+    const hash = await walletClient.writeContract({
+      address: GUARDIAN_ADDRESS,
+      abi: PROCESS_VERDICT_ABI,
+      functionName: 'processVerdict',
+      args: [reportData],
+    })
+    await publicClient.waitForTransactionReceipt({ hash })
+    console.log('[On-chain verdict] Recorded:', hash.slice(0, 14), approved ? 'APPROVED' : 'DENIED')
+
+    // If denied, the agent gets frozen — unfreeze it so the next demo scenario works
+    if (!approved) {
+      try {
+        const unfreezeHash = await walletClient.writeContract({
+          address: GUARDIAN_ADDRESS,
+          abi: PROCESS_VERDICT_ABI,
+          functionName: 'unfreezeAgent',
+          args: [agentId as Hex],
+        })
+        await publicClient.waitForTransactionReceipt({ hash: unfreezeHash })
+      } catch {
+        // Agent might not be frozen (baseline scenarios) — ignore
+      }
+    }
+  } catch (err) {
+    console.error('[On-chain verdict] Failed:', err)
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -105,6 +204,17 @@ Respond with ONLY valid JSON:
     } catch {
       // Non-blocking
     }
+
+    // Step 5: Submit verdict on-chain to SentinelGuardian (Tenderly Virtual TestNet)
+    await submitVerdictOnChain(
+      proposal.agentId,
+      consensus === 'APPROVED',
+      consensus === 'APPROVED' ? v1.reason : v1.reason,
+      proposal.targetContract,
+      proposal.functionSignature,
+      proposal.value,
+      proposal.mintAmount,
+    )
 
     // Compute severity for denied verdicts
     let severity: 'LOW' | 'MEDIUM' | 'CRITICAL' | undefined

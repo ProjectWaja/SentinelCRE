@@ -2,9 +2,9 @@ import type { Address } from 'viem'
 
 export const ADDRESSES = {
   sentinelGuardian: (process.env.NEXT_PUBLIC_GUARDIAN_ADDRESS ??
-    '0x3e2D7CE3CcB520f26dE6fe499bAA38A28cfd476f') as Address,
+    '0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8') as Address,
   agentRegistry: (process.env.NEXT_PUBLIC_REGISTRY_ADDRESS ??
-    '0xb008CE7EE90C66A219C842E69a4fBAF7E5359bbE') as Address,
+    '0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6') as Address,
 }
 
 export const MOCK_API_URL =

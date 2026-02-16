@@ -7,6 +7,14 @@ export interface PipelineRun {
   description: string
   consensus: 'APPROVED' | 'DENIED' | null
   startedAt: number
+  /** Pipeline step index where the attack was caught (undefined = full pass) */
+  catchStep?: number
+  /** Reason the attack was blocked at this step */
+  catchReason?: string
+  /** Live step during scenario execution (before verdict) — maps to pipeline step */
+  liveStep?: number
+  /** Total scenario steps (used for proportional mapping) */
+  totalSteps?: number
 }
 
 const PIPELINE_STEPS = [
@@ -30,23 +38,23 @@ const PIPELINE_STEPS = [
     service: 'BehavioralEngine',
     action: 'analyzeAll()',
     label: 'Behavioral Risk Scoring',
-    desc: '6-dimension anomaly detection — probing, velocity, deviation',
+    desc: '7-dimension anomaly detection — probing, velocity, drift, deviation',
     color: 'orange',
     delay: 700,
   },
   {
     service: 'HTTPClient',
     action: 'sendRequest()',
-    label: 'AI Model 1',
-    desc: 'Call Claude (Model 1) with behavioral context injected',
+    label: 'AI Model 1 (Claude)',
+    desc: 'Evaluate with Claude — behavioral context injected',
     color: 'purple',
     delay: 1000,
   },
   {
     service: 'HTTPClient',
     action: 'sendRequest()',
-    label: 'AI Model 2',
-    desc: 'Call GPT-4 (Model 2) with behavioral context injected',
+    label: 'AI Model 2 (GPT-4)',
+    desc: 'Evaluate with GPT-4 — behavioral context injected',
     color: 'purple',
     delay: 1200,
   },
@@ -70,7 +78,7 @@ const PIPELINE_STEPS = [
     service: 'SentinelGuardian',
     action: 'processVerdict()',
     label: 'On-Chain Policy',
-    desc: 'PolicyLib.checkAll() — value, target, function, rate, mint',
+    desc: 'PolicyLib.checkAll() — value, target, function, rate, mint, PoR',
     color: 'red',
     delay: 2400,
   },
@@ -86,6 +94,15 @@ const COLOR_MAP: Record<string, { dot: string; text: string; bg: string; border:
   red: { dot: 'bg-red-400', text: 'text-red-400', bg: 'bg-red-400/10', border: 'border-red-400/30', glow: 'shadow-red-400/20' },
 }
 
+/** Map a scenario step index to a pipeline step index (proportional) */
+function mapToPipelineStep(scenarioStep: number, totalScenarioSteps: number): number {
+  if (totalScenarioSteps <= 1) return 0
+  return Math.min(
+    PIPELINE_STEPS.length - 1,
+    Math.round(scenarioStep * (PIPELINE_STEPS.length - 1) / (totalScenarioSteps - 1)),
+  )
+}
+
 export default function ChainlinkActivityPanel({
   currentRun,
 }: {
@@ -93,31 +110,81 @@ export default function ChainlinkActivityPanel({
 }) {
   const [activeStep, setActiveStep] = useState(-1)
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
+  const [blockedStep, setBlockedStep] = useState(-1)
   const prevRunId = useRef<string | null>(null)
+  const prevLiveStep = useRef<number>(-1)
 
+  // Live step tracking — animate pipeline in real-time during scenario execution
   useEffect(() => {
-    if (!currentRun || currentRun.id === prevRunId.current) return
+    if (!currentRun || currentRun.consensus) return
+    if (currentRun.liveStep == null || currentRun.totalSteps == null) return
+
+    const pipelineIdx = mapToPipelineStep(currentRun.liveStep, currentRun.totalSteps)
+
+    // Reset on new run
+    if (currentRun.id !== prevRunId.current) {
+      prevRunId.current = currentRun.id
+      prevLiveStep.current = -1
+      setActiveStep(-1)
+      setCompletedSteps([])
+      setBlockedStep(-1)
+    }
+
+    // Mark previous pipeline steps as completed, set current as active
+    if (pipelineIdx !== prevLiveStep.current) {
+      const newCompleted: number[] = []
+      for (let i = 0; i < pipelineIdx; i++) {
+        newCompleted.push(i)
+      }
+      setCompletedSteps(newCompleted)
+      setActiveStep(pipelineIdx)
+      prevLiveStep.current = pipelineIdx
+    }
+  }, [currentRun?.id, currentRun?.liveStep, currentRun?.totalSteps, currentRun?.consensus])
+
+  // Final verdict animation — plays after consensus is determined
+  useEffect(() => {
+    if (!currentRun || !currentRun.consensus) return
+    // Only run the final animation once per run
+    if (currentRun.id === prevRunId.current && prevLiveStep.current === -2) return
+
     prevRunId.current = currentRun.id
+    prevLiveStep.current = -2 // sentinel: final animation played
 
-    setActiveStep(-1)
-    setCompletedSteps([])
+    const lastStep = currentRun.catchStep ?? PIPELINE_STEPS.length - 1
+    const shouldBlock = currentRun.consensus === 'DENIED' && currentRun.catchStep !== undefined
 
-    PIPELINE_STEPS.forEach((step, i) => {
+    // Quick final sweep: complete remaining steps and show catch
+    setBlockedStep(-1)
+
+    for (let i = 0; i <= lastStep; i++) {
+      const delay = i * 150 // fast sweep
+
       setTimeout(() => {
         setActiveStep(i)
-        setCompletedSteps((prev) => [...prev.filter((s) => s < i)])
-      }, step.delay)
+        setCompletedSteps((prev) => {
+          const s = new Set(prev)
+          for (let j = 0; j < i; j++) s.add(j)
+          return [...s]
+        })
+      }, delay)
 
       setTimeout(() => {
-        setCompletedSteps((prev) => [...prev, i])
-        if (i === PIPELINE_STEPS.length - 1) {
-          setTimeout(() => setActiveStep(-1), 600)
+        if (i === lastStep && shouldBlock) {
+          setBlockedStep(i)
+        } else {
+          setCompletedSteps((prev) => [...new Set([...prev, i])])
         }
-      }, step.delay + 350)
-    })
-  }, [currentRun])
+        if (i === lastStep) {
+          setTimeout(() => setActiveStep(-1), 800)
+        }
+      }, delay + 120)
+    }
+  }, [currentRun?.id, currentRun?.consensus])
 
-  const isIdle = !currentRun || activeStep === -1
+  const isPending = currentRun && !currentRun.consensus
+  const isAnimating = activeStep >= 0
+  const isIdle = !currentRun || (!isAnimating && !isPending && blockedStep === -1)
 
   return (
     <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5">
@@ -125,13 +192,19 @@ export default function ChainlinkActivityPanel({
         <h2 className="text-lg font-black text-white uppercase tracking-widest">
           Chainlink Pipeline
         </h2>
-        {!isIdle && (
+        {isPending && (
+          <span className="flex items-center gap-2 text-base text-yellow-400 bg-yellow-400/10 px-4 py-1.5 rounded-full font-bold">
+            <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" />
+            Evaluating...
+          </span>
+        )}
+        {!isPending && isAnimating && (
           <span className="flex items-center gap-2 text-base text-yellow-400 bg-yellow-400/10 px-4 py-1.5 rounded-full font-bold">
             <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" />
             Processing
           </span>
         )}
-        {isIdle && currentRun?.consensus && (
+        {!isPending && !isAnimating && currentRun?.consensus && (
           <span
             className={`text-lg px-4 py-1.5 rounded-full font-black ${
               currentRun.consensus === 'APPROVED'
@@ -139,7 +212,7 @@ export default function ChainlinkActivityPanel({
                 : 'text-red-400 bg-red-400/10'
             }`}
           >
-            {currentRun.consensus}
+            {currentRun.consensus === 'APPROVED' ? 'APPROVED' : 'BLOCKED'}
           </span>
         )}
       </div>
@@ -147,36 +220,55 @@ export default function ChainlinkActivityPanel({
       <div className="space-y-0">
         {PIPELINE_STEPS.map((step, i) => {
           const colors = COLOR_MAP[step.color]
-          const isActive = activeStep === i
+          const isBlocked = blockedStep === i
+          const isActive = activeStep === i && !isBlocked
           const isCompleted = completedSteps.includes(i)
-          const isPending = !isActive && !isCompleted
+          const isSkipped =
+            currentRun?.catchStep !== undefined &&
+            currentRun.consensus === 'DENIED' &&
+            i > currentRun.catchStep &&
+            (blockedStep >= 0 || completedSteps.length > 0)
 
           return (
             <div
               key={i}
               className={`flex items-start gap-3 rounded-lg px-3 py-2 transition-all duration-300 ${
-                isActive
-                  ? `${colors.bg} border ${colors.border} shadow-lg ${colors.glow}`
-                  : isCompleted
-                    ? 'bg-gray-800/30 border border-transparent'
-                    : 'bg-transparent border border-transparent opacity-40'
+                isBlocked
+                  ? 'bg-red-500/10 border border-red-500/40 shadow-lg shadow-red-500/20'
+                  : isActive
+                    ? `${colors.bg} border ${colors.border} shadow-lg ${colors.glow}`
+                    : isCompleted
+                      ? 'bg-gray-800/30 border border-transparent'
+                      : isSkipped
+                        ? 'bg-transparent border border-gray-800/30 opacity-20'
+                        : 'bg-transparent border border-transparent opacity-40'
               }`}
             >
               {/* Step indicator */}
               <div className="flex flex-col items-center mt-1">
                 <div
                   className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    isActive
-                      ? `${colors.dot} animate-pulse scale-125`
-                      : isCompleted
-                        ? 'bg-gray-600'
-                        : 'bg-gray-800 border-2 border-gray-700'
+                    isBlocked
+                      ? 'bg-red-500 animate-pulse scale-125'
+                      : isActive
+                        ? `${colors.dot} animate-pulse scale-125`
+                        : isCompleted
+                          ? currentRun?.consensus === 'APPROVED' && i === PIPELINE_STEPS.length - 1
+                            ? 'bg-green-400'
+                            : 'bg-gray-600'
+                          : isSkipped
+                            ? 'bg-gray-800 border border-gray-700'
+                            : 'bg-gray-800 border-2 border-gray-700'
                   }`}
                 />
                 {i < PIPELINE_STEPS.length - 1 && (
                   <div
                     className={`w-0.5 h-3 mt-0.5 transition-colors duration-300 ${
-                      isCompleted ? 'bg-gray-700' : 'bg-gray-800'
+                      isBlocked
+                        ? 'bg-red-500/30'
+                        : isCompleted
+                          ? 'bg-gray-700'
+                          : 'bg-gray-800'
                     }`}
                   />
                 )}
@@ -185,32 +277,58 @@ export default function ChainlinkActivityPanel({
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span
-                    className={`text-base font-bold transition-colors duration-300 ${
-                      isActive
-                        ? colors.text
-                        : isCompleted
-                          ? 'text-gray-200'
-                          : 'text-gray-600'
-                    }`}
-                  >
-                    {step.label}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-base font-bold transition-colors duration-300 ${
+                        isBlocked
+                          ? 'text-red-400'
+                          : isActive
+                            ? colors.text
+                            : isCompleted
+                              ? 'text-gray-200'
+                              : isSkipped
+                                ? 'text-gray-700 line-through'
+                                : 'text-gray-600'
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                    {isBlocked && (
+                      <span className="text-xs font-black text-red-400 bg-red-500/20 px-2 py-0.5 rounded-full border border-red-500/40 animate-pulse uppercase tracking-widest">
+                        Blocked
+                      </span>
+                    )}
+                    {isSkipped && (
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Skipped
+                      </span>
+                    )}
+                  </div>
                   <span
                     className={`font-mono text-sm transition-colors duration-300 ${
-                      isActive ? colors.text : 'text-gray-600'
+                      isBlocked
+                        ? 'text-red-400/60'
+                        : isActive
+                          ? colors.text
+                          : 'text-gray-600'
                     }`}
                   >
                     {step.service}
                   </span>
                 </div>
-                {(isActive || isCompleted) && (
+                {(isActive || isCompleted || isBlocked) && (
                   <p
                     className={`text-sm mt-0.5 transition-colors duration-300 ${
-                      isActive ? 'text-gray-300' : 'text-gray-500'
+                      isBlocked
+                        ? 'text-red-300/80 font-semibold'
+                        : isActive
+                          ? 'text-gray-300'
+                          : 'text-gray-500'
                     }`}
                   >
-                    {isPending ? '' : step.desc}
+                    {isBlocked && currentRun?.catchReason
+                      ? currentRun.catchReason
+                      : step.desc}
                   </p>
                 )}
                 {isActive && (
@@ -237,7 +355,7 @@ export default function ChainlinkActivityPanel({
             />
           </svg>
           <span>
-            Confidential HTTP hides API keys from DON nodes
+            Confidential HTTP hides API keys + risk thresholds from DON nodes
           </span>
         </div>
       </div>
