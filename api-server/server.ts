@@ -289,6 +289,14 @@ function evaluateAction(prompt: string): EvalResponse {
         reason: `Mint amount ${mint} exceeds safe cap — potential infinite mint attack`,
       }
     }
+    // Near-cap mint (>80% of max) — suspicious, especially with coordination signals
+    if (mint > (ROGUE_THRESHOLDS.maxMintAmount * 80n) / 100n) {
+      return {
+        verdict: 'DENIED',
+        confidence: 87,
+        reason: `Mint amount is ${Number((mint * 100n) / ROGUE_THRESHOLDS.maxMintAmount)}% of cap — near-limit exploitation detected`,
+      }
+    }
   }
 
   // Check for unapproved targets

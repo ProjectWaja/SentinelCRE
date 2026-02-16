@@ -16,10 +16,12 @@ export default function ScenarioDemoPanel({
   onVerdictReceived,
   onPipelineStart,
   onPipelineComplete,
+  onPipelineStep,
 }: {
   onVerdictReceived: (v: VerdictResult) => void
   onPipelineStart?: (description: string) => void
-  onPipelineComplete?: (consensus: 'APPROVED' | 'DENIED') => void
+  onPipelineComplete?: (result: VerdictResult) => void
+  onPipelineStep?: (stepIndex: number, totalSteps: number) => void
 }) {
   const [activeScenario, setActiveScenario] = useState<DemoScenario | null>(null)
   const [runState, setRunState] = useState<RunState>('idle')
@@ -41,6 +43,7 @@ export default function ScenarioDemoPanel({
 
     for (let i = 0; i < scenario.steps.length; i++) {
       setActiveStep(i)
+      onPipelineStep?.(i, scenario.steps.length)
       await new Promise((r) => setTimeout(r, 500))
     }
 
@@ -48,14 +51,20 @@ export default function ScenarioDemoPanel({
       const result = await evaluateAction(scenario.proposal)
       setVerdict(result)
       onVerdictReceived(result)
-      onPipelineComplete?.(result.consensus === 'APPROVED' ? 'APPROVED' : 'DENIED')
+      onPipelineComplete?.(result)
     } catch {
-      onPipelineComplete?.('DENIED')
+      onPipelineComplete?.({
+        model1: { verdict: 'DENIED', confidence: 0, reason: 'API unavailable' },
+        model2: { verdict: 'DENIED', confidence: 0, reason: 'API unavailable' },
+        consensus: 'DENIED',
+        proposal: scenario.proposal,
+        timestamp: Date.now(),
+      })
     }
 
     setRunState('done')
     setCompletedIds((prev) => new Set(prev).add(scenario.id))
-  }, [onVerdictReceived, onPipelineStart, onPipelineComplete])
+  }, [onVerdictReceived, onPipelineStart, onPipelineComplete, onPipelineStep])
 
   function handleContinue() {
     continueRef.current?.()
@@ -413,9 +422,11 @@ export default function ScenarioDemoPanel({
                                 <span className={`text-base px-3 py-1 rounded-full font-bold ${
                                   verdict.anomalyFlagged
                                     ? 'bg-red-400/10 text-red-400 border border-red-400/30'
-                                    : 'bg-green-400/10 text-green-400 border border-green-400/30'
+                                    : (verdict.anomalyScore ?? 0) >= 25
+                                      ? 'bg-orange-400/10 text-orange-400 border border-orange-400/30'
+                                      : 'bg-green-400/10 text-green-400 border border-green-400/30'
                                 }`}>
-                                  {verdict.anomalyFlagged ? 'FLAGGED' : 'NORMAL'}
+                                  {verdict.anomalyFlagged ? 'FLAGGED' : (verdict.anomalyScore ?? 0) >= 25 ? 'ELEVATED' : 'NORMAL'}
                                 </span>
                               </div>
                               <span className={`text-2xl font-black ${
