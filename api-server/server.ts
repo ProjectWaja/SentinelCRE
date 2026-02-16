@@ -51,7 +51,7 @@ function getOrCreateProfile(agentId: string): BehaviorProfile {
       knownContracts: [],
       commonFunctions: [],
       minExpectedInterval: 60_000,
-      activeHours: Array.from({ length: 24 }, (_, i) => i),
+      activeHours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20], // Business hours UTC
       recentValues: [],
       lastActionTimestamp: 0,
       actionCount: 0,
@@ -80,15 +80,22 @@ function computeBehavioralAnalysis(
   functionSig: string,
   valueWei: string,
   recentValuesOverride?: number[],
+  mintAmountWei?: string,
 ): { totalScore: number; threshold: number; flagged: boolean; dimensions: AnomalyDim[] } {
   const profile = getOrCreateProfile(agentId)
-  const currentValue = Number(BigInt(valueWei || '0')) / 1e18
+  const ethValue = Number(BigInt(valueWei || '0')) / 1e18
+  // For mint-focused agents (value=0), use mint amount as the behavioral value signal
+  const mintTokens = Number(BigInt(mintAmountWei || '0')) / 1e18
+  const currentValue = ethValue > 0 ? ethValue : mintTokens > 0 ? mintTokens : 0
   const threshold = 50
   const dims: AnomalyDim[] = []
 
   // Dim 1: Value Deviation (+25)
+  // Zero-value txs (approvals, admin ops) skip deviation — they're common DeFi operations
   if (profile.avgValue === 0 && profile.stdDevValue === 0) {
     dims.push({ name: 'Value Deviation', score: 0, maxWeight: 25, fired: false, reason: 'No baseline — first action' })
+  } else if (currentValue === 0 && profile.avgValue > 0) {
+    dims.push({ name: 'Value Deviation', score: 0, maxWeight: 25, fired: false, reason: 'Zero-value operation (approval/admin) — not anomalous' })
   } else {
     const sd = profile.stdDevValue > 0 ? profile.stdDevValue : profile.avgValue * 0.25
     const z = sd > 0 ? Math.abs(currentValue - profile.avgValue) / sd : 0
@@ -127,13 +134,16 @@ function computeBehavioralAnalysis(
   }
 
   // Dim 4: Function Pattern (+30)
+  // Common DeFi functions (swap, approve, transfer, mint) are never unusual
   const sig = functionSig.toLowerCase()
+  const COMMON_DEFI_FUNCTIONS = ['0x38ed1739', '0x095ea7b3', '0xa9059cbb', '0x40c10f19', '0x23b872dd']
+  const isCommonDefi = COMMON_DEFI_FUNCTIONS.includes(sig)
   if (profile.commonFunctions.length === 0) {
     dims.push({ name: 'Function Pattern', score: 0, maxWeight: 30, fired: false, reason: 'New agent — no function history' })
-  } else if (!profile.commonFunctions.includes(sig)) {
+  } else if (!profile.commonFunctions.includes(sig) && !isCommonDefi) {
     dims.push({ name: 'Function Pattern', score: 30, maxWeight: 30, fired: true, reason: `Unusual function ${functionSig}` })
   } else {
-    dims.push({ name: 'Function Pattern', score: 0, maxWeight: 30, fired: false, reason: 'Known function' })
+    dims.push({ name: 'Function Pattern', score: 0, maxWeight: 30, fired: false, reason: isCommonDefi ? 'Standard DeFi function' : 'Known function' })
   }
 
   // Dim 5: Time-of-Day (+10)
@@ -200,9 +210,11 @@ function computeBehavioralAnalysis(
   return { totalScore, threshold, flagged: totalScore >= threshold, dimensions: dims }
 }
 
-function updateProfile(agentId: string, target: string, funcSig: string, valueWei: string) {
+function updateProfile(agentId: string, target: string, funcSig: string, valueWei: string, mintAmountWei?: string) {
   const profile = getOrCreateProfile(agentId)
-  const ethValue = Number(BigInt(valueWei || '0')) / 1e18
+  const rawEth = Number(BigInt(valueWei || '0')) / 1e18
+  const mintTokens = Number(BigInt(mintAmountWei || '0')) / 1e18
+  const ethValue = rawEth > 0 ? rawEth : mintTokens > 0 ? mintTokens : 0
 
   profile.actionCount++
   profile.valueSum += ethValue
@@ -390,6 +402,34 @@ function evaluateAction(prompt: string): EvalResponse {
     }
   }
 
+  // Check for batch/rapid-fire patterns (e.g., "17 of 50", "batch 3 of 20")
+  const batchMatch = prompt.match(/(\d+)\s+of\s+(\d+)/i)
+  if (batchMatch) {
+    const current = parseInt(batchMatch[1])
+    const total = parseInt(batchMatch[2])
+    if (total >= 10 && current > 1) {
+      return {
+        verdict: 'DENIED',
+        confidence: 88,
+        reason: `Batch transaction pattern detected — ${current} of ${total} indicates rapid micro-drain`,
+      }
+    }
+  }
+
+  // Check for social engineering / urgency patterns
+  if (
+    (lower.includes('emergency') && (lower.includes('transfer') || lower.includes('liquidat'))) ||
+    (lower.includes('transfer all') && lower.includes('safe wallet')) ||
+    lower.includes('system override') ||
+    lower.includes('authorized by governance')
+  ) {
+    return {
+      verdict: 'DENIED',
+      confidence: 90,
+      reason: 'Social engineering detected — urgency language combined with fund movement',
+    }
+  }
+
   // Check for behavioral analysis flags in the prompt
   if (lower.includes('behavioral risk analysis') && lower.includes('flagged')) {
     // Extract anomaly score if present
@@ -536,6 +576,7 @@ const server = Bun.serve({
         body.functionSignature ?? '',
         body.value ?? '0',
         body.recentValues,
+        body.mintAmount,
       )
       return Response.json(result)
     }
@@ -550,6 +591,7 @@ const server = Bun.serve({
           proposal.targetContract ?? '',
           proposal.functionSignature ?? '',
           proposal.value ?? '0',
+          proposal.mintAmount,
         )
       }
       const profile = getOrCreateProfile(agentId ?? proposal?.agentId ?? '')
