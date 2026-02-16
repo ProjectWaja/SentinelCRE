@@ -97,7 +97,7 @@ export default function ScenarioDemoPanel({
           <div>
             <h2 className="text-4xl font-black text-white">Live Defense Demo</h2>
             <p className="text-2xl text-gray-400 mt-2">
-              3 baseline operations train the system, then 11 escalating attacks test it
+              3 baselines train the system, 5 obvious attacks test policy, then 6 edge cases prove behavioral analysis
             </p>
           </div>
           {runningAll && runState === 'waiting' ? (
@@ -173,28 +173,31 @@ export default function ScenarioDemoPanel({
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-2xl font-black text-red-400 uppercase tracking-widest">Phase 2: Attack Escalation</h3>
+                      <h3 className="text-2xl font-black text-red-400 uppercase tracking-widest">Phase 2: Policy Violations</h3>
                       <p className="text-lg text-red-400/60 mt-0.5">
-                        Attacks escalate from obvious policy violations to sophisticated behavioral exploits that bypass traditional security
+                        Obvious attacks that any risk system should catch — value limits, mint caps, blocklists, and AI pattern detection
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Tier sub-headers within attacks */}
-              {scenario.id === 5 && (
-                <div className="flex items-center gap-3 px-4 py-2 mb-3">
-                  <div className="flex-1 h-px bg-orange-400/20" />
-                  <span className="text-sm font-black text-orange-400/60 uppercase tracking-widest">Subtle Attacks — Pass Policy, Caught by Behavior</span>
-                  <div className="flex-1 h-px bg-orange-400/20" />
-                </div>
-              )}
-              {scenario.id === 9 && (
-                <div className="flex items-center gap-3 px-4 py-2 mb-3">
-                  <div className="flex-1 h-px bg-purple-400/20" />
-                  <span className="text-sm font-black text-purple-400/60 uppercase tracking-widest">Advanced Attacks — Would Fool Traditional Security</span>
-                  <div className="flex-1 h-px bg-purple-400/20" />
+              {/* Phase 3 header — before behavioral edge cases */}
+              {scenario.id === 6 && (
+                <div className="bg-orange-900/20 rounded-2xl border border-orange-500/20 p-5 mb-5 mt-3">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-orange-400/20 flex items-center justify-center shrink-0">
+                      <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm-1-5a1 1 0 112 0 1 1 0 01-2 0zm0-6a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1v3a1 1 0 102 0V6z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-orange-400 uppercase tracking-widest">Phase 3: Edge Cases — Would Slip Traditional Security</h3>
+                      <p className="text-lg text-orange-400/60 mt-0.5">
+                        These attacks pass every policy check. Values are within limits, targets are approved, functions are whitelisted. Only behavioral risk scoring catches them.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
