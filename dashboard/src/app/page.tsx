@@ -4,19 +4,17 @@ import { useState, useCallback, useRef } from 'react'
 import { useSentinelData } from '@/hooks/useSentinelData'
 import { useVerdictHistory } from '@/hooks/useVerdictHistory'
 import TabNavigation from '@/components/TabNavigation'
-import StatsOverview from '@/components/StatsOverview'
-import AgentRegistryPanel from '@/components/AgentRegistryPanel'
-import IncidentLogPanel from '@/components/IncidentLogPanel'
 import ScenarioDemoPanel from '@/components/ScenarioDemoPanel'
 import VerdictFeedPanel from '@/components/VerdictFeedPanel'
 import ArchitecturePanel from '@/components/ArchitecturePanel'
 import ChainlinkActivityPanel, { type PipelineRun } from '@/components/ChainlinkActivityPanel'
 import TenderlyFeedPanel from '@/components/TenderlyFeedPanel'
-import TransactionSimulatorPanel from '@/components/TransactionSimulatorPanel'
+import GuardianTab from '@/components/guardian/GuardianTab'
+import BehavioralTrainingPanel from '@/components/simulator/BehavioralTrainingPanel'
 import type { VerdictResult } from '@/lib/demo-scenarios'
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('demo')
+  const [activeTab, setActiveTab] = useState('architecture')
   const { data } = useSentinelData()
   const { verdicts, addVerdict, clearVerdicts } = useVerdictHistory()
   const [currentRun, setCurrentRun] = useState<PipelineRun | null>(null)
@@ -142,15 +140,11 @@ export default function Home() {
       {/* Other tabs use full-width layout */}
       <div className="w-full px-6 xl:px-10 py-6">
         <div className={activeTab === 'guardian' ? '' : 'hidden'}>
-          <div className="space-y-6">
-            <StatsOverview data={data} sessionVerdicts={verdicts} />
-            <AgentRegistryPanel agents={data.agents} sessionVerdicts={verdicts} />
-            <IncidentLogPanel agents={data.agents} sessionVerdicts={verdicts} />
-          </div>
+          <GuardianTab sessionVerdicts={verdicts} />
         </div>
 
         <div className={activeTab === 'simulator' ? '' : 'hidden'}>
-          <TransactionSimulatorPanel />
+          <BehavioralTrainingPanel />
         </div>
 
         <div className={activeTab === 'architecture' ? '' : 'hidden'}>

@@ -10,8 +10,9 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 |---|---|
 | **Demo Video** | [Coming Soon](#) |
 | **Live Dashboard** | `bun run mock-api && bun run dashboard` → http://localhost:3000 |
-| **Tenderly Explorer** | [Virtual TestNet](https://virtual.sepolia.us-west.rpc.tenderly.co/709c1ff8-2e72-47a5-83ec-4a71a9a9c951) |
-| **Contracts** | [`0x3e2D...476f`](https://sepolia.etherscan.io/address/0x3e2D7CE3CcB520f26dE6fe499bAA38A28cfd476f) (Guardian) · [`0xb008...9bbE`](https://sepolia.etherscan.io/address/0xb008CE7EE90C66A219C842E69a4fBAF7E5359bbE) (Registry) |
+| **Tenderly Explorer** | [Virtual TestNet Transactions](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions) |
+| **Contracts** | `0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8` (Guardian) · `0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6` (Registry) |
+| **Deployer** | `0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446` |
 
 ---
 
@@ -241,27 +242,28 @@ cd contracts && forge test -v
 
 ## Interactive Risk Monitoring Dashboard
 
-Four tabs built with Next.js 15 + React 19 + Tailwind CSS 4:
+Four tabs built with Next.js 15 + React 19 + Tailwind CSS 4 (Architecture opens first for demo video flow):
 
 | Tab | What It Shows |
 |-----|--------------|
-| **Demo** | Narrative walkthrough — 3 baselines train the system, then 11 escalating attacks are detected. Shows 8-step CRE pipeline, dual-AI verdicts (Claude + secondary), and 7-dimension behavioral risk breakdown with progress bars |
-| **Guardian** | Live risk stats (approved/denied/active/frozen agents), per-agent compliance policies, incident log with severity classification, real-time updates after each evaluation |
-| **Simulator** | Drag-and-drop attack cards onto a wallet — triggers real Tenderly simulations showing gas, events, state changes, and call traces for each scenario |
-| **Architecture** | Visual overview of all Chainlink services, contract details with test counts, and the full risk evaluation pipeline |
+| **Architecture** | Detailed reference — problem statement with real DeFi exploits ($625M Ronin, $320M Wormhole, $114M Mango Markets), three-layer defense diagram, 8-step verdict pipeline, 7 Chainlink integration cards with LIVE/READY status, expandable smart contracts with Solidity code snippets, 7 behavioral dimension breakdown with weight bars, and tech stack grid |
+| **Demo** | Narrative walkthrough — 3 baselines train the system, then 11 escalating attacks are detected. Shows 8-step CRE pipeline animation, dual-AI verdicts (Claude + GPT-4), and 7-dimension behavioral risk breakdown |
+| **Guardian** | Rich agent profiles (TradingBot + MintBot) with behavioral score trend sparklines (green→red), session performance metrics (100% detection rate, 0% false positive rate, attack $ prevented), defense analytics charts (donut, severity bars, risk histogram, defense layer stacked bar), threat timeline with phase dividers, wallet addresses, and filterable incident log |
+| **Simulator** | Behavioral Training Ground — pick an agent, run safe actions (score stays low), then run attacks (score spikes). Cumulative behavioral score meter with CSS gradient gauge. At score 70+, AGENT LOCKOUT fires on-chain via processVerdict. Reset to retrain |
 
 ---
 
 ## Tenderly Integration
 
-Contracts are deployed on Tenderly's Virtual Sepolia TestNet with full simulation capabilities:
+Contracts are deployed on Tenderly's Virtual Sepolia TestNet with live on-chain verdict recording:
 
 | Contract | Address |
 |----------|---------|
-| SentinelGuardian | `0x3e2D7CE3CcB520f26dE6fe499bAA38A28cfd476f` |
-| AgentRegistry | `0xb008CE7EE90C66A219C842E69a4fBAF7E5359bbE` |
+| SentinelGuardian | `0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8` |
+| AgentRegistry | `0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6` |
+| Deployer | `0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446` |
 
-The dashboard reads live on-chain state (agent policies, incident history, action stats) and runs real transaction simulations through Tenderly's Simulation API — judges can see exactly which compliance check catches each attack, what events are emitted, and the full gas profile.
+Every demo verdict fires real `processVerdict()` and `unfreezeAgent()` transactions to Tenderly. The dashboard includes a live Tenderly feed panel that polls transaction counts and recent function calls every 12 seconds. Judges can verify all on-chain activity via the [Tenderly Explorer](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions).
 
 ---
 
