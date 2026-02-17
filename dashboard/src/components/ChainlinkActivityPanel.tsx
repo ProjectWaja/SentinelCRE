@@ -187,7 +187,13 @@ export default function ChainlinkActivityPanel({
   const isIdle = !currentRun || (!isAnimating && !isPending && blockedStep === -1)
 
   return (
-    <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5">
+    <div className={`bg-gray-900 rounded-2xl border p-5 transition-colors duration-500 ${
+      isPending || isAnimating
+        ? 'border-yellow-500/30'
+        : blockedStep >= 0
+          ? 'border-red-500/30'
+          : 'border-gray-800'
+    }`}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xl font-black text-white uppercase tracking-widest">
           CRE Pipeline

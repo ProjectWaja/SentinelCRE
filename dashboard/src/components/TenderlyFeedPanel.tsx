@@ -100,8 +100,24 @@ export default function TenderlyFeedPanel() {
         </div>
       </div>
 
+      {/* Loading skeleton */}
+      {loading && !data && (
+        <div className="space-y-2.5">
+          {[1, 2].map((i) => (
+            <div key={i} className="p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
+              <div className="flex items-center justify-between mb-2">
+                <div className="skeleton h-4 w-32" />
+                <div className="skeleton h-4 w-16" />
+              </div>
+              <div className="skeleton h-3 w-full mb-2" />
+              <div className="skeleton h-3 w-48" />
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Contract cards */}
-      <div className="space-y-2.5">
+      <div className={`space-y-2.5 ${loading && !data ? 'hidden' : ''}`}>
         {CONTRACTS.map((c) => (
           <a
             key={c.address}

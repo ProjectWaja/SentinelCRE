@@ -1,5 +1,7 @@
 'use client'
 
+import { useRef, useState, useEffect, useCallback } from 'react'
+
 interface Tab {
   id: string
   label: string
@@ -8,6 +10,16 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
+  {
+    id: 'architecture',
+    label: 'Architecture',
+    desc: '3-layer defense',
+    icon: (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+      </svg>
+    ),
+  },
   {
     id: 'demo',
     label: 'Live Demo',
@@ -19,16 +31,6 @@ const TABS: Tab[] = [
           d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
           clipRule="evenodd"
         />
-      </svg>
-    ),
-  },
-  {
-    id: 'architecture',
-    label: 'Architecture',
-    desc: '3-layer defense',
-    icon: (
-      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
       </svg>
     ),
   },
@@ -69,32 +71,68 @@ export default function TabNavigation({
   activeTab: string
   onTabChange: (tab: string) => void
 }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
+
+  const updateIndicator = useCallback(() => {
+    const button = tabRefs.current.get(activeTab)
+    const container = containerRef.current
+    if (!button || !container) return
+
+    const containerRect = container.getBoundingClientRect()
+    const buttonRect = button.getBoundingClientRect()
+
+    setIndicatorStyle({
+      left: buttonRect.left - containerRect.left,
+      width: buttonRect.width,
+    })
+  }, [activeTab])
+
+  useEffect(() => {
+    updateIndicator()
+    window.addEventListener('resize', updateIndicator)
+    return () => window.removeEventListener('resize', updateIndicator)
+  }, [updateIndicator])
+
   return (
     <div className="sticky top-20 z-40 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800">
       <div className="w-full px-6 xl:px-10">
-        <div className="flex gap-1">
+        <div ref={containerRef} className="relative flex gap-1">
           {TABS.map((tab) => (
             <button
               key={tab.id}
+              ref={(el) => {
+                if (el) tabRefs.current.set(tab.id, el)
+              }}
               onClick={() => onTabChange(tab.id)}
-              className={`flex items-center gap-2.5 px-5 py-3.5 text-lg font-semibold transition-colors relative ${
+              className={`flex items-center gap-2.5 px-5 py-3.5 text-lg font-semibold transition-colors duration-200 relative ${
                 activeTab === tab.id
                   ? 'text-red-400'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
+              } rounded-t-lg`}
             >
-              <span className="w-5 h-5">{tab.icon}</span>
+              <span className={`w-5 h-5 transition-transform duration-200 ${
+                activeTab === tab.id ? 'scale-110' : ''
+              }`}>
+                {tab.icon}
+              </span>
               {tab.label}
-              <span className={`text-sm font-normal ${
+              <span className={`text-sm font-normal transition-colors duration-200 ${
                 activeTab === tab.id ? 'text-red-400/50' : 'text-gray-600'
               }`}>
                 {tab.desc}
               </span>
-              {activeTab === tab.id && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500 rounded-full" />
-              )}
             </button>
           ))}
+          {/* Animated sliding indicator */}
+          <div
+            className="absolute bottom-0 h-[2px] bg-red-500 rounded-full transition-all duration-300 ease-out"
+            style={{
+              left: indicatorStyle.left,
+              width: indicatorStyle.width,
+            }}
+          />
         </div>
       </div>
     </div>

@@ -18,7 +18,7 @@ export default function RootLayout({
         <nav className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-sm sticky top-0 z-50">
           <div className="w-full px-6 xl:px-10 h-20 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-orange-500 flex items-center justify-center animate-shield">
+              <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-orange-500 flex items-center justify-center animate-shield">
                 <svg
                   className="w-7 h-7 text-white"
                   fill="currentColor"
@@ -31,21 +31,23 @@ export default function RootLayout({
                   />
                 </svg>
               </div>
-              <h1 className="text-2xl font-black text-white tracking-tight">
-                SentinelCRE
-              </h1>
-              <span className="text-lg text-gray-500 font-medium">
-                AI Guardian Protocol
-              </span>
+              <div>
+                <h1 className="text-2xl font-black text-white tracking-tight leading-none">
+                  SentinelCRE
+                </h1>
+                <span className="text-sm text-gray-500 font-medium">
+                  AI Guardian Protocol
+                </span>
+              </div>
             </div>
             <div className="flex items-center gap-5">
               <a
                 href="/presentation"
-                className="text-lg text-gray-400 hover:text-white transition-colors font-semibold"
+                className="text-base text-gray-400 hover:text-white transition-colors duration-200 font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-800/50"
               >
                 Presentation
               </a>
-              <span className="text-base text-purple-400 bg-purple-400/10 px-4 py-1.5 rounded-full font-bold">
+              <span className="text-sm text-purple-400 bg-purple-400/10 px-4 py-1.5 rounded-full font-bold border border-purple-400/20">
                 Tenderly TestNet
               </span>
             </div>

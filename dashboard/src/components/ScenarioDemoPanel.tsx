@@ -98,6 +98,9 @@ export default function ScenarioDemoPanel({
     setRunningAll(false)
   }
 
+  const totalScenarios = allScenarios.length
+  const completedCount = completedIds.size
+
   return (
     <div className="space-y-6">
       {/* Header + Run All */}
@@ -142,6 +145,36 @@ export default function ScenarioDemoPanel({
             </button>
           )}
         </div>
+
+        {/* Progress bar during full demo */}
+        {(runningAll || completedCount > 0) && (
+          <div className="mt-5 pt-5 border-t border-gray-800">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-base font-bold text-gray-400">
+                Demo Progress
+              </span>
+              <span className="text-base font-bold text-gray-300 tabular-nums">
+                {completedCount} / {totalScenarios}
+              </span>
+            </div>
+            <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500 ease-out"
+                style={{
+                  width: `${(completedCount / totalScenarios) * 100}%`,
+                  background: completedCount === totalScenarios
+                    ? 'linear-gradient(to right, #22c55e, #4ade80)'
+                    : 'linear-gradient(to right, #ef4444, #f97316)',
+                }}
+              />
+            </div>
+            <div className="flex justify-between mt-1.5 text-sm text-gray-600">
+              <span>Baselines ({Math.min(completedCount, 3)}/3)</span>
+              <span>Attacks ({Math.min(Math.max(completedCount - 3, 0), 5)}/5)</span>
+              <span>Edge Cases ({Math.max(completedCount - 8, 0)}/6)</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Scenario Cards with Phase Dividers */}
