@@ -293,7 +293,7 @@ export default function BehavioralTrainingPanel() {
       {isLockout && (
         <div
           className={`relative overflow-hidden rounded-2xl border-2 border-red-500 bg-red-950/50 px-8 py-6 ${
-            lockoutShake ? 'animate-[lockout-shake_0.5s_ease-in-out]' : ''
+            lockoutShake ? 'animate-lockout-shake' : ''
           }`}
         >
           {/* Animated background pulse */}
@@ -375,28 +375,6 @@ export default function BehavioralTrainingPanel() {
         </div>
       )}
 
-      {/* Inline keyframes for lockout shake */}
-      <style jsx>{`
-        @keyframes lockout-shake {
-          0%,
-          100% {
-            transform: translateX(0);
-          }
-          10%,
-          30%,
-          50%,
-          70%,
-          90% {
-            transform: translateX(-4px);
-          }
-          20%,
-          40%,
-          60%,
-          80% {
-            transform: translateX(4px);
-          }
-        }
-      `}</style>
     </div>
   )
 }

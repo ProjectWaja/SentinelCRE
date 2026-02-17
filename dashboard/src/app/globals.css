@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+/* ── Verdict & slide animations ───────────────────────────────────── */
+
 @keyframes verdict-flash {
   0% { opacity: 0; transform: scale(0.95); }
   50% { opacity: 1; transform: scale(1.02); }
@@ -20,7 +22,8 @@
 .animate-slide-in { animation: slide-in 0.3s ease-out; }
 .animate-shield { animation: shield-pulse 2s ease-in-out infinite; }
 
-/* Drop zone glow animations for drag-and-drop simulator */
+/* ── Drop zone glow animations for drag-and-drop simulator ─────── */
+
 @keyframes drop-zone-glow {
   0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
   50% { box-shadow: 0 0 30px 8px rgba(59, 130, 246, 0.2); }
@@ -47,13 +50,76 @@
 .animate-drop-glow-safe { animation: drop-zone-glow-safe 1.5s ease-in-out infinite; }
 .animate-result-slam { animation: result-slam 0.35s ease-out; }
 
-/* Thin scrollbar for sticky sidebar */
+/* ── Score meter & lockout animations (moved from inline style jsx) ── */
+
+@keyframes score-pulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  30% { transform: scale(1.15); filter: brightness(1.5); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes lockout-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.5); }
+}
+
+@keyframes lockout-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.animate-score-pulse { animation: score-pulse 0.6s ease-out; }
+.animate-lockout-glow { animation: lockout-glow 2s ease-in-out infinite; }
+.animate-lockout-shake { animation: lockout-shake 0.5s ease-in-out; }
+
+/* ── Tab content transitions ──────────────────────────────────────── */
+
+@keyframes tab-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tab-panel-enter { animation: tab-fade-in 0.25s ease-out; }
+
+/* ── Skeleton shimmer for loading states ─────────────────────────── */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ── Progress bar fill animation ──────────────────────────────────── */
+
+@keyframes progress-fill {
+  from { width: 0%; }
+}
+
+.animate-progress-fill { animation: progress-fill 0.5s ease-out; }
+
+/* ── Scrollbar styling ────────────────────────────────────────────── */
+
 .scrollbar-thin::-webkit-scrollbar { width: 4px; }
 .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
 .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 2px; }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 .scrollbar-thin { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
 
-/* Hide scrollbar entirely */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Focus-visible for keyboard navigation ────────────────────────── */
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgba(239, 68, 68, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

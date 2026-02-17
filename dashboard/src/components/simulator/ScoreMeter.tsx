@@ -58,7 +58,7 @@ export default function ScoreMeter({ score, maxScore = 100 }: ScoreMeterProps) {
     <div
       className={`relative rounded-2xl border p-6 transition-all duration-500 ${
         isLockout
-          ? 'border-red-500/70 bg-red-950/30 shadow-[0_0_30px_rgba(239,68,68,0.3)] animate-[lockout-glow_2s_ease-in-out_infinite]'
+          ? 'border-red-500/70 bg-red-950/30 shadow-[0_0_30px_rgba(239,68,68,0.3)] animate-lockout-glow'
           : 'border-gray-700/50 bg-gray-900/80'
       }`}
     >
@@ -81,7 +81,7 @@ export default function ScoreMeter({ score, maxScore = 100 }: ScoreMeterProps) {
         >
           <span
             className={`text-5xl font-black tabular-nums ${getScoreNumberColor(score)} ${
-              isAnimating ? 'animate-[score-pulse_0.6s_ease-out]' : ''
+              isAnimating ? 'animate-score-pulse' : ''
             }`}
           >
             {score}
@@ -146,32 +146,6 @@ export default function ScoreMeter({ score, maxScore = 100 }: ScoreMeterProps) {
         <span className="text-red-500">{maxScore}</span>
       </div>
 
-      {/* Inline keyframes via style tag */}
-      <style jsx>{`
-        @keyframes score-pulse {
-          0% {
-            transform: scale(1);
-            filter: brightness(1);
-          }
-          30% {
-            transform: scale(1.15);
-            filter: brightness(1.5);
-          }
-          100% {
-            transform: scale(1);
-            filter: brightness(1);
-          }
-        }
-        @keyframes lockout-glow {
-          0%,
-          100% {
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
-          }
-          50% {
-            box-shadow: 0 0 40px rgba(239, 68, 68, 0.5);
-          }
-        }
-      `}</style>
     </div>
   )
 }
