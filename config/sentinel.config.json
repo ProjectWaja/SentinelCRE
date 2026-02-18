@@ -4,5 +4,6 @@
   "guardianContractAddress": "0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8",
   "registryContractAddress": "0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6",
   "aiEndpoint1": "https://api.anthropic.com/v1/messages",
-  "aiEndpoint2": "https://api.anthropic.com/v1/messages"
+  "aiEndpoint2": "https://api.anthropic.com/v1/messages",
+  "enableConfidentialCompute": true
 }

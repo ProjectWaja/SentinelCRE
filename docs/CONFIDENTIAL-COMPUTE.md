@@ -4,7 +4,7 @@
 
 Chainlink Confidential Compute (CC) is a breakthrough privacy service built natively into CRE. SentinelCRE leverages CC to make guardrail evaluation fundamentally opaque to the AI agents being protected.
 
-**Status**: Confidential HTTP is in **Experimental / Early Access** (available Feb 16, 2026). This document describes both the current implementation and the production upgrade path.
+**Status**: Confidential HTTP is **live** in `@chainlink/cre-sdk` v1.0.9+ (simulator support) with secret injection fixed in v1.0.10 (Feb 9, 2026). SentinelCRE now has a feature-flagged implementation using `ConfidentialHTTPClient`. See [SDK Reference](https://docs.chain.link/cre/reference/sdk/confidential-http-client-ts) and [Usage Guide](https://docs.chain.link/cre/guides/workflow/using-confidential-http-client/making-requests-ts).
 
 ## Why Confidential Compute Matters for SentinelCRE
 
@@ -30,24 +30,23 @@ const policyJson = runtime.getSecret("agent_policy_0").result();
 const policy: AgentPolicy = JSON.parse(policyJson);
 ```
 
-**Confidential Compute upgrade** (Feb 16+ Early Access):
+**Confidential Compute upgrade** (live in CRE SDK v1.0.10+):
 ```typescript
+import { ConfidentialHTTPClient } from "@chainlink/cre-sdk";
+
 // [CONFIDENTIAL_COMPUTE] Policy retrieved inside TEE
 // Node operators CANNOT see the decrypted value
-// Policy is encrypted in Vault DON with DKG threshold encryption
+// Secrets injected via {{TEMPLATE}} syntax — never visible outside enclave
 const confClient = new ConfidentialHTTPClient();
 
-// Option A: Policy stored in Vault DON directly
-const policy = runtime.getConfidentialSecret("agent_policy_0").result();
-
-// Option B: Policy retrieved from external encrypted store via Confidential HTTP
+// Policy retrieved from external encrypted store via Confidential HTTP
+// The {{POLICY_API_KEY}} template is resolved inside the TEE from DON-hosted secrets
 const policyResponse = confClient.sendRequest({
   url: config.policyEndpoint,
   method: "GET",
-  confidentialHeaders: {
-    "Authorization": `Bearer ${runtime.getSecret("policy_api_key").result()}`
+  headers: {
+    "Authorization": "Bearer {{POLICY_API_KEY}}"
   },
-  responseExtraction: { path: "policy" }
 }).result();
 ```
 
@@ -88,18 +87,20 @@ const verdict = runtime
   .result();
 ```
 
-**Confidential Compute upgrade** (Feb 16+ Early Access):
+**Confidential Compute upgrade** (live in CRE SDK v1.0.10+):
 ```typescript
+import { ConfidentialHTTPClient } from "@chainlink/cre-sdk";
+
 // [CONFIDENTIAL_COMPUTE] AI calls via Confidential HTTP
-// API key hidden, prompt hidden, full response hidden
-// Only extracted verdict field exits TEE
+// API key hidden via {{TEMPLATE}} secret injection, prompt hidden, full response hidden
+// Only the verdict exits the TEE
 const confClient = new ConfidentialHTTPClient();
 
 const claudeResult = confClient.sendRequest({
   url: "https://api.anthropic.com/v1/messages",
   method: "POST",
-  confidentialHeaders: {
-    "x-api-key": runtime.getConfidentialSecret("anthropic_api_key").result(),
+  headers: {
+    "x-api-key": "{{ANTHROPIC_API_KEY}}",
     "Content-Type": "application/json",
     "anthropic-version": "2023-06-01"
   },
@@ -109,11 +110,10 @@ const claudeResult = confClient.sendRequest({
     max_tokens: 500,
     messages: [{ role: "user", content: evaluationPrompt }]
   }),
-  // CRITICAL: Only the verdict JSON exits the TEE
-  // The full response (including reasoning, token usage, etc.) stays inside
-  responseExtraction: { path: "content[0].text" }
 }).result();
 ```
+
+This is now implemented in `sentinel-workflow/main.ts` behind the `enableConfidentialCompute` feature flag.
 
 **What changes**: The entire AI evaluation — prompt construction, API call, response parsing — happens inside a TEE. The AI models receive encrypted prompts containing sensitive agent context (behavioral history, portfolio data, transaction patterns) that would be valuable intelligence if leaked. Confidential HTTP ensures this intelligence never leaves the enclave.
 
@@ -154,23 +154,20 @@ const encryptedReport = confClient.sendRequest({
 
 ## Implementation Strategy
 
-### Phase 1: Standard Implementation (Now)
-Build the full workflow using `runInNodeMode` + `runtime.getSecret()`. This is battle-tested and guaranteed to work with CRE simulation and deployment.
+### Phase 1: Standard Implementation — COMPLETE
+Full workflow using `HTTPClient.sendRequest()` with `ConsensusAggregationByFields`. Battle-tested with CRE simulation and mock API server.
 
-### Phase 2: CC Layer (Feb 16+)
-Add Confidential HTTP as an upgrade layer. Keep the standard implementation as a fallback. Use feature flags:
+### Phase 2: CC Layer — IMPLEMENTED
+`ConfidentialHTTPClient` integrated behind `enableConfidentialCompute` feature flag in `sentinel-workflow/main.ts`. Standard path retained as fallback. Set `"enableConfidentialCompute": true` in config to activate.
 
 ```typescript
-const USE_CONFIDENTIAL_HTTP = config.enableConfidentialCompute ?? false;
-
-if (USE_CONFIDENTIAL_HTTP) {
-  // Confidential HTTP path
-  verdict = evaluateWithConfidentialHTTP(runtime, action);
+// In sentinel-workflow/main.ts — already implemented
+if (config.enableConfidentialCompute) {
+  aiVerdict = evaluateWithConfidentialHttp(runtime, config, proposal, policyContext, behavioralResult);
 } else {
-  // Standard runInNodeMode path
-  verdict = runtime
-    .runInNodeMode(fetchAIEvaluation, consensusIdenticalAggregation<AIVerdict>())()
-    .result();
+  // Standard HTTPClient path (fallback)
+  const httpClient = new HTTPClient();
+  aiVerdict = httpClient.sendRequest(runtime, /* ... */).result();
 }
 ```
 
@@ -179,16 +176,17 @@ Full Vault DON integration with DKG threshold encryption for all secrets, custom
 
 ## What's Available Now vs. Later
 
-| Feature | Early Access (Feb 2026) | General Access (Later 2026) |
-|---------|------------------------|----------------------------|
-| Confidential HTTP | ✅ Yes | ✅ Yes |
-| Basic Vault DON secrets | ✅ Yes | ✅ Yes |
-| TEE execution markers | ✅ Yes | ✅ Yes |
-| Attestation proofs | ✅ Expected | ✅ Yes |
-| Custom DKG threshold encryption | ❓ Possibly | ✅ Yes |
-| Custom enclave deployment | ❌ No | ✅ Yes |
-| Multi-party confidential compute | ❌ No | ✅ Yes |
-| Production SLA guarantees | ❌ No | ✅ Yes |
+| Feature | CRE SDK v1.0.10 (Now) | SentinelCRE Status | General Access (Later 2026) |
+|---------|----------------------|-------------------|----------------------------|
+| Confidential HTTP | ✅ Live | ✅ Implemented | ✅ Yes |
+| Secret template injection | ✅ Live (fixed v1.0.10) | ✅ Implemented (`{{ANTHROPIC_API_KEY}}`) | ✅ Yes |
+| Simulator support | ✅ Live (v1.0.9+) | ✅ Ready to test | ✅ Yes |
+| TEE execution markers | ✅ Live | ✅ attestationHash in verdict | ✅ Yes |
+| Attestation proofs | ✅ Expected | ⏳ Stub verification | ✅ Yes |
+| Custom DKG threshold encryption | ❓ Possibly | ⏳ Designed, not integrated | ✅ Yes |
+| Custom enclave deployment | ❌ Not yet | ❌ N/A | ✅ Yes |
+| Multi-party confidential compute | ❌ Not yet | ❌ N/A | ✅ Yes |
+| Production SLA guarantees | ❌ Not yet | ❌ N/A | ✅ Yes |
 
 ## Attestation Model
 
