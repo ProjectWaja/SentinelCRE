@@ -1,0 +1,16 @@
+# ==========================================================================
+# CRE PROJECT SETTINGS FILE — SentinelCRE
+# ==========================================================================
+# Project-specific settings for CRE CLI targets.
+
+# ==========================================================================
+local-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: https://ethereum-sepolia-rpc.publicnode.com
+
+# ==========================================================================
+staging-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: https://ethereum-sepolia-rpc.publicnode.com

@@ -18,6 +18,7 @@ import {
   Runner,
   handler,
   HTTPClient,
+  ConfidentialHTTPClient,
   HTTPCapability,
   CronCapability,
   EVMClient,
@@ -31,6 +32,7 @@ import {
   text,
   type Runtime,
   type HTTPSendRequester,
+  type ConfidentialHTTPSendRequester,
   type HTTPPayload,
   type CronPayload,
   type HandlerEntry,
@@ -58,6 +60,9 @@ const configSchema = z.object({
   registryContractAddress: z.string().describe('AgentRegistry contract address'),
   aiEndpoint1: z.string().describe('AI Model 1 evaluation URL'),
   aiEndpoint2: z.string().describe('AI Model 2 evaluation URL'),
+  enableConfidentialCompute: z
+    .boolean()
+    .describe('Enable Confidential HTTP for AI calls (hides prompts, API keys, and responses inside TEE)'),
 })
 
 type Config = z.infer<typeof configSchema>
@@ -190,11 +195,14 @@ Respond with ONLY valid JSON (no markdown):
 }
 
 /**
- * Calls both AI models and requires consensus.
+ * Calls both AI models via standard HTTPClient and requires consensus.
  * Uses HTTPClient.sendRequest with ConsensusAggregationByFields.
  * Temperature 0 ensures deterministic output for DON consensus.
+ *
+ * NOTE: In this path, node operators CAN see API keys, prompts, and responses.
+ * Use evaluateWithConfidentialHttp() to hide all of this inside a TEE.
  */
-function evaluateWithAI(
+function evaluateWithStandardHttp(
   sendRequester: HTTPSendRequester,
   config: Config,
   proposal: ActionProposal,
@@ -207,12 +215,6 @@ function evaluateWithAI(
   behavioralResult?: BehavioralAnalysisResult,
 ): AIVerdict {
   const prompt = buildEvaluationPrompt(proposal, policyContext, behavioralResult)
-
-  // --- [CONFIDENTIAL_COMPUTE_BOUNDARY_START] ---
-  // When Chainlink Confidential Compute SDK ships, wrap AI calls in:
-  //   confidentialRuntime.execute(evaluateWithAI, { visibility: 'attestation-only' })
-  // This hides policy thresholds and guardrail parameters from the AI agent itself,
-  // preventing the agent from learning its own constraints and gaming the system.
 
   // Call Model 1
   const response1 = sendRequester
@@ -243,9 +245,127 @@ function evaluateWithAI(
       }),
     })
     .result()
-  // --- [CONFIDENTIAL_COMPUTE_BOUNDARY_END] ---
 
-  // Parse responses — default to DENIED on any error (fail-safe)
+  return parseAIResponses(response1, response2)
+}
+
+/**
+ * Calls both AI models via ConfidentialHTTPClient (TEE-backed).
+ * API keys, evaluation prompts, and full AI responses stay INSIDE the enclave.
+ * Only the parsed AIVerdict exits after consensus aggregation.
+ *
+ * This prevents:
+ * - Node operators from seeing policy thresholds embedded in prompts
+ * - API keys from being exposed during execution (injected via Vault DON templates)
+ * - AI reasoning/confidence details from leaking
+ * - Agents from reverse-engineering their own guardrail parameters
+ *
+ * Uses the same sugar pattern as HTTPClient: callback + ConsensusAggregationByFields.
+ */
+function evaluateWithConfidentialHttp(
+  sendRequester: ConfidentialHTTPSendRequester,
+  config: Config,
+  proposal: ActionProposal,
+  policyContext: {
+    maxTransactionValue: string
+    maxDailyVolume: string
+    maxMintAmount: string
+    rateLimit: string
+  },
+  behavioralResult?: BehavioralAnalysisResult,
+): AIVerdict {
+  const prompt = buildEvaluationPrompt(proposal, policyContext, behavioralResult)
+
+  const requestBody = JSON.stringify({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 300,
+    temperature: 0,
+    messages: [{ role: 'user', content: prompt }],
+  })
+
+  // ConfidentialHTTPRequest: secrets listed in vaultDonSecrets, referenced via
+  // {{ANTHROPIC_API_KEY}} template in headers. Resolved inside TEE from Vault DON.
+  const confRequest = {
+    vaultDonSecrets: [{ key: 'ANTHROPIC_API_KEY', namespace: 'sentinel' }],
+    request: {
+      url: config.aiEndpoint1,
+      method: 'POST',
+      bodyString: requestBody,
+      multiHeaders: {
+        'Content-Type': { values: ['application/json'] },
+        Accept: { values: ['application/json'] },
+        'x-api-key': { values: ['{{ANTHROPIC_API_KEY}}'] },
+        'anthropic-version': { values: ['2023-06-01'] },
+      },
+    },
+  }
+
+  const response1 = sendRequester.sendRequest(confRequest).result()
+  const response2 = sendRequester
+    .sendRequest({
+      ...confRequest,
+      request: { ...confRequest.request, url: config.aiEndpoint2 },
+    })
+    .result()
+
+  return parseConfidentialAIResponses(response1, response2)
+}
+
+/**
+ * Parse ConfidentialHTTPClient responses.
+ * Response body is Uint8Array (from enclave), decoded to string then parsed.
+ * Default to DENIED on any parse error (fail-safe).
+ */
+function parseConfidentialAIResponses(response1: any, response2: any): AIVerdict {
+  let v1: AIVerdict = { verdict: 'DENIED', confidence: 0, reason: 'Model 1 unavailable' }
+  let v2: AIVerdict = { verdict: 'DENIED', confidence: 0, reason: 'Model 2 unavailable' }
+
+  const decoder = new TextDecoder()
+
+  if (response1 && response1.statusCode >= 200 && response1.statusCode < 300) {
+    try {
+      const body1 = JSON.parse(decoder.decode(response1.body))
+      const parsed1 = JSON.parse(body1.content?.[0]?.text ?? '{}')
+      v1 = {
+        verdict: String(parsed1.verdict ?? 'DENIED'),
+        confidence: Number(parsed1.confidence ?? 0),
+        reason: String(parsed1.reason ?? ''),
+      }
+    } catch {
+      // Fail-safe: default to DENIED
+    }
+  }
+
+  if (response2 && response2.statusCode >= 200 && response2.statusCode < 300) {
+    try {
+      const body2 = JSON.parse(decoder.decode(response2.body))
+      const parsed2 = JSON.parse(body2.content?.[0]?.text ?? '{}')
+      v2 = {
+        verdict: String(parsed2.verdict ?? 'DENIED'),
+        confidence: Number(parsed2.confidence ?? 0),
+        reason: String(parsed2.reason ?? ''),
+      }
+    } catch {
+      // Fail-safe: default to DENIED
+    }
+  }
+
+  const approved = v1.verdict === 'APPROVED' && v2.verdict === 'APPROVED'
+
+  return {
+    verdict: approved ? 'APPROVED' : 'DENIED',
+    confidence: Math.min(v1.confidence, v2.confidence),
+    reason: approved
+      ? 'Both AI models approve action (confidential)'
+      : `Model1: ${v1.reason}. Model2: ${v2.reason}`,
+  }
+}
+
+/**
+ * Shared response parser for standard HTTP path.
+ * Default to DENIED on any parse error (fail-safe).
+ */
+function parseAIResponses(response1: any, response2: any): AIVerdict {
   let v1: AIVerdict = { verdict: 'DENIED', confidence: 0, reason: 'Model 1 unavailable' }
   let v2: AIVerdict = { verdict: 'DENIED', confidence: 0, reason: 'Model 2 unavailable' }
 
@@ -387,7 +507,6 @@ const onActionProposal = (runtime: Runtime<Config>, payload: HTTPPayload): strin
   }
 
   // Step 3: Multi-AI consensus evaluation (enriched with behavioral context)
-  const httpClient = new HTTPClient()
   const policyContext = {
     maxTransactionValue: maxTxValue.toString(),
     maxDailyVolume: maxDailyVol.toString(),
@@ -395,18 +514,41 @@ const onActionProposal = (runtime: Runtime<Config>, payload: HTTPPayload): strin
     rateLimit: rateLimit.toString(),
   }
 
-  const aiVerdict = httpClient
-    .sendRequest(
-      runtime,
-      (sendRequester: HTTPSendRequester) =>
-        evaluateWithAI(sendRequester, config, proposal, policyContext, behavioralResult),
-      ConsensusAggregationByFields<AIVerdict>({
-        verdict: identical,
-        confidence: median,
-        reason: identical,
-      }),
-    )(config)
-    .result()
+  let aiVerdict: AIVerdict
+
+  if (config.enableConfidentialCompute) {
+    // Confidential HTTP path: prompts, API keys, and AI responses stay inside TEE.
+    // Agents cannot reverse-engineer their own guardrail parameters.
+    runtime.log('[SentinelCRE] Using Confidential HTTP for AI evaluation')
+    const confClient = new ConfidentialHTTPClient()
+    aiVerdict = confClient
+      .sendRequest(
+        runtime,
+        (sendRequester: ConfidentialHTTPSendRequester) =>
+          evaluateWithConfidentialHttp(sendRequester, config, proposal, policyContext, behavioralResult),
+        ConsensusAggregationByFields<AIVerdict>({
+          verdict: identical,
+          confidence: median,
+          reason: identical,
+        }),
+      )()
+      .result()
+  } else {
+    // Standard HTTP path: node operators can see API calls (fallback)
+    const httpClient = new HTTPClient()
+    aiVerdict = httpClient
+      .sendRequest(
+        runtime,
+        (sendRequester: HTTPSendRequester) =>
+          evaluateWithStandardHttp(sendRequester, config, proposal, policyContext, behavioralResult),
+        ConsensusAggregationByFields<AIVerdict>({
+          verdict: identical,
+          confidence: median,
+          reason: identical,
+        }),
+      )()
+      .result()
+  }
 
   runtime.log(
     `[SentinelCRE] AI Verdict: ${aiVerdict.verdict} (confidence: ${aiVerdict.confidence})`,

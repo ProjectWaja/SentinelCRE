@@ -1,0 +1,21 @@
+# ==========================================================================
+# CRE WORKFLOW SETTINGS FILE — SentinelCRE
+# ==========================================================================
+
+# ==========================================================================
+local-settings:
+  user-workflow:
+    workflow-name: "sentinel-cre-local"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "../config/sentinel.local.config.json"
+    secrets-path: ""
+
+# ==========================================================================
+staging-settings:
+  user-workflow:
+    workflow-name: "sentinel-cre-staging"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "../config/sentinel.config.json"
+    secrets-path: "../secrets.yaml"
