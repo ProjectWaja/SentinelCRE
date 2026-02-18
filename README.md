@@ -60,8 +60,10 @@ flowchart TB
         L2 --> L3
 
         subgraph L3["Layer 3: Multi-AI Consensus"]
-            M1["Claude Evaluation"]
-            M2["Secondary Model"]
+            subgraph TEE["ConfidentialHTTPClient (TEE Enclave)"]
+                M1["Claude Evaluation"]
+                M2["Secondary Model"]
+            end
             M3["Both Must APPROVE"]
         end
     end
@@ -126,30 +128,31 @@ Two independent AI models evaluate every action with the behavioral risk analysi
 - **Claude** and a **secondary model** each receive the proposal, the on-chain policy, and the behavioral anomaly breakdown
 - **Both must independently return APPROVED** — a single denial triggers a block
 - CRE's `ConsensusAggregationByFields` ensures all DON nodes agree on the verdict field-by-field
-- **Confidential HTTP** hides API keys, evaluation prompts, and risk thresholds from DON node operators — agents cannot learn their own limits
+- **`ConfidentialHTTPClient`** (`@chainlink/cre-sdk` v1.0.9) hides API keys, evaluation prompts, and risk thresholds inside a TEE — agents receive only APPROVED/DENIED with zero information about boundaries, criteria, or AI consultation
 
 ---
 
 ## Chainlink Services — Deep Integration
 
-We use **5 CRE capabilities** plus Data Feeds and Automation-ready hooks:
+We use **5 CRE capabilities** (including Confidential HTTP) plus Data Feeds and Automation-ready hooks:
 
 | Service | How We Use It | Risk & Compliance Value |
 |---------|--------------|------------------------|
 | **CRE HTTPClient** | Calls 2 AI models with `ConsensusAggregationByFields` | DON-level BFT consensus on AI risk verdicts — no single node can approve a malicious action |
+| **CRE ConfidentialHTTPClient** | TEE-backed AI calls — API keys injected via Vault DON `{{ANTHROPIC_API_KEY}}` template, prompts and responses stay inside enclave | Agents cannot see evaluation prompts, policy thresholds, or AI reasoning. Feature-flagged via `enableConfidentialCompute` config |
 | **CRE EVMClient** | Reads agent policies, writes verdicts on-chain | Automated compliance enforcement with immutable audit trail |
 | **CRE CronCapability** | Periodic health checks and anomaly detection | Proactive risk monitoring beyond request-response |
-| **Confidential HTTP** | Hides API keys + risk thresholds from DON nodes | Prevents agents from reverse-engineering their own compliance limits |
 | **Data Feeds** | `AggregatorV3Interface` for Proof of Reserves | Real-time reserve verification before mints — cumulative tracking prevents gradual reserve depletion |
 | **Automation** | `finalizeExpiredChallenge()` uses checkUpkeep/performUpkeep | Expired compliance appeal windows auto-finalize without manual intervention |
 
 ### Why CRE Specifically?
 
-CRE's `ConsensusAggregationByFields` is the critical enabler. It ensures the dual-AI consensus isn't just application logic — it's enforced at the DON level. Combined with Confidential HTTP hiding the evaluation prompts, this creates a risk evaluation pipeline where:
-1. Agents can't see their limits (Confidential HTTP)
-2. Agents can't game the AI evaluators (hidden prompts)
-3. No single DON node can override the consensus (BFT aggregation)
-4. All verdicts are written immutably on-chain (audit trail)
+CRE's `ConsensusAggregationByFields` is the critical enabler. It ensures the dual-AI consensus isn't just application logic — it's enforced at the DON level. Combined with `ConfidentialHTTPClient` hiding the evaluation prompts inside a TEE, this creates a risk evaluation pipeline where:
+1. Agents can't see their limits (`ConfidentialHTTPClient` keeps policy thresholds inside the enclave)
+2. Agents can't game the AI evaluators (prompts never leave the TEE)
+3. API keys are injected via Vault DON secret templates (`{{ANTHROPIC_API_KEY}}`), never exposed to node operators
+4. No single DON node can override the consensus (BFT aggregation)
+5. All verdicts are written immutably on-chain (audit trail)
 
 ---
 
@@ -299,7 +302,7 @@ bun run behavioral:reset
 | Layer | Technology |
 |-------|------------|
 | Smart Contracts | Solidity 0.8.24, Foundry, OpenZeppelin v5.5.0 |
-| CRE Workflow | Chainlink CRE SDK, TypeScript, Bun |
+| CRE Workflow | Chainlink CRE SDK v1.0.9 (ConfidentialHTTPClient + HTTPClient + EVMClient), TypeScript, Bun |
 | Behavioral Engine | Pure TypeScript, 7 statistical dimensions |
 | Dashboard | Next.js 15, React 19, Tailwind CSS 4, viem |
 | Simulation | Tenderly Virtual TestNet + Simulation API |
@@ -313,9 +316,9 @@ bun run behavioral:reset
 
 2. **Three-layer defense with no single point of failure** — On-chain compliance checks catch policy violations. Behavioral scoring catches anomalous patterns. Multi-AI consensus catches context-dependent threats. No single layer is sufficient; together they're comprehensive.
 
-3. **Deep CRE integration** — 5 CRE capabilities + Data Feeds + Automation. Not a wrapper around a single Chainlink service. ConsensusAggregationByFields enforces AI verdict consensus at the DON level.
+3. **Deep CRE integration** — 5 CRE capabilities (HTTPClient, ConfidentialHTTPClient, EVMClient, CronCapability, HTTPCapability) + Data Feeds + Automation. Not a wrapper around a single Chainlink service. ConsensusAggregationByFields enforces AI verdict consensus at the DON level.
 
-4. **Confidential risk thresholds** — Policy limits and evaluation prompts are hidden from AI agents via Confidential HTTP. Agents can't binary-search for their own limits, and they can't craft prompt injections against prompts they can't see.
+4. **Confidential risk thresholds** — Policy limits and evaluation prompts execute inside a TEE via `ConfidentialHTTPClient`. API keys are injected from Vault DON secrets using `{{TEMPLATE}}` syntax. Agents can't binary-search for their own limits, can't extract API credentials, and can't craft prompt injections against prompts they can't see. See [`docs/CONFIDENTIAL-COMPUTE.md`](docs/CONFIDENTIAL-COMPUTE.md) for full integration details.
 
 5. **Behavioral intelligence** — Seven anomaly dimensions that learn per-agent baselines. Catches sophisticated attacks that pass every individual rule: sequential probing, slow drift injection, velocity bursts, off-hours activity.
 
