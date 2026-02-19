@@ -11,6 +11,7 @@ const TOC = [
   { id: 'chainlink', label: 'Chainlink', color: 'text-blue-400' },
   { id: 'contracts', label: 'Contracts', color: 'text-green-400' },
   { id: 'behavioral', label: 'Behavioral', color: 'text-purple-400' },
+  { id: 'ecosystem', label: 'Ecosystem', color: 'text-yellow-400' },
   { id: 'prevention', label: 'Prevention', color: 'text-cyan-400' },
 ]
 
@@ -309,10 +310,49 @@ const BEHAVIORAL_DIMENSIONS = [
   },
 ]
 
+const ECOSYSTEM_STATS = [
+  {
+    metric: '100M+',
+    label: 'AI agent payments',
+    source: 'Coinbase x402',
+    desc: 'Coinbase x402 processed over 100 million AI agent payments in 2025. Those agents need risk controls before they touch DeFi.',
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
+    border: 'border-blue-500/30',
+  },
+  {
+    metric: '$1B',
+    label: 'institutional deposits target',
+    source: 'Aave Horizon',
+    desc: 'Aave Horizon is targeting a billion dollars in institutional deposits managed by autonomous strategies. Institutional capital requires institutional-grade risk monitoring.',
+    color: 'text-purple-400',
+    bg: 'bg-purple-500/10',
+    border: 'border-purple-500/30',
+  },
+  {
+    metric: '2026',
+    label: '"Know Your Agent"',
+    source: 'a16z Prediction',
+    desc: 'a16z predicts 2026 is the year of "Know Your Agent" \u2014 cryptographic identity linking agents to their constraints. That\u2019s exactly what SentinelCRE enforces on-chain.',
+    color: 'text-green-400',
+    bg: 'bg-green-500/10',
+    border: 'border-green-500/30',
+  },
+  {
+    metric: '17%',
+    label: 'monitor agent interactions',
+    source: 'Industry Gap',
+    desc: 'Only 17% of organizations continuously monitor agent-to-agent interactions. The $30 trillion agentic economy is being built with no risk layer.',
+    color: 'text-red-400',
+    bg: 'bg-red-500/10',
+    border: 'border-red-500/30',
+  },
+]
+
 const TECH_BADGES = ['Solidity 0.8.24', 'Foundry', 'CRE SDK (TypeScript)', 'Bun', 'Next.js 15', 'Tenderly Virtual TestNet', 'viem', 'Tailwind 4']
 
 const TECH_STATS = [
-  { label: '61 tests', sublabel: 'Forge', color: 'text-green-400' },
+  { label: '85 tests', sublabel: 'Forge', color: 'text-green-400' },
   { label: '14 scenarios', sublabel: 'Demo', color: 'text-cyan-400' },
   { label: '2 AI models', sublabel: 'Claude + GPT-4', color: 'text-purple-400' },
   { label: '7 dimensions', sublabel: 'Behavioral', color: 'text-orange-400' },
@@ -498,6 +538,47 @@ export default function ArchitecturePanel() {
         <p className="text-gray-400 text-xl mb-6">
           Autonomous AI agents are the next frontier of DeFi. They are also the next frontier of DeFi exploits.
         </p>
+
+        {/* 2025 AI Agent Threat Landscape */}
+        <div className="bg-red-500/8 border border-red-500/30 rounded-xl p-6 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-red-400 text-2xl">&#9888;</span>
+            <h4 className="text-red-400 font-black text-2xl uppercase tracking-wider">2025: AI Agents Under Attack</h4>
+          </div>
+          <div className="text-gray-400 text-lg mb-4">
+            $17 billion lost to crypto exploits in 2025. AI agents are both the targets and the weapons.
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="bg-gray-900/60 rounded-lg p-4 border border-red-500/20">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-red-400 font-black text-xl font-mono">$106K</span>
+                <span className="text-white font-bold text-lg">AIXBT Hack</span>
+              </div>
+              <p className="text-gray-400 text-base">AI agent on Base compromised at 2 AM &mdash; attacker accessed dashboard, drained 55 ETH while operators slept. <span className="text-red-400/80 font-semibold">No kill switch.</span></p>
+            </div>
+            <div className="bg-gray-900/60 rounded-lg p-4 border border-red-500/20">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-red-400 font-black text-xl font-mono">$1.78M</span>
+                <span className="text-white font-bold text-lg">Moonwell Exploit</span>
+              </div>
+              <p className="text-gray-400 text-base">AI-generated code introduced an oracle bug into a live DeFi protocol. The agent that wrote the code had no risk evaluation layer.</p>
+            </div>
+            <div className="bg-gray-900/60 rounded-lg p-4 border border-red-500/20">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-red-400 font-black text-xl font-mono">$1.22</span>
+                <span className="text-white font-bold text-lg">Anthropic Research</span>
+              </div>
+              <p className="text-gray-400 text-base">AI agents can autonomously crack over half of historically exploited smart contracts &mdash; for $1.22 each. Automated exploitation at scale.</p>
+            </div>
+            <div className="bg-gray-900/60 rounded-lg p-4 border border-red-500/20">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-red-400 font-black text-xl font-mono">$1.5B</span>
+                <span className="text-white font-bold text-lg">Bybit Hack</span>
+              </div>
+              <p className="text-gray-400 text-base">Largest single crypto theft in history. North Korea&apos;s Lazarus Group. No pre-execution risk controls caught it.</p>
+            </div>
+          </div>
+        </div>
 
         <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5 text-center mb-6">
           <div className="text-red-400 text-4xl font-black mb-1">$2.2 Billion+ stolen</div>
@@ -910,7 +991,7 @@ export default function ArchitecturePanel() {
         <SectionTitle>Smart Contracts</SectionTitle>
         <h3 className="text-3xl font-black text-white mb-2">On-Chain Infrastructure</h3>
         <p className="text-gray-400 text-xl mb-6">
-          Two battle-tested contracts with 61 passing tests across 3 test suites.
+          Two battle-tested contracts with 85 passing tests across 5 test suites.
         </p>
 
         <div className="space-y-4">
@@ -929,7 +1010,7 @@ export default function ArchitecturePanel() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-green-400 bg-green-400/10 text-sm px-3 py-1 rounded-full font-bold">
-                        41 tests
+                        45 tests
                       </span>
                       <ChevronIcon open={open} />
                     </div>
@@ -993,7 +1074,7 @@ export default function ArchitecturePanel() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-green-400 bg-green-400/10 text-sm px-3 py-1 rounded-full font-bold">
-                        20 tests
+                        8 tests
                       </span>
                       <ChevronIcon open={open} />
                     </div>
@@ -1043,8 +1124,8 @@ export default function ArchitecturePanel() {
         </div>
 
         <div className="mt-5 text-center">
-          <span className="text-xl font-bold text-green-400">61 tests passing</span>
-          <span className="text-xl text-gray-500"> across 3 test suites</span>
+          <span className="text-xl font-bold text-green-400">85 tests passing</span>
+          <span className="text-xl text-gray-500"> across 5 test suites</span>
         </div>
       </Section>
 
@@ -1116,7 +1197,38 @@ export default function ArchitecturePanel() {
         </div>
       </Section>
 
-      {/* ═══════════ SECTION 8: PREVENTION — FULL CIRCLE ═══════════ */}
+      {/* ═══════════ SECTION 8: ECOSYSTEM POSITIONING ═══════════ */}
+      <Section id="ecosystem" borderColor="border-l-yellow-500">
+        <SectionTitle>Ecosystem &amp; Market Validation</SectionTitle>
+        <h3 className="text-3xl font-black text-white mb-2">Risk Infrastructure for the Agentic Economy</h3>
+        <p className="text-gray-400 text-xl mb-6">
+          SentinelCRE isn&apos;t an application &mdash; it&apos;s the risk layer the autonomous agent economy is missing.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          {ECOSYSTEM_STATS.map((stat) => (
+            <div key={stat.source} className={`${stat.bg} rounded-xl p-5 border ${stat.border}`}>
+              <div className="flex items-center gap-3 mb-2">
+                <span className={`${stat.color} text-3xl font-black font-mono`}>{stat.metric}</span>
+                <div>
+                  <div className="text-white font-bold text-lg">{stat.label}</div>
+                  <div className="text-gray-500 text-sm font-mono">{stat.source}</div>
+                </div>
+              </div>
+              <p className="text-gray-300 text-lg leading-relaxed">{stat.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-5 text-center">
+          <p className="text-white text-xl font-medium leading-relaxed">
+            The <span className="text-yellow-400 font-black">$30 trillion</span> agentic economy is being built with no risk layer.
+            <span className="text-yellow-400 font-bold ml-1">We&apos;re building that layer.</span>
+          </p>
+        </div>
+      </Section>
+
+      {/* ═══════════ SECTION 9: PREVENTION — FULL CIRCLE ═══════════ */}
       <Section id="prevention" borderColor="border-l-cyan-500">
         <SectionTitle>Prevention Proof</SectionTitle>
         <div className="flex items-center justify-between mb-2">
