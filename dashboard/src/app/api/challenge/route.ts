@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { validateProposal } from '@/lib/validation'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,6 +10,11 @@ export async function POST(request: Request) {
   try {
     const { proposal } = await request.json()
 
+    const validationError = validateProposal(proposal)
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 })
+    }
+
     const prompt = `APPEAL RE-EVALUATION — This action was previously denied and is being re-evaluated with additional context.
 
 PROPOSED ACTION:
@@ -17,7 +23,7 @@ PROPOSED ACTION:
 - Function: ${proposal.functionSignature}
 - Value (wei): ${proposal.value}
 - Mint Amount: ${proposal.mintAmount}
-- Description: ${proposal.description}
+- Description: ${(proposal.description ?? '').replace(/[\x00-\x1f\x7f]/g, '').slice(0, 500)}
 
 Re-evaluate with lenient thresholds. Respond with ONLY valid JSON:
 {"verdict":"APPROVED" or "DENIED","confidence":0-100,"reason":"brief explanation"}`
@@ -44,8 +50,9 @@ Re-evaluate with lenient thresholds. Respond with ONLY valid JSON:
       reason: v.reason,
     })
   } catch (err) {
+    console.error('[challenge] Appeal error:', err)
     return NextResponse.json(
-      { verdict: 'DENIED', confidence: 0, reason: `Appeal failed: ${err}` },
+      { verdict: 'DENIED', confidence: 0, reason: 'Appeal evaluation unavailable' },
       { status: 502 },
     )
   }

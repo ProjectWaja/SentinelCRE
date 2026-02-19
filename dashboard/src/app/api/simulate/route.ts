@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { simulateTransaction, isTenderlyConfigured, type SimulationResult } from '@/lib/tenderly'
 import { encodeFunctionData, encodeAbiParameters, parseAbiParameters, type Hex } from 'viem'
+import { validateProposal, isAddress, isHex } from '@/lib/validation'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +34,12 @@ export async function POST(req: NextRequest) {
     let result: SimulationResult
 
     if (mode === 'custom') {
+      if (custom?.to && !isAddress(custom.to)) {
+        return NextResponse.json({ error: 'Invalid target address' }, { status: 400 })
+      }
+      if (custom?.input && !isHex(custom.input)) {
+        return NextResponse.json({ error: 'Invalid calldata' }, { status: 400 })
+      }
       result = await simulateTransaction({
         from: custom.from || DEPLOYER,
         to: custom.to,
@@ -41,6 +48,11 @@ export async function POST(req: NextRequest) {
         gas: custom.gas || 8_000_000,
       })
     } else {
+      const proposalError = validateProposal(proposal)
+      if (proposalError) {
+        return NextResponse.json({ error: proposalError }, { status: 400 })
+      }
+
       const reportData = encodeAbiParameters(
         parseAbiParameters('bytes32, bool, string, address, bytes4, uint256, uint256'),
         [
