@@ -148,7 +148,7 @@
 
 ## 3:30–3:55 — ECOSYSTEM POSITIONING
 
-> *[Screen: Stay on Live Demo results showing 14/14 scenarios complete.]*
+> *[Screen: Stay on Live Demo results showing 7/7 primary scenarios complete, 11 additional scenarios below.]*
 
 "SentinelCRE isn't an application — it's risk infrastructure for the autonomous agent economy."
 
@@ -208,7 +208,7 @@
 
 "SentinelCRE. The kill switch the AI-native financial system is missing."
 
-> *[END CARD: 3 layers | 85 tests | 14 scenarios | 7 real exploits blocked | $2.2B saved]*
+> *[END CARD: 3 layers | 85 tests | 18 scenarios | 7 real exploits blocked | $2.2B saved]*
 > *[GitHub URL overlay → END]*
 
 ---

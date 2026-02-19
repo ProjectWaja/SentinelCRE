@@ -23,7 +23,7 @@ const TABS: Tab[] = [
   {
     id: 'demo',
     label: 'Live Demo',
-    desc: '14 attack scenarios',
+    desc: '15 attack scenarios',
     icon: (
       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path
