@@ -534,28 +534,57 @@ function handleEvaluation(body: EvalRequest, modelName: string): object {
   }
 }
 
+// ── CORS ─────────────────────────────────────────────────────────────
+const ALLOWED_ORIGINS = ['http://localhost:3000', 'http://localhost:3002']
+
+function corsHeaders(origin: string | null) {
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Max-Age': '86400',
+  }
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin
+  }
+  return headers
+}
+
+function withCors(response: Response, origin: string | null): Response {
+  const headers = corsHeaders(origin)
+  for (const [k, v] of Object.entries(headers)) {
+    response.headers.set(k, v)
+  }
+  return response
+}
+
 const server = Bun.serve({
   port: PORT,
   async fetch(req) {
     const url = new URL(req.url)
     const method = req.method
+    const origin = req.headers.get('Origin')
+
+    // CORS preflight
+    if (method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: corsHeaders(origin) })
+    }
 
     // Health check
     if (method === 'GET' && url.pathname === '/health') {
-      return Response.json({ status: 'healthy', timestamp: new Date().toISOString() })
+      return withCors(Response.json({ status: 'healthy', timestamp: new Date().toISOString() }), origin)
     }
 
     // AI evaluation endpoints
     if (method === 'POST' && url.pathname === '/evaluate/model1') {
       const body = (await req.json()) as EvalRequest
       const result = handleEvaluation(body, 'sentinel-model-1')
-      return Response.json(result)
+      return withCors(Response.json(result), origin)
     }
 
     if (method === 'POST' && url.pathname === '/evaluate/model2') {
       const body = (await req.json()) as EvalRequest
       const result = handleEvaluation(body, 'sentinel-model-2')
-      return Response.json(result)
+      return withCors(Response.json(result), origin)
     }
 
     // Challenge re-evaluation endpoint (more lenient)
@@ -563,14 +592,14 @@ const server = Bun.serve({
       const body = (await req.json()) as EvalRequest
       const userMsg = body?.messages?.[0]?.content ?? ''
       const evalResult = evaluateChallenge(userMsg)
-      return Response.json({
+      return withCors(Response.json({
         id: `msg_mock_challenge_${Date.now()}`,
         type: 'message',
         role: 'assistant',
         content: [{ type: 'text', text: JSON.stringify(evalResult) }],
         model: 'sentinel-challenge-eval',
         usage: { input_tokens: 100, output_tokens: 50 },
-      })
+      }), origin)
     }
 
     // ── Behavioral Endpoints ────────────────────────────────────────
@@ -586,7 +615,7 @@ const server = Bun.serve({
         body.recentValues,
         body.mintAmount,
       )
-      return Response.json(result)
+      return withCors(Response.json(result), origin)
     }
 
     // Update profile after verdict (only approved actions update baseline)
@@ -603,24 +632,24 @@ const server = Bun.serve({
         )
       }
       const profile = getOrCreateProfile(agentId ?? proposal?.agentId ?? '')
-      return Response.json({ updated: verdict === 'APPROVED', profile })
+      return withCors(Response.json({ updated: verdict === 'APPROVED', profile }), origin)
     }
 
     // Get agent behavior profile
     if (method === 'GET' && url.pathname.startsWith('/behavioral/profile/')) {
       const agentId = url.pathname.replace('/behavioral/profile/', '')
       const profile = agentProfiles.get(agentId) ?? null
-      return Response.json({ agentId, exists: !!profile, profile })
+      return withCors(Response.json({ agentId, exists: !!profile, profile }), origin)
     }
 
     // Reset all behavior profiles
     if (method === 'DELETE' && url.pathname === '/behavioral/reset') {
       const count = agentProfiles.size
       agentProfiles.clear()
-      return Response.json({ reset: true, profilesCleared: count })
+      return withCors(Response.json({ reset: true, profilesCleared: count }), origin)
     }
 
-    return Response.json({ error: 'Not found' }, { status: 404 })
+    return withCors(Response.json({ error: 'Not found' }, { status: 404 }), origin)
   },
 })
 

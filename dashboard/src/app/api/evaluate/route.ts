@@ -10,6 +10,7 @@ import {
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { sepolia } from 'viem/chains'
+import { validateProposal } from '@/lib/validation'
 
 export const dynamic = 'force-dynamic'
 
@@ -108,6 +109,11 @@ export async function POST(request: Request) {
   try {
     const { proposal } = await request.json()
 
+    const validationError = validateProposal(proposal)
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 })
+    }
+
     // Step 1: Behavioral analysis (Layer 2)
     let behavioral: any = null
     try {
@@ -129,6 +135,8 @@ export async function POST(request: Request) {
     }
 
     // Step 2: Build prompt with behavioral context
+    const safeDescription = (proposal.description ?? '').replace(/[\x00-\x1f\x7f]/g, '').slice(0, 500)
+
     let prompt = `You are a security sentinel evaluating an AI agent's proposed on-chain action.
 
 PROPOSED ACTION:
@@ -137,7 +145,7 @@ PROPOSED ACTION:
 - Function: ${proposal.functionSignature}
 - Value (wei): ${proposal.value}
 - Mint Amount: ${proposal.mintAmount}
-- Description: ${proposal.description}`
+- Description: ${safeDescription}`
 
     if (behavioral) {
       prompt += `
@@ -256,6 +264,7 @@ Respond with ONLY valid JSON:
       anomalyDimensions: behavioral?.dimensions ?? null,
     })
   } catch (err) {
+    console.error('[evaluate] Internal error:', err)
     return NextResponse.json(
       {
         model1: { verdict: 'DENIED', confidence: 0, reason: 'API unavailable' },
@@ -263,7 +272,7 @@ Respond with ONLY valid JSON:
         consensus: 'DENIED',
         proposal: null,
         timestamp: Date.now(),
-        error: String(err),
+        error: 'Evaluation service unavailable',
       },
       { status: 502 },
     )

@@ -9,6 +9,7 @@ contracts/cache/
 # Environment & secrets
 .env
 .env.*
+!.env.example
 config/secrets.json
 secrets.yaml
 

@@ -145,6 +145,13 @@ const GUARDIAN_ABI = [
 // AI Evaluation
 // =============================================================================
 
+/** Strip control characters and limit length to mitigate prompt injection via user-supplied fields. */
+function sanitizeField(input: string, maxLen = 500): string {
+  return input
+    .replace(/[\x00-\x1f\x7f]/g, '') // strip control chars
+    .slice(0, maxLen)
+}
+
 function buildEvaluationPrompt(
   proposal: ActionProposal,
   policyContext: {
@@ -155,6 +162,8 @@ function buildEvaluationPrompt(
   },
   behavioralResult?: BehavioralAnalysisResult,
 ): string {
+  const safeDescription = sanitizeField(proposal.description ?? '', 500)
+
   let prompt = `You are a security sentinel evaluating an AI agent's proposed on-chain action.
 
 PROPOSED ACTION:
@@ -163,7 +172,7 @@ PROPOSED ACTION:
 - Function: ${proposal.functionSignature}
 - Value (wei): ${proposal.value}
 - Mint Amount: ${proposal.mintAmount}
-- Description: ${proposal.description}
+- Description: ${safeDescription}
 
 AGENT POLICY LIMITS:
 - Max Transaction Value: ${policyContext.maxTransactionValue} wei
