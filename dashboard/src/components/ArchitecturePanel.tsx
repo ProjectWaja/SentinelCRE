@@ -662,9 +662,9 @@ export default function ArchitecturePanel() {
         </div>
 
         {/* Historical exploits sub-header */}
-        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 text-center mb-4">
-          <div className="text-red-400 text-2xl font-black mb-0.5">$2.2 Billion+ stolen in 2021&ndash;2024</div>
-          <p className="text-gray-400 text-base">
+        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5 text-center mb-4">
+          <div className="text-red-400 text-4xl font-black mb-1">$2.2 Billion+ stolen in 2021&ndash;2024</div>
+          <p className="text-gray-400 text-lg">
             {EXPLOITS.length} major DeFi exploits &mdash; click any to see what happened
           </p>
         </div>
