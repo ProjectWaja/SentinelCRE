@@ -412,7 +412,7 @@ const TECH_BADGES = ['Solidity 0.8.24', 'Foundry', 'CRE SDK (TypeScript)', 'Bun'
 
 const TECH_STATS = [
   { label: '85 tests', sublabel: 'Forge', color: 'text-green-400' },
-  { label: '14 scenarios', sublabel: 'Demo', color: 'text-cyan-400' },
+  { label: '18 scenarios', sublabel: 'Demo', color: 'text-cyan-400' },
   { label: '2 AI models', sublabel: 'Claude + GPT-4', color: 'text-purple-400' },
   { label: '7 dimensions', sublabel: 'Behavioral', color: 'text-orange-400' },
 ]
@@ -543,8 +543,6 @@ export default function ArchitecturePanel() {
   const [expandedContracts, setExpandedContracts] = useState<Record<string, boolean>>({})
   const [expandedExploits, setExpandedExploits] = useState<Record<string, boolean>>({})
   const [expandedDimensions, setExpandedDimensions] = useState(false)
-  const [pipelineExample, setPipelineExample] = useState(false)
-  const [pipelineApproved, setPipelineApproved] = useState(false)
 
   const allProblemExpanded =
     AI_AGENT_INCIDENTS.every((e) => !!expandedExploits[`incident-${e.name}`]) &&
@@ -868,166 +866,6 @@ export default function ArchitecturePanel() {
           ))}
         </div>
 
-        {/* Walkthrough example */}
-        <div className="mt-4 bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden">
-          <button
-            onClick={() => setPipelineExample(!pipelineExample)}
-            className="w-full flex items-center justify-between p-5 text-left cursor-pointer"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-cyan-400 text-xl">&#9881;</span>
-              <div>
-                <div className="text-white font-bold text-xl">Walkthrough: Rogue Agent Attempts 50 ETH Drain</div>
-                <div className="text-gray-400 text-base">Step-by-step example of the full verdict pipeline in action</div>
-              </div>
-            </div>
-            <ChevronIcon open={pipelineExample} />
-          </button>
-          <div
-            className={`transition-all duration-300 ease-in-out overflow-hidden ${
-              pipelineExample ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
-            }`}
-          >
-            <div className="px-5 pb-5 border-t border-gray-700/50 pt-4">
-              {/* Incoming proposal */}
-              <div className="bg-gray-900 rounded-lg p-4 border border-gray-800 mb-4">
-                <div className="text-gray-500 text-sm uppercase tracking-wider font-bold mb-2">Incoming Proposal</div>
-                <div className="font-mono text-base text-gray-200 space-y-1">
-                  <div><span className="text-gray-500">agent:</span> <span className="text-cyan-400">0xROGUE_AGENT</span></div>
-                  <div><span className="text-gray-500">action:</span> <span className="text-white">transfer</span></div>
-                  <div><span className="text-gray-500">target:</span> <span className="text-yellow-400">0xUNKNOWN_WALLET</span></div>
-                  <div><span className="text-gray-500">value:</span> <span className="text-red-400 font-bold">50 ETH</span> <span className="text-gray-600">(agent avg: 0.3 ETH)</span></div>
-                  <div><span className="text-gray-500">function:</span> <span className="text-orange-400">transfer(address,uint256)</span></div>
-                </div>
-              </div>
-
-              {/* Step-by-step results */}
-              <div className="space-y-2">
-                {[
-                  { step: 1, title: 'Receive Proposal', status: 'pass', color: 'text-blue-400', detail: 'CRE HTTP Trigger receives the agent\'s action proposal via webhook' },
-                  { step: 2, title: 'Read Policy', status: 'pass', color: 'text-cyan-400', detail: 'EVMClient reads policy: maxTxValue = 10 ETH, rateLimit = 5/hr, target whitelist active' },
-                  { step: 3, title: 'Behavioral Scoring', status: 'flag', color: 'text-orange-400', detail: 'Risk score: 82/155 — Value Deviation [REDACTED], Contract Diversity +18, Velocity +12, Function Pattern +15, Sequential Probing +12' },
-                  { step: 4, title: 'AI Model 1 (Claude)', status: 'deny', color: 'text-purple-400', detail: 'DENIED (94% confidence) — "Transfer 167x above historical average to unknown address. Behavioral risk score 82 exceeds threshold."' },
-                  { step: 5, title: 'AI Model 2 (GPT-4)', status: 'deny', color: 'text-purple-400', detail: 'DENIED (91% confidence) — "Anomalous value deviation and unfamiliar target pattern consistent with fund extraction attempt."' },
-                  { step: 6, title: 'DON Consensus', status: 'deny', color: 'text-yellow-400', detail: 'BFT consensus reached — both models independently returned DENIED. Verdict is unanimous.' },
-                  { step: 7, title: 'Write Verdict', status: 'done', color: 'text-green-400', detail: 'Signed verdict report submitted to SentinelGuardian.processVerdict() on-chain' },
-                  { step: 8, title: 'Enforcement', status: 'freeze', color: 'text-red-400', detail: 'Agent FROZEN. Incident recorded: ConsensusFailure. Transfer blocked before execution.' },
-                ].map((s) => (
-                  <div key={s.step} className="flex items-start gap-3 rounded-lg px-4 py-3 bg-gray-900/60 border border-gray-800">
-                    <div className="flex items-center gap-2 shrink-0 mt-0.5">
-                      <span className={`${s.color} text-lg font-black font-mono`}>{s.step}</span>
-                      {s.status === 'pass' && <span className="text-green-400 text-sm">&#10003;</span>}
-                      {s.status === 'flag' && <span className="text-orange-400 text-sm font-bold">&#9888;</span>}
-                      {s.status === 'deny' && <span className="text-red-400 text-sm font-bold">&#10007;</span>}
-                      {s.status === 'done' && <span className="text-green-400 text-sm">&#10003;</span>}
-                      {s.status === 'freeze' && <span className="text-red-400 text-sm font-bold">&#9632;</span>}
-                    </div>
-                    <div className="min-w-0">
-                      <span className={`${s.color} font-bold text-lg`}>{s.title}</span>
-                      <p className="text-gray-300 text-base leading-relaxed mt-0.5">{s.detail}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Final outcome */}
-              <div className="mt-4 bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center justify-between">
-                <div>
-                  <div className="text-red-400 font-black text-xl">VERDICT: DENIED</div>
-                  <div className="text-gray-400 text-base">50 ETH transfer blocked &mdash; agent frozen &mdash; incident logged on-chain</div>
-                </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
-                  <span className="text-red-400 bg-red-500/15 border border-red-500/30 text-sm font-bold px-3 py-1 rounded-full">Caught at Step 3</span>
-                  <span className="text-gray-500 text-sm">Behavioral Risk Engine</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Approved walkthrough example */}
-        <div className="mt-3 bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden">
-          <button
-            onClick={() => setPipelineApproved(!pipelineApproved)}
-            className="w-full flex items-center justify-between p-5 text-left cursor-pointer"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-green-400 text-xl">&#10003;</span>
-              <div>
-                <div className="text-white font-bold text-xl">Walkthrough: Legitimate 0.25 ETH Swap</div>
-                <div className="text-gray-400 text-base">Normal agent activity passes all 8 steps and executes</div>
-              </div>
-            </div>
-            <ChevronIcon open={pipelineApproved} />
-          </button>
-          <div
-            className={`transition-all duration-300 ease-in-out overflow-hidden ${
-              pipelineApproved ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
-            }`}
-          >
-            <div className="px-5 pb-5 border-t border-gray-700/50 pt-4">
-              {/* Incoming proposal */}
-              <div className="bg-gray-900 rounded-lg p-4 border border-gray-800 mb-4">
-                <div className="text-gray-500 text-sm uppercase tracking-wider font-bold mb-2">Incoming Proposal</div>
-                <div className="font-mono text-base text-gray-200 space-y-1">
-                  <div><span className="text-gray-500">agent:</span> <span className="text-cyan-400">0xTRADING_BOT_A</span></div>
-                  <div><span className="text-gray-500">action:</span> <span className="text-white">swap</span></div>
-                  <div><span className="text-gray-500">target:</span> <span className="text-green-400">0xUNISWAP_ROUTER</span> <span className="text-gray-600">(whitelisted)</span></div>
-                  <div><span className="text-gray-500">value:</span> <span className="text-green-400 font-bold">0.25 ETH</span> <span className="text-gray-600">(agent avg: 0.3 ETH)</span></div>
-                  <div><span className="text-gray-500">function:</span> <span className="text-green-400">swapExactETHForTokens(uint256,address[],address,uint256)</span></div>
-                </div>
-              </div>
-
-              {/* Step-by-step results */}
-              <div className="space-y-2">
-                {[
-                  { step: 1, title: 'Receive Proposal', color: 'text-blue-400', detail: 'CRE HTTP Trigger receives swap proposal from registered trading bot' },
-                  { step: 2, title: 'Read Policy', color: 'text-cyan-400', detail: 'Policy loaded: maxTxValue = 10 ETH, rateLimit = 20/hr, Uniswap Router is on target whitelist' },
-                  { step: 3, title: 'Behavioral Scoring', color: 'text-orange-400', detail: 'Risk score: 6/155 — Value Deviation +2, all other dimensions +0 or +1. Well within normal baseline.' },
-                  { step: 4, title: 'AI Model 1 (Claude)', color: 'text-purple-400', detail: 'APPROVED (97% confidence) — "Routine swap on whitelisted DEX. Value consistent with historical pattern. Risk score 6 is minimal."' },
-                  { step: 5, title: 'AI Model 2 (GPT-4)', color: 'text-purple-400', detail: 'APPROVED (95% confidence) — "Standard token swap within policy limits. No behavioral anomalies detected."' },
-                  { step: 6, title: 'DON Consensus', color: 'text-yellow-400', detail: 'BFT consensus reached — both models independently returned APPROVED. Verdict is unanimous.' },
-                  { step: 7, title: 'Write Verdict', color: 'text-green-400', detail: 'Signed approval report submitted to SentinelGuardian.processVerdict() on-chain' },
-                  { step: 8, title: 'Enforcement', color: 'text-emerald-400', detail: 'Action APPROVED. Agent remains active. Stats updated: approved +1. Swap executes normally.' },
-                ].map((s) => (
-                  <div key={s.step} className="flex items-start gap-3 rounded-lg px-4 py-3 bg-gray-900/60 border border-gray-800">
-                    <div className="flex items-center gap-2 shrink-0 mt-0.5">
-                      <span className={`${s.color} text-lg font-black font-mono`}>{s.step}</span>
-                      <span className="text-green-400 text-sm">&#10003;</span>
-                    </div>
-                    <div className="min-w-0">
-                      <span className={`${s.color} font-bold text-lg`}>{s.title}</span>
-                      <p className="text-gray-300 text-base leading-relaxed mt-0.5">{s.detail}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Final outcome */}
-              <div className="mt-4 bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-center justify-between">
-                <div>
-                  <div className="text-green-400 font-black text-xl">VERDICT: APPROVED</div>
-                  <div className="text-gray-400 text-base">0.25 ETH swap executed &mdash; agent stays active &mdash; behavioral profile updated</div>
-                </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
-                  <span className="text-green-400 bg-green-500/15 border border-green-500/30 text-sm font-bold px-3 py-1 rounded-full">All 8 steps passed</span>
-                  <span className="text-gray-500 text-sm">Risk score: 6/155</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 bg-red-500/5 border border-red-500/20 rounded-xl p-5 flex items-start gap-3">
-          <span className="text-red-500 text-xl mt-0.5">&#9888;</span>
-          <div>
-            <div className="text-red-400 font-bold text-lg mb-1">When a proposal is DENIED</div>
-            <p className="text-gray-300 text-lg">
-              The verdict includes which step caught the attack (e.g., Step 3 behavioral anomaly, Step 4 AI rejection).
-              The agent is immediately frozen and an incident is recorded on-chain with full context.
-            </p>
-          </div>
-        </div>
       </Section>
 
       {/* ═══════════ SECTION 5: CHAINLINK INTEGRATIONS ═══════════ */}
