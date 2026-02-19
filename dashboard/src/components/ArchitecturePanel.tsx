@@ -24,7 +24,7 @@ const EXPLOITS = [
     amountNum: 625,
     date: 'Mar 2022',
     method: 'Compromised validator keys',
-    color: 'border-red-500',
+    color: 'border-l-red-500',
     bg: 'bg-red-500/5',
     textColor: 'text-red-400',
     problem: [
@@ -42,7 +42,7 @@ const EXPLOITS = [
     amountNum: 611,
     date: 'Aug 2021',
     method: 'Cross-chain relay exploit',
-    color: 'border-rose-500',
+    color: 'border-l-rose-500',
     bg: 'bg-rose-500/5',
     textColor: 'text-rose-400',
     problem: [
@@ -60,7 +60,7 @@ const EXPLOITS = [
     amountNum: 320,
     date: 'Feb 2022',
     method: 'Forged guardian signatures',
-    color: 'border-orange-500',
+    color: 'border-l-orange-500',
     bg: 'bg-orange-500/5',
     textColor: 'text-orange-400',
     problem: [
@@ -78,7 +78,7 @@ const EXPLOITS = [
     amountNum: 197,
     date: 'Mar 2023',
     method: 'Flash loan liquidation attack',
-    color: 'border-yellow-500',
+    color: 'border-l-yellow-500',
     bg: 'bg-yellow-500/5',
     textColor: 'text-yellow-400',
     problem: [
@@ -96,7 +96,7 @@ const EXPLOITS = [
     amountNum: 190,
     date: 'Aug 2022',
     method: 'Copy-paste initialization exploit',
-    color: 'border-amber-500',
+    color: 'border-l-amber-500',
     bg: 'bg-amber-500/5',
     textColor: 'text-amber-400',
     problem: [
@@ -114,7 +114,7 @@ const EXPLOITS = [
     amountNum: 182,
     date: 'Apr 2022',
     method: 'Flash loan governance attack',
-    color: 'border-lime-500',
+    color: 'border-l-lime-500',
     bg: 'bg-lime-500/5',
     textColor: 'text-lime-400',
     problem: [
@@ -132,7 +132,7 @@ const EXPLOITS = [
     amountNum: 114,
     date: 'Oct 2022',
     method: 'Oracle price manipulation',
-    color: 'border-emerald-500',
+    color: 'border-l-emerald-500',
     bg: 'bg-emerald-500/5',
     textColor: 'text-emerald-400',
     problem: [
@@ -143,6 +143,65 @@ const EXPLOITS = [
     prevention: 'Value Deviation scoring flags the extreme collateral-to-borrow ratio. Dual-AI consensus recognizes the oracle manipulation pattern from training data.',
     caughtBy: ['L2', 'L3'] as ('L1' | 'L2' | 'L3')[],
     stoppedAt: 'Dual-AI Consensus',
+  },
+]
+
+const AI_AGENT_INCIDENTS = [
+  {
+    name: 'AIXBT Hack',
+    amount: '$106K',
+    date: 'Mar 2025',
+    method: 'Dashboard compromise',
+    color: 'border-l-red-500',
+    bg: 'bg-red-500/5',
+    textColor: 'text-red-400',
+    problem: [
+      'AI agent on Base was compromised when an attacker accessed its dashboard at 2 AM while operators slept.',
+      'Attacker drained 55 ETH in minutes — the agent had no time-of-day anomaly detection or kill switch.',
+      'No pre-execution risk controls existed to freeze the agent or flag the off-hours activity.',
+    ],
+  },
+  {
+    name: 'Moonwell Exploit',
+    amount: '$1.78M',
+    date: 'Feb 2025',
+    method: 'AI-generated oracle bug',
+    color: 'border-l-rose-500',
+    bg: 'bg-rose-500/5',
+    textColor: 'text-rose-400',
+    problem: [
+      'AI-generated code introduced an oracle manipulation bug into the live Moonwell DeFi protocol.',
+      'The agent that wrote the code had no risk evaluation layer — the vulnerability shipped to production.',
+      '$1.78 million drained before anyone noticed the faulty price feed logic.',
+    ],
+  },
+  {
+    name: 'Anthropic Research',
+    amount: '$1.22',
+    date: '2025',
+    method: 'Autonomous exploit discovery',
+    color: 'border-l-orange-500',
+    bg: 'bg-orange-500/5',
+    textColor: 'text-orange-400',
+    problem: [
+      'Anthropic demonstrated that AI agents can autonomously discover and exploit over half of historically attacked smart contracts.',
+      'Average cost per successful exploit: $1.22. This enables automated exploitation at unprecedented scale.',
+      'Proves that AI agents can be weaponized — and that hiding risk thresholds (via Confidential Compute) is essential.',
+    ],
+  },
+  {
+    name: 'Bybit Hack',
+    amount: '$1.5B',
+    date: 'Feb 2025',
+    method: 'Largest single crypto theft',
+    color: 'border-l-amber-500',
+    bg: 'bg-amber-500/5',
+    textColor: 'text-amber-400',
+    problem: [
+      'Largest single crypto theft in history — $1.5 billion stolen by North Korea\'s Lazarus Group.',
+      'No pre-execution risk controls caught the anomalous withdrawal pattern before funds left.',
+      'Demonstrates that even the largest exchanges lack adaptive behavioral risk monitoring.',
+    ],
   },
 ]
 
@@ -487,7 +546,9 @@ export default function ArchitecturePanel() {
   const [pipelineExample, setPipelineExample] = useState(false)
   const [pipelineApproved, setPipelineApproved] = useState(false)
 
-  const allProblemExpanded = EXPLOITS.every((e) => !!expandedExploits[`problem-${e.name}`])
+  const allProblemExpanded =
+    AI_AGENT_INCIDENTS.every((e) => !!expandedExploits[`incident-${e.name}`]) &&
+    EXPLOITS.every((e) => !!expandedExploits[`problem-${e.name}`])
   const allPreventionExpanded = EXPLOITS.every((e) => !!expandedExploits[`prevent-${e.name}`])
 
   const toggleLayer = (layer: number) =>
@@ -526,6 +587,7 @@ export default function ArchitecturePanel() {
             onClick={() => {
               const next = !allProblemExpanded
               const updated: Record<string, boolean> = { ...expandedExploits }
+              AI_AGENT_INCIDENTS.forEach((e) => { updated[`incident-${e.name}`] = next })
               EXPLOITS.forEach((e) => { updated[`problem-${e.name}`] = next })
               setExpandedExploits(updated)
             }}
@@ -539,51 +601,71 @@ export default function ArchitecturePanel() {
           Autonomous AI agents are the next frontier of DeFi. They are also the next frontier of DeFi exploits.
         </p>
 
-        {/* 2025 AI Agent Threat Landscape */}
-        <div className="bg-red-500/8 border border-red-500/30 rounded-xl p-6 mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-red-400 text-2xl">&#9888;</span>
-            <h4 className="text-red-400 font-black text-2xl uppercase tracking-wider">2025: AI Agents Under Attack</h4>
-          </div>
-          <div className="text-gray-400 text-lg mb-4">
-            $17 billion lost to crypto exploits in 2025. AI agents are both the targets and the weapons.
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="bg-gray-900/60 rounded-lg p-4 border border-red-500/20">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-red-400 font-black text-xl font-mono">$106K</span>
-                <span className="text-white font-bold text-lg">AIXBT Hack</span>
-              </div>
-              <p className="text-gray-400 text-base">AI agent on Base compromised at 2 AM &mdash; attacker accessed dashboard, drained 55 ETH while operators slept. <span className="text-red-400/80 font-semibold">No kill switch.</span></p>
-            </div>
-            <div className="bg-gray-900/60 rounded-lg p-4 border border-red-500/20">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-red-400 font-black text-xl font-mono">$1.78M</span>
-                <span className="text-white font-bold text-lg">Moonwell Exploit</span>
-              </div>
-              <p className="text-gray-400 text-base">AI-generated code introduced an oracle bug into a live DeFi protocol. The agent that wrote the code had no risk evaluation layer.</p>
-            </div>
-            <div className="bg-gray-900/60 rounded-lg p-4 border border-red-500/20">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-red-400 font-black text-xl font-mono">$1.22</span>
-                <span className="text-white font-bold text-lg">Anthropic Research</span>
-              </div>
-              <p className="text-gray-400 text-base">AI agents can autonomously crack over half of historically exploited smart contracts &mdash; for $1.22 each. Automated exploitation at scale.</p>
-            </div>
-            <div className="bg-gray-900/60 rounded-lg p-4 border border-red-500/20">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-red-400 font-black text-xl font-mono">$1.5B</span>
-                <span className="text-white font-bold text-lg">Bybit Hack</span>
-              </div>
-              <p className="text-gray-400 text-base">Largest single crypto theft in history. North Korea&apos;s Lazarus Group. No pre-execution risk controls caught it.</p>
-            </div>
-          </div>
+        {/* Headline damage figure */}
+        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5 text-center mb-6">
+          <div className="text-red-400 text-4xl font-black mb-1">$3.4 Billion stolen in 2025</div>
+          <p className="text-gray-400 text-lg">
+            The worst year on record for crypto security. North Korea&apos;s Lazarus Group stole $2B alone &mdash; and AI agents are both the targets and the weapons.
+          </p>
         </div>
 
-        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5 text-center mb-6">
-          <div className="text-red-400 text-4xl font-black mb-1">$2.2 Billion+ stolen</div>
-          <p className="text-gray-400 text-lg">
-            across {EXPLOITS.length} major DeFi exploits in 2021&ndash;2024 &mdash; click any to see what happened
+        {/* 2025 AI Agent Incidents — expandable cards */}
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-red-400 text-xl">&#9888;</span>
+          <h4 className="text-red-400 font-black text-xl uppercase tracking-wider">2025: AI Agents Under Attack</h4>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-6">
+          {AI_AGENT_INCIDENTS.map((e) => {
+            const open = !!expandedExploits[`incident-${e.name}`]
+            return (
+              <div
+                key={e.name}
+                className={`${e.bg} rounded-xl border-l-4 ${e.color} border border-gray-800 overflow-hidden`}
+              >
+                <button
+                  onClick={() => toggleExploit(`incident-${e.name}`)}
+                  className="w-full flex items-center justify-between p-4 text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`${e.textColor} text-2xl font-black font-mono shrink-0`}>
+                      {e.amount}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-white font-bold text-lg">{e.name}</div>
+                      <div className="text-gray-400 text-base truncate">{e.method}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-gray-500 text-sm font-mono">{e.date}</span>
+                    <ChevronIcon open={open} />
+                  </div>
+                </button>
+                <div
+                  className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                    open ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <div className="px-4 pb-4 border-t border-gray-800/50 pt-3">
+                    <ul className="space-y-2">
+                      {e.problem.map((d, i) => (
+                        <li key={i} className="text-gray-300 text-xl flex items-start gap-2 leading-relaxed">
+                          <span className={`${e.textColor} mt-0.5 shrink-0`}>{'\u25B6'}</span>
+                          {d}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Historical exploits sub-header */}
+        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 text-center mb-4">
+          <div className="text-red-400 text-2xl font-black mb-0.5">$2.2 Billion+ stolen in 2021&ndash;2024</div>
+          <p className="text-gray-400 text-base">
+            {EXPLOITS.length} major DeFi exploits &mdash; click any to see what happened
           </p>
         </div>
 
