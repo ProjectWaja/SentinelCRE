@@ -284,8 +284,8 @@ const CHAINLINK_INTEGRATIONS = [
   { name: 'CRE HTTPClient', desc: 'Calls Claude and GPT-4 for independent dual-AI risk evaluation with ConsensusAggregationByFields.', status: 'LIVE', file: 'sentinel-workflow/main.ts', color: 'text-cyan-400', bg: 'bg-cyan-400/10', border: 'border-cyan-400/30' },
   { name: 'CRE EVMClient', desc: 'Reads agent policies from SentinelGuardian and writes signed verdicts on-chain.', status: 'LIVE', file: 'sentinel-workflow/main.ts', color: 'text-green-400', bg: 'bg-green-400/10', border: 'border-green-400/30' },
   { name: 'CRE CronCapability', desc: 'Periodic health sweeps detect anomalous agents and auto-freeze them between proposals.', status: 'LIVE', file: 'sentinel-workflow/main.ts', color: 'text-yellow-400', bg: 'bg-yellow-400/10', border: 'border-yellow-400/30' },
-  { name: 'Confidential HTTP', desc: 'Hides AI API keys and guardrail thresholds from DON node operators during evaluation.', status: 'READY', file: 'sentinel-workflow/main.ts', color: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/30' },
-  { name: 'Confidential Compute', desc: 'Hides policy parameters from AI agents to prevent adversarial gaming of thresholds.', status: 'READY', file: 'planned', color: 'text-orange-400', bg: 'bg-orange-400/10', border: 'border-orange-400/30' },
+  { name: 'Confidential HTTP', desc: 'Hides AI API keys and guardrail thresholds from DON node operators during evaluation.', status: 'LIVE', file: 'sentinel-workflow/main.ts', color: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/30' },
+  { name: 'Confidential Compute', desc: 'Hides policy parameters from AI agents to prevent adversarial gaming of thresholds.', status: 'LIVE', file: 'sentinel-workflow/main.ts', color: 'text-orange-400', bg: 'bg-orange-400/10', border: 'border-orange-400/30' },
   { name: 'Behavioral Risk Engine', desc: 'Custom 7-dimension anomaly detection scoring system running inside CRE workflow.', status: 'LIVE', file: 'api-server/server.ts', color: 'text-rose-400', bg: 'bg-rose-400/10', border: 'border-rose-400/30' },
 ]
 
