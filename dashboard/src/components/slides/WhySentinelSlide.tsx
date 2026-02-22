@@ -10,8 +10,8 @@ const differentiators = [
     border: 'border-red-500',
   },
   {
-    title: 'Two-Layer Defense',
-    desc: 'AI consensus + on-chain policy. Even if AI is wrong, hard-coded guardrails catch what they miss.',
+    title: 'Three-Layer Defense',
+    desc: 'On-chain policy + behavioral scoring + multi-AI consensus. No single point of failure — all three must agree.',
     color: 'text-blue-400',
     border: 'border-blue-500',
   },
@@ -28,7 +28,7 @@ const differentiators = [
     border: 'border-green-500',
   },
   {
-    title: '61 Tests, 3 Suites',
+    title: '85 Tests, 5 Suites',
     desc: 'Production-grade coverage: infinite mint, rate limiting, circuit breaker, full lifecycle.',
     color: 'text-yellow-400',
     border: 'border-yellow-500',
@@ -55,7 +55,7 @@ export default function WhySentinelSlide() {
             className={`bg-gray-800/50 rounded-xl p-5 border-l-4 ${d.border}`}
           >
             <h3 className={`font-semibold mb-2 ${d.color}`}>{d.title}</h3>
-            <p className="text-sm text-gray-400">{d.desc}</p>
+            <p className="text-base text-gray-400">{d.desc}</p>
           </div>
         ))}
       </div>

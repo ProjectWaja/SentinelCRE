@@ -46,7 +46,7 @@ export default function ProblemSlide() {
           >
             <p className="text-2xl font-bold text-red-400 mb-1">{a.loss}</p>
             <p className="text-white font-semibold">{a.name}</p>
-            <p className="text-sm text-gray-400 mt-1">{a.desc}</p>
+            <p className="text-base text-gray-400 mt-1">{a.desc}</p>
           </div>
         ))}
       </div>

@@ -54,13 +54,16 @@ export default function ScenarioDemoPanel({
       onVerdictReceived(result)
       onPipelineComplete?.(result)
     } catch {
-      onPipelineComplete?.({
+      const fallback: VerdictResult = {
         model1: { verdict: 'DENIED', confidence: 0, reason: 'API unavailable' },
         model2: { verdict: 'DENIED', confidence: 0, reason: 'API unavailable' },
         consensus: 'DENIED',
         proposal: scenario.proposal,
         timestamp: Date.now(),
-      })
+      }
+      setVerdict(fallback)
+      onVerdictReceived(fallback)
+      onPipelineComplete?.(fallback)
     }
 
     setRunState('done')
@@ -169,7 +172,7 @@ export default function ScenarioDemoPanel({
                 }}
               />
             </div>
-            <div className="flex justify-between mt-1.5 text-sm text-gray-600">
+            <div className="flex justify-between mt-1.5 text-base text-gray-600">
               <span>Baselines ({Math.min(completedCount, 3)}/3)</span>
               <span>2025 Incidents ({Math.max(completedCount - 3, 0)}/4)</span>
             </div>
@@ -408,7 +411,7 @@ export default function ScenarioDemoPanel({
                               <span className={`text-base font-black ${verdict.model1.verdict === 'APPROVED' ? 'text-green-400' : 'text-red-400'}`}>
                                 {verdict.model1.verdict}
                               </span>
-                              <span className="text-sm text-gray-500 font-bold">{verdict.model1.confidence}%</span>
+                              <span className="text-base text-gray-500 font-bold">{verdict.model1.confidence}%</span>
                             </div>
                             <p className="text-base text-gray-400 leading-snug">{verdict.model1.reason}</p>
                           </div>
@@ -420,7 +423,7 @@ export default function ScenarioDemoPanel({
                               <span className={`text-base font-black ${verdict.model2.verdict === 'APPROVED' ? 'text-green-400' : 'text-red-400'}`}>
                                 {verdict.model2.verdict}
                               </span>
-                              <span className="text-sm text-gray-500 font-bold">{verdict.model2.confidence}%</span>
+                              <span className="text-base text-gray-500 font-bold">{verdict.model2.confidence}%</span>
                             </div>
                             <p className="text-base text-gray-400 leading-snug">{verdict.model2.reason}</p>
                           </div>
@@ -455,7 +458,7 @@ export default function ScenarioDemoPanel({
                                 {verdict.anomalyDimensions.map((dim, idx) => (
                                   <div key={idx} className="flex items-center gap-3">
                                     <div className="w-28 shrink-0">
-                                      <span className={`text-sm font-semibold ${dim.fired ? 'text-orange-400' : 'text-gray-600'}`}>
+                                      <span className={`text-base font-semibold ${dim.fired ? 'text-orange-400' : 'text-gray-600'}`}>
                                         {dim.name}
                                       </span>
                                     </div>
@@ -467,7 +470,7 @@ export default function ScenarioDemoPanel({
                                         style={{ width: `${(dim.score / dim.maxWeight) * 100}%` }}
                                       />
                                     </div>
-                                    <span className={`text-sm font-bold w-10 text-right ${dim.fired ? 'text-orange-400' : 'text-gray-700'}`}>
+                                    <span className={`text-base font-bold w-10 text-right ${dim.fired ? 'text-orange-400' : 'text-gray-700'}`}>
                                       {dim.fired ? `+${dim.score}` : '0'}
                                     </span>
                                   </div>
@@ -645,7 +648,7 @@ export default function ScenarioDemoPanel({
                               <span className={`text-base font-black ${verdict.model1.verdict === 'APPROVED' ? 'text-green-400' : 'text-red-400'}`}>
                                 {verdict.model1.verdict}
                               </span>
-                              <span className="text-sm text-gray-500 font-bold">{verdict.model1.confidence}%</span>
+                              <span className="text-base text-gray-500 font-bold">{verdict.model1.confidence}%</span>
                             </div>
                             <p className="text-base text-gray-400 leading-snug">{verdict.model1.reason}</p>
                           </div>
@@ -657,7 +660,7 @@ export default function ScenarioDemoPanel({
                               <span className={`text-base font-black ${verdict.model2.verdict === 'APPROVED' ? 'text-green-400' : 'text-red-400'}`}>
                                 {verdict.model2.verdict}
                               </span>
-                              <span className="text-sm text-gray-500 font-bold">{verdict.model2.confidence}%</span>
+                              <span className="text-base text-gray-500 font-bold">{verdict.model2.confidence}%</span>
                             </div>
                             <p className="text-base text-gray-400 leading-snug">{verdict.model2.reason}</p>
                           </div>
@@ -691,7 +694,7 @@ export default function ScenarioDemoPanel({
                                 {verdict.anomalyDimensions.map((dim, didx) => (
                                   <div key={didx} className="flex items-center gap-3">
                                     <div className="w-28 shrink-0">
-                                      <span className={`text-sm font-semibold ${dim.fired ? 'text-orange-400' : 'text-gray-600'}`}>
+                                      <span className={`text-base font-semibold ${dim.fired ? 'text-orange-400' : 'text-gray-600'}`}>
                                         {dim.name}
                                       </span>
                                     </div>
@@ -703,7 +706,7 @@ export default function ScenarioDemoPanel({
                                         style={{ width: `${(dim.score / dim.maxWeight) * 100}%` }}
                                       />
                                     </div>
-                                    <span className={`text-sm font-bold w-10 text-right ${dim.fired ? 'text-orange-400' : 'text-gray-700'}`}>
+                                    <span className={`text-base font-bold w-10 text-right ${dim.fired ? 'text-orange-400' : 'text-gray-700'}`}>
                                       {dim.fired ? `+${dim.score}` : '0'}
                                     </span>
                                   </div>

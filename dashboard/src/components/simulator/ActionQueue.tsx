@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
+import type { LayerCatchInfo } from '@/lib/demo-scenarios'
 
 export interface ActionItem {
   title: string
@@ -10,6 +11,7 @@ export interface ActionItem {
   scoreBefore?: number
   scoreAfter?: number
   verdict?: 'APPROVED' | 'DENIED'
+  layerCatchInfo?: LayerCatchInfo
 }
 
 interface ActionQueueProps {
@@ -22,7 +24,7 @@ function ScoreDelta({ before, after }: { before: number; after: number }) {
   const delta = after - before
   if (delta === 0) {
     return (
-      <span className="text-green-400 font-mono text-sm font-bold">+0</span>
+      <span className="text-green-400 font-mono text-base font-bold">+0</span>
     )
   }
   const color =
@@ -34,7 +36,62 @@ function ScoreDelta({ before, after }: { before: number; after: number }) {
           ? 'text-yellow-400'
           : 'text-green-400'
   return (
-    <span className={`${color} font-mono text-sm font-bold`}>+{delta}</span>
+    <span className={`${color} font-mono text-base font-bold`}>+{delta}</span>
+  )
+}
+
+function LayerBadge({
+  label,
+  info,
+}: {
+  label: string
+  info: { checked: boolean; caught: boolean; reason?: string }
+}) {
+  if (!info.checked) {
+    return (
+      <span className="text-xs px-1.5 py-0.5 rounded text-yellow-400/80 bg-yellow-500/5 border border-dashed border-yellow-500/20 line-through">
+        {label}
+      </span>
+    )
+  }
+  if (info.caught) {
+    return (
+      <span className="text-xs px-1.5 py-0.5 rounded text-red-400 bg-red-500/10 border border-red-500/20 font-bold">
+        {label}
+      </span>
+    )
+  }
+  return (
+    <span className="text-xs px-1.5 py-0.5 rounded text-green-400/60 bg-green-500/5 border border-green-500/10">
+      {label}
+    </span>
+  )
+}
+
+function LayerPipeline({ info }: { info: LayerCatchInfo }) {
+  const arrow = <span className="text-gray-600 text-xs mx-0.5">&rsaquo;</span>
+
+  return (
+    <div className="flex items-center gap-0.5 mt-1.5">
+      <LayerBadge label="L1" info={info.layer1} />
+      {arrow}
+      <LayerBadge label="L2" info={info.layer2} />
+      {arrow}
+      <LayerBadge label="L3" info={info.layer3} />
+      {info.caughtBy !== 'none' && (
+        <span className="text-xs text-gray-500 ml-1.5">
+          {!info.layer1.checked && info.caughtBy === 'layer2'
+            ? 'Policy bypassed — behavioral caught'
+            : !info.layer1.checked && !info.layer2.caught && info.caughtBy === 'layer3'
+              ? 'L1+L2 bypassed — AI caught'
+              : info.caughtBy === 'layer1'
+                ? 'Policy violation'
+                : info.caughtBy === 'layer2'
+                  ? 'Behavioral anomaly'
+                  : 'AI consensus denied'}
+        </span>
+      )}
+    </div>
   )
 }
 
@@ -191,7 +248,7 @@ export default function ActionQueue({
               <div className="flex items-start gap-4">
                 {/* Index + Status Icon */}
                 <div className="flex items-center gap-2 pt-0.5 shrink-0">
-                  <span className="text-sm text-gray-600 font-mono w-5 text-right">
+                  <span className="text-base text-gray-600 font-mono w-5 text-right">
                     {index + 1}.
                   </span>
                   <StatusIcon
@@ -218,16 +275,16 @@ export default function ActionQueue({
                       {action.title}
                     </span>
                     {action.isSafe ? (
-                      <span className="text-sm px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 font-semibold">
+                      <span className="text-base px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 font-semibold">
                         SAFE
                       </span>
                     ) : (
-                      <span className="text-sm px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 font-semibold">
+                      <span className="text-base px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 font-semibold">
                         ATTACK
                       </span>
                     )}
                     {isCurrentlyRunning && (
-                      <span className="text-sm text-blue-400 font-semibold animate-pulse">
+                      <span className="text-base text-blue-400 font-semibold animate-pulse">
                         Evaluating...
                       </span>
                     )}
@@ -239,12 +296,15 @@ export default function ActionQueue({
                   >
                     {action.description}
                   </p>
+                  {isDone && action.layerCatchInfo && (
+                    <LayerPipeline info={action.layerCatchInfo} />
+                  )}
                 </div>
 
                 {/* Score delta and verdict (right side) */}
                 <div className="flex items-center gap-3 shrink-0 pt-0.5">
                   {isDone && action.scoreBefore !== undefined && action.scoreAfter !== undefined && (
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-base">
                       <span className="text-gray-500 font-mono">
                         {action.scoreBefore}
                       </span>
@@ -268,7 +328,7 @@ export default function ActionQueue({
                   )}
                   {isDone && action.verdict && (
                     <span
-                      className={`text-sm font-bold px-2.5 py-1 rounded-lg ${
+                      className={`text-base font-bold px-2.5 py-1 rounded-lg ${
                         action.verdict === 'APPROVED'
                           ? 'bg-green-500/10 text-green-400'
                           : 'bg-red-500/10 text-red-400'

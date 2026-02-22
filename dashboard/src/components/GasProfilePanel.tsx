@@ -101,7 +101,7 @@ export default function GasProfilePanel({
               title={`${b.label}: ${b.gas.toLocaleString()} gas (${pct.toFixed(1)}%)`}
             >
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                <div className="bg-gray-800 text-sm text-white px-3 py-1.5 rounded-lg whitespace-nowrap border border-gray-700">
+                <div className="bg-gray-800 text-base text-white px-3 py-1.5 rounded-lg whitespace-nowrap border border-gray-700">
                   {b.label}: {b.gas.toLocaleString()} gas
                 </div>
               </div>
@@ -111,7 +111,7 @@ export default function GasProfilePanel({
       </div>
 
       {/* Legend */}
-      <div className="flex gap-5 mb-5 text-sm text-gray-500">
+      <div className="flex gap-5 mb-5 text-base text-gray-500">
         <span className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-green-500" /> {'< 50K'}
         </span>
@@ -131,7 +131,7 @@ export default function GasProfilePanel({
               className="flex-shrink-0"
               style={{ paddingLeft: `${b.depth * 12}px` }}
             >
-              <span className="text-sm text-gray-600 font-mono w-16 inline-block">
+              <span className="text-base text-gray-600 font-mono w-16 inline-block">
                 {b.type}
               </span>
             </div>
@@ -143,11 +143,11 @@ export default function GasProfilePanel({
                     style={{ width: `${(b.gas / maxGas) * 100}%` }}
                   />
                 </div>
-                <span className={`text-sm font-mono w-24 text-right ${gasTextColor(b.gas)}`}>
+                <span className={`text-base font-mono w-24 text-right ${gasTextColor(b.gas)}`}>
                   {b.gas.toLocaleString()}
                 </span>
               </div>
-              <p className="text-sm text-gray-500 truncate">{b.label}</p>
+              <p className="text-base text-gray-500 truncate">{b.label}</p>
             </div>
           </div>
         ))}

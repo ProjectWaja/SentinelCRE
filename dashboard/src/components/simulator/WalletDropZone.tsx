@@ -133,18 +133,18 @@ export default function WalletDropZone({
 
       {/* Contract info */}
       <h3 className="text-xl font-bold text-white mb-1">SentinelGuardian</h3>
-      <p className="text-sm font-mono text-gray-500 mb-3">{shortAddr}</p>
+      <p className="text-base font-mono text-gray-500 mb-3">{shortAddr}</p>
 
       <div className="flex items-center gap-3 mb-4">
-        <span className="text-sm px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 font-semibold">
+        <span className="text-base px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 font-semibold">
           Sepolia
         </span>
-        <span className="text-sm px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 font-semibold">
+        <span className="text-base px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 font-semibold">
           Tenderly
         </span>
       </div>
 
-      <p className="text-sm text-gray-600 mb-6">
+      <p className="text-base text-gray-600 mb-6">
         Deployer: <span className="font-mono">{shortDeployer}</span>
       </p>
 
@@ -162,7 +162,7 @@ export default function WalletDropZone({
             {result.success ? 'SUCCESS' : 'REVERTED'}
           </p>
           {result.revertReason && (
-            <p className="text-sm text-red-300/70 font-mono mb-2">{result.revertReason}</p>
+            <p className="text-base text-red-300/70 font-mono mb-2">{result.revertReason}</p>
           )}
           <p className="text-base text-gray-400">
             Gas: <span className="font-mono text-white">{result.gasUsed.toLocaleString()}</span>
@@ -173,7 +173,7 @@ export default function WalletDropZone({
       {isError && error && (
         <div>
           <p className="text-lg font-bold text-red-400 mb-1">Simulation Error</p>
-          <p className="text-sm text-red-300/70 font-mono">{error}</p>
+          <p className="text-base text-red-300/70 font-mono">{error}</p>
         </div>
       )}
 

@@ -150,6 +150,7 @@ const AI_AGENT_INCIDENTS = [
   {
     name: 'AIXBT Hack',
     amount: '$106K',
+    amountNum: 0.106,
     date: 'Mar 2025',
     method: 'Dashboard compromise',
     color: 'border-l-red-500',
@@ -160,10 +161,14 @@ const AI_AGENT_INCIDENTS = [
       'Attacker drained 55 ETH in minutes — the agent had no time-of-day anomaly detection or kill switch.',
       'No pre-execution risk controls existed to freeze the agent or flag the off-hours activity.',
     ],
+    prevention: 'Behavioral engine detects "EMERGENCY" + "immediately" social engineering pattern (Time-of-Day +30) and "transfer all" fund extraction language (Value Deviation +25). Score 55/100 triggers DENY — exactly the off-hours drain SentinelCRE was built to stop.',
+    caughtBy: ['L2'] as ('L1' | 'L2' | 'L3')[],
+    stoppedAt: 'Behavioral Risk Scoring',
   },
   {
     name: 'Moonwell Exploit',
     amount: '$1.78M',
+    amountNum: 1.78,
     date: 'Feb 2025',
     method: 'AI-generated oracle bug',
     color: 'border-l-rose-500',
@@ -174,10 +179,14 @@ const AI_AGENT_INCIDENTS = [
       'The agent that wrote the code had no risk evaluation layer — the vulnerability shipped to production.',
       '$1.78 million drained before anyone noticed the faulty price feed logic.',
     ],
+    prevention: 'Flash loan targeting unapproved contract is caught at Layer 1 (target whitelist + value limit). Dual-AI consensus independently recognizes the oracle manipulation pattern. All three layers trigger simultaneously.',
+    caughtBy: ['L1', 'L2', 'L3'] as ('L1' | 'L2' | 'L3')[],
+    stoppedAt: 'On-Chain Policy',
   },
   {
     name: 'Anthropic Research',
     amount: '$1.22',
+    amountNum: 0,
     date: '2025',
     method: 'Autonomous exploit discovery',
     color: 'border-l-orange-500',
@@ -188,10 +197,14 @@ const AI_AGENT_INCIDENTS = [
       'Average cost per successful exploit: $1.22. This enables automated exploitation at unprecedented scale.',
       'Proves that AI agents can be weaponized — and that hiding risk thresholds (via Confidential Compute) is essential.',
     ],
+    prevention: 'Sequential Probing detection (+35) catches the binary-search doubling pattern. Cumulative Drift (+20) flags deviation from origin baseline. Value Deviation (+12) confirms anomalous amounts. Score 67/100 triggers DENY — and Confidential Compute means the agent can\'t even see the thresholds it\'s probing for.',
+    caughtBy: ['L2'] as ('L1' | 'L2' | 'L3')[],
+    stoppedAt: 'Behavioral Risk Scoring',
   },
   {
     name: 'Bybit Hack',
     amount: '$1.5B',
+    amountNum: 1500,
     date: 'Feb 2025',
     method: 'Largest single crypto theft',
     color: 'border-l-amber-500',
@@ -202,6 +215,9 @@ const AI_AGENT_INCIDENTS = [
       'No pre-execution risk controls caught the anomalous withdrawal pattern before funds left.',
       'Demonstrates that even the largest exchanges lack adaptive behavioral risk monitoring.',
     ],
+    prevention: 'Value 100x above policy limit is caught instantly at Layer 1 (PolicyLib.checkValue). Behavioral engine flags the unprecedented withdrawal size. Agent frozen permanently — CRITICAL severity, no appeal, circuit breaker triggered.',
+    caughtBy: ['L1', 'L2'] as ('L1' | 'L2' | 'L3')[],
+    stoppedAt: 'On-Chain Policy',
   },
 ]
 
@@ -293,7 +309,7 @@ const BEHAVIORAL_DIMENSIONS = [
   {
     name: 'Value Deviation',
     max: 25,
-    total: 155,
+    total: 230,
     desc: 'Flags transactions significantly above the agent\'s historical average',
     examples: [
       'Agent usually sends 0.1 ETH, suddenly tries 50 ETH',
@@ -304,7 +320,7 @@ const BEHAVIORAL_DIMENSIONS = [
   {
     name: 'Contract Diversity',
     max: 20,
-    total: 155,
+    total: 230,
     desc: 'Detects when agent suddenly interacts with unknown contracts',
     examples: [
       'DeFi trading agent starts calling NFT minting contracts it\'s never used before',
@@ -314,44 +330,44 @@ const BEHAVIORAL_DIMENSIONS = [
   },
   {
     name: 'Velocity',
-    max: 15,
-    total: 155,
+    max: 50,
+    total: 230,
     desc: 'Catches burst-rate transactions faster than the agent\'s baseline',
     examples: [
-      '20 transactions in 60 seconds vs. the agent\'s normal 2/minute',
+      '16+ rapid transactions vs. the agent\'s normal 2/minute — micro-drain pattern',
       'Agent that normally acts every 5 minutes suddenly fires 8 actions in 30 seconds',
     ],
     color: 'bg-yellow-500',
   },
   {
     name: 'Function Pattern',
-    max: 30,
-    total: 155,
-    desc: 'Identifies unusual function calls for this agent type',
+    max: 50,
+    total: 230,
+    desc: 'Identifies unusual function calls or near-limit exploitation for this agent type',
     examples: [
-      'Swap agent suddenly calling approve() on an unknown token contract',
+      'Minting agent requests 90%+ of its authorized cap in a single action',
       'Trading bot invoking transferOwnership() or upgradeTo() — admin functions it should never use',
     ],
     color: 'bg-purple-500',
   },
   {
     name: 'Time-of-Day',
-    max: 10,
-    total: 155,
-    desc: 'Flags activity outside the agent\'s normal operating hours',
+    max: 30,
+    total: 230,
+    desc: 'Flags activity outside the agent\'s normal operating hours or urgency language',
     examples: [
       'Business-hours agent active at 3 AM UTC when it\'s never operated at that time',
-      'Weekend-inactive agent suddenly submitting proposals on Saturday night',
+      'Action description uses "EMERGENCY" + "immediately" — social engineering pattern',
     ],
     color: 'bg-blue-500',
   },
   {
     name: 'Sequential Probing',
     max: 35,
-    total: 155,
+    total: 230,
     desc: 'Detects monotonically increasing values (threshold hunting)',
     examples: [
-      'Agent sends 1, 2, 4, 8, 16 ETH — binary search probing for the value limit',
+      'Agent sends 0.025, 0.05, 0.1, 0.2, 0.4, 0.8 ETH — binary search probing for the limit',
       'Minting 100, 200, 400, 800 tokens in sequence to find the mint cap',
     ],
     color: 'bg-pink-500',
@@ -359,10 +375,10 @@ const BEHAVIORAL_DIMENSIONS = [
   {
     name: 'Cumulative Drift',
     max: 20,
-    total: 155,
+    total: 230,
     desc: 'Catches slow baseline poisoning over many transactions',
     examples: [
-      'Gradually increasing average from 0.1 ETH to 2.5 ETH over 100 small transactions',
+      'Gradually increasing average from 0.1 ETH to 0.8 ETH over 12 small transactions',
       'Slowly adding new target contracts one-at-a-time to normalize unusual contract diversity',
     ],
     color: 'bg-teal-500',
@@ -530,7 +546,7 @@ function Section({
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
+    <h2 className="text-base font-bold uppercase tracking-widest text-gray-500 mb-4">
       {children}
     </h2>
   )
@@ -547,7 +563,9 @@ export default function ArchitecturePanel() {
   const allProblemExpanded =
     AI_AGENT_INCIDENTS.every((e) => !!expandedExploits[`incident-${e.name}`]) &&
     EXPLOITS.every((e) => !!expandedExploits[`problem-${e.name}`])
-  const allPreventionExpanded = EXPLOITS.every((e) => !!expandedExploits[`prevent-${e.name}`])
+  const allPreventionExpanded =
+    EXPLOITS.every((e) => !!expandedExploits[`prevent-${e.name}`]) &&
+    AI_AGENT_INCIDENTS.every((e) => !!expandedExploits[`prevent-${e.name}`])
 
   const toggleLayer = (layer: number) =>
     setExpandedLayers((prev) => ({ ...prev, [layer]: !prev[layer] }))
@@ -561,12 +579,12 @@ export default function ArchitecturePanel() {
       {/* ─── Table of Contents ─── */}
       <nav className="bg-gray-900/80 backdrop-blur-sm rounded-xl border border-gray-800 px-5 py-3.5 sticky top-36 z-30">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
-          <span className="text-gray-600 text-sm font-mono uppercase tracking-wider mr-2 shrink-0">Jump to:</span>
+          <span className="text-gray-600 text-base font-mono uppercase tracking-wider mr-2 shrink-0">Jump to:</span>
           {TOC.map((t) => (
             <a
               key={t.id}
               href={`#${t.id}`}
-              className={`${t.color} text-sm font-semibold px-3 py-1.5 rounded-md hover:bg-gray-800 transition-colors whitespace-nowrap`}
+              className={`${t.color} text-base font-semibold px-3 py-1.5 rounded-md hover:bg-gray-800 transition-colors whitespace-nowrap`}
             >
               {t.label}
             </a>
@@ -634,7 +652,7 @@ export default function ArchitecturePanel() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-gray-500 text-sm font-mono">{e.date}</span>
+                    <span className="text-gray-500 text-base font-mono">{e.date}</span>
                     <ChevronIcon open={open} />
                   </div>
                 </button>
@@ -689,7 +707,7 @@ export default function ArchitecturePanel() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-gray-500 text-sm font-mono">{e.date}</span>
+                    <span className="text-gray-500 text-base font-mono">{e.date}</span>
                     <ChevronIcon open={open} />
                   </div>
                 </button>
@@ -742,7 +760,7 @@ export default function ArchitecturePanel() {
           {TECH_STATS.map((stat) => (
             <div key={stat.label} className="bg-gray-800/50 rounded-xl p-5 border border-gray-700/50 text-center">
               <div className={`${stat.color} text-2xl font-black`}>{stat.label}</div>
-              <div className="text-gray-500 text-sm mt-1">{stat.sublabel}</div>
+              <div className="text-gray-500 text-base mt-1">{stat.sublabel}</div>
             </div>
           ))}
         </div>
@@ -756,40 +774,77 @@ export default function ArchitecturePanel() {
           Three concentric layers of protection. An attacker must bypass all three simultaneously to succeed.
         </p>
 
-        {/* Concentric rings visual */}
-        <div className="relative flex items-center justify-center mb-8 py-4">
-          <div className="relative w-full max-w-xl aspect-square rounded-full border-2 border-dashed border-purple-500/40 flex items-center justify-center p-6 sm:p-10">
-            <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gray-900 px-4 text-purple-400 text-base font-black uppercase tracking-wider whitespace-nowrap">
-              Layer 3 &mdash; Dual-AI Consensus
-            </span>
-            <div className="relative w-full aspect-square rounded-full border-2 border-dashed border-orange-500/40 flex items-center justify-center p-6 sm:p-8">
-              <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gray-900 px-4 text-orange-400 text-base font-black uppercase tracking-wider whitespace-nowrap">
-                Layer 2 &mdash; Behavioral Engine
+        {/* Rings + Key Differentiators — side by side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-center">
+          {/* Concentric rings visual — interactive, linked to expandable cards */}
+          <div className="relative flex items-center justify-center py-4">
+            {/* L3 outer ring */}
+            <div
+              onClick={() => toggleLayer(3)}
+              className={`relative w-full max-w-md aspect-square rounded-full border-2 border-dashed flex items-center justify-center p-5 sm:p-8 cursor-pointer transition-all duration-500 ${
+                expandedLayers[3]
+                  ? 'border-purple-400 bg-purple-500/10 shadow-[0_0_40px_rgba(168,85,247,0.25)] scale-[1.01]'
+                  : 'border-purple-500/40 hover:border-purple-500/60'
+              }`}
+            >
+              <span className={`absolute -top-4 left-1/2 -translate-x-1/2 bg-gray-900 px-3 text-base font-black uppercase tracking-wider whitespace-nowrap transition-colors duration-500 ${
+                expandedLayers[3] ? 'text-purple-300' : 'text-purple-400'
+              }`}>
+                Layer 3 &mdash; Dual-AI Consensus
               </span>
-              <div className="relative w-full aspect-square rounded-full border-2 border-solid border-red-500/60 flex items-center justify-center bg-red-500/5">
-                <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gray-900 px-4 text-red-400 text-base font-black uppercase tracking-wider whitespace-nowrap">
-                  Layer 1 &mdash; On-Chain Policy
+              {/* L2 middle ring */}
+              <div
+                onClick={(e) => { e.stopPropagation(); toggleLayer(2) }}
+                className={`relative w-full aspect-square rounded-full border-2 border-dashed flex items-center justify-center p-5 sm:p-7 cursor-pointer transition-all duration-500 ${
+                  expandedLayers[2]
+                    ? 'border-orange-400 bg-orange-500/10 shadow-[0_0_30px_rgba(249,115,22,0.25)] scale-[1.01]'
+                    : 'border-orange-500/40 hover:border-orange-500/60'
+                }`}
+              >
+                <span className={`absolute -top-4 left-1/2 -translate-x-1/2 bg-gray-900 px-3 text-base font-black uppercase tracking-wider whitespace-nowrap transition-colors duration-500 ${
+                  expandedLayers[2] ? 'text-orange-300' : 'text-orange-400'
+                }`}>
+                  Layer 2 &mdash; Behavioral Engine
                 </span>
-                <div className="text-center px-2">
-                  <div className="text-white font-black text-lg sm:text-xl">PolicyLib.sol</div>
-                  <div className="text-gray-400 text-base mt-1">Immutable Rules</div>
+                {/* L1 inner ring */}
+                <div
+                  onClick={(e) => { e.stopPropagation(); toggleLayer(1) }}
+                  className={`relative w-full aspect-square rounded-full border-2 flex items-center justify-center cursor-pointer transition-all duration-500 ${
+                    expandedLayers[1]
+                      ? 'border-solid border-red-400 bg-red-500/15 shadow-[0_0_30px_rgba(239,68,68,0.3)] scale-[1.02]'
+                      : 'border-solid border-red-500/60 bg-red-500/5 hover:border-red-500/80'
+                  }`}
+                >
+                  <span className={`absolute -top-4 left-1/2 -translate-x-1/2 bg-gray-900 px-3 text-base font-black uppercase tracking-wider whitespace-nowrap transition-colors duration-500 ${
+                    expandedLayers[1] ? 'text-red-300' : 'text-red-400'
+                  }`}>
+                    Layer 1 &mdash; On-Chain Policy
+                  </span>
+                  <div className="text-center px-2">
+                    <div className={`font-black text-lg sm:text-xl transition-colors duration-500 ${
+                      expandedLayers[1] ? 'text-red-300' : 'text-white'
+                    }`}>PolicyLib.sol</div>
+                    <div className={`text-base mt-1 transition-colors duration-500 ${
+                      expandedLayers[1] ? 'text-red-400/80' : 'text-gray-400'
+                    }`}>Immutable Rules</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Key Differentiators */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          {KEY_DIFFERENTIATORS.map((d) => (
-            <div key={d.title} className={`${d.bg} rounded-xl p-5 border ${d.border}`}>
-              <div className="flex items-center gap-3 mb-2">
-                <span className={`text-2xl`} dangerouslySetInnerHTML={{ __html: d.icon }} />
-                <h4 className={`${d.color} font-bold text-xl`}>{d.title}</h4>
+          {/* Key Differentiators — stacked 1x4 on the right */}
+          <div className="grid grid-cols-1 gap-3">
+            {KEY_DIFFERENTIATORS.map((d) => (
+              <div key={d.title} className={`${d.bg} rounded-xl p-4 border ${d.border}`}>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className={`text-xl`} dangerouslySetInnerHTML={{ __html: d.icon }} />
+                  <h4 className={`${d.color} font-bold text-lg`}>{d.title}</h4>
+                </div>
+                <p className="text-gray-300 text-base leading-relaxed">{d.desc}</p>
               </div>
-              <p className="text-gray-300 text-lg leading-relaxed">{d.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Expandable layer cards — 3 columns */}
@@ -806,7 +861,7 @@ export default function ArchitecturePanel() {
                     <span className={`${layer.textColor} text-3xl font-black`}>L{layer.layer}</span>
                     <div>
                       <div className="text-white font-bold text-lg">{layer.name}</div>
-                      <div className="text-gray-500 text-sm font-mono">{layer.subtitle}</div>
+                      <div className="text-gray-500 text-base font-mono">{layer.subtitle}</div>
                     </div>
                   </div>
                   <ChevronIcon open={open} />
@@ -853,7 +908,7 @@ export default function ArchitecturePanel() {
                   <span className="text-white font-bold text-lg">{s.title}</span>
                 </div>
                 <p className="text-gray-400 text-base mb-2">{s.desc}</p>
-                <span className="inline-block text-sm font-mono px-2.5 py-1 rounded bg-gray-800/80 text-gray-500">
+                <span className="inline-block text-base font-mono px-2.5 py-1 rounded bg-gray-800/80 text-gray-500">
                   {s.service}
                 </span>
               </div>
@@ -885,7 +940,7 @@ export default function ArchitecturePanel() {
               <div className="flex items-center justify-between mb-2">
                 <h4 className={`${svc.color} font-bold text-lg`}>{svc.name}</h4>
                 <span
-                  className={`text-sm px-3 py-1 rounded-full font-bold ${
+                  className={`text-base px-3 py-1 rounded-full font-bold ${
                     svc.status === 'LIVE'
                       ? 'text-green-400 bg-green-400/15 border border-green-400/30'
                       : 'text-yellow-400 bg-yellow-400/15 border border-yellow-400/30'
@@ -896,8 +951,8 @@ export default function ArchitecturePanel() {
               </div>
               <p className="text-gray-400 text-base mb-3">{svc.desc}</p>
               <div className="flex items-center gap-1.5">
-                <span className="text-gray-600 text-sm">File:</span>
-                <code className="text-sm font-mono text-gray-500 bg-gray-800/60 px-2 py-0.5 rounded">
+                <span className="text-gray-600 text-base">File:</span>
+                <code className="text-base font-mono text-gray-500 bg-gray-800/60 px-2 py-0.5 rounded">
                   {svc.file}
                 </code>
               </div>
@@ -929,7 +984,7 @@ export default function ArchitecturePanel() {
                       <h4 className="font-mono text-xl text-white font-bold">SentinelGuardian.sol</h4>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-green-400 bg-green-400/10 text-sm px-3 py-1 rounded-full font-bold">
+                      <span className="text-green-400 bg-green-400/10 text-base px-3 py-1 rounded-full font-bold">
                         45 tests
                       </span>
                       <ChevronIcon open={open} />
@@ -939,7 +994,7 @@ export default function ArchitecturePanel() {
                     <p className="text-gray-300 text-lg mb-1">
                       Core risk engine &mdash; compliance checks, circuit breakers, agent lifecycle management
                     </p>
-                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <div className="flex flex-wrap items-center gap-2 text-base">
                       <span className="text-gray-400 font-mono bg-gray-800 px-2.5 py-1 rounded">AccessControl</span>
                       <span className="text-gray-400 font-mono bg-gray-800 px-2.5 py-1 rounded">Pausable</span>
                     </div>
@@ -993,7 +1048,7 @@ export default function ArchitecturePanel() {
                       <h4 className="font-mono text-xl text-white font-bold">AgentRegistry.sol</h4>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-green-400 bg-green-400/10 text-sm px-3 py-1 rounded-full font-bold">
+                      <span className="text-green-400 bg-green-400/10 text-base px-3 py-1 rounded-full font-bold">
                         8 tests
                       </span>
                       <ChevronIcon open={open} />
@@ -1003,7 +1058,7 @@ export default function ArchitecturePanel() {
                     <p className="text-gray-300 text-lg mb-1">
                       Agent metadata registry &mdash; name, description, owner tracking
                     </p>
-                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <div className="flex flex-wrap items-center gap-2 text-base">
                       <span className="text-gray-400 font-mono bg-gray-800 px-2.5 py-1 rounded">Ownable</span>
                     </div>
                   </div>
@@ -1063,7 +1118,7 @@ export default function ArchitecturePanel() {
           </button>
         </div>
         <p className="text-gray-400 text-xl mb-6">
-          Each proposal is scored across 7 independent dimensions. Total max score: 155. Threshold for denial: configurable per agent policy.
+          Each proposal is scored across 7 independent dimensions. Total max score: 230. Threshold for denial: configurable per agent policy.
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -1095,7 +1150,7 @@ export default function ArchitecturePanel() {
                   <div className="space-y-2">
                     {dim.examples.map((ex, i) => (
                       <div key={i} className="bg-gray-900/80 rounded-lg px-4 py-3 border border-gray-800">
-                        <span className="text-gray-500 text-sm uppercase tracking-wider font-bold mr-2">Ex {i + 1}: </span>
+                        <span className="text-gray-500 text-base uppercase tracking-wider font-bold mr-2">Ex {i + 1}: </span>
                         <span className="text-gray-300 text-base italic">{ex}</span>
                       </div>
                     ))}
@@ -1109,7 +1164,7 @@ export default function ArchitecturePanel() {
         <div className="mt-4 bg-purple-500/5 border border-purple-500/20 rounded-xl p-5 text-center">
           <div className="text-purple-400 text-base font-medium">
             Combined max score:{' '}
-            <span className="text-white font-black text-2xl">155</span>
+            <span className="text-white font-black text-2xl">230</span>
             <span className="text-gray-500 ml-3">|</span>
             <span className="text-gray-400 ml-3">Typical denial threshold:</span>
             <span className="text-red-400 font-black text-2xl ml-1">50+</span>
@@ -1132,7 +1187,7 @@ export default function ArchitecturePanel() {
                 <span className={`${stat.color} text-3xl font-black font-mono`}>{stat.metric}</span>
                 <div>
                   <div className="text-white font-bold text-lg">{stat.label}</div>
-                  <div className="text-gray-500 text-sm font-mono">{stat.source}</div>
+                  <div className="text-gray-500 text-base font-mono">{stat.source}</div>
                 </div>
               </div>
               <p className="text-gray-300 text-lg leading-relaxed">{stat.desc}</p>
@@ -1160,6 +1215,7 @@ export default function ArchitecturePanel() {
               const next = !allPreventionExpanded
               const updated: Record<string, boolean> = { ...expandedExploits }
               EXPLOITS.forEach((e) => { updated[`prevent-${e.name}`] = next })
+              AI_AGENT_INCIDENTS.forEach((e) => { updated[`prevent-${e.name}`] = next })
               setExpandedExploits(updated)
             }}
             className="text-base text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer shrink-0"
@@ -1169,17 +1225,108 @@ export default function ArchitecturePanel() {
           </button>
         </div>
         <p className="text-gray-400 text-xl mb-6">
-          The same {EXPLOITS.length} exploits from above &mdash; but now with the 3-layer defense active. Click any to see exactly where the attack gets blocked.
+          All {EXPLOITS.length + AI_AGENT_INCIDENTS.length} exploits from above &mdash; historical and 2025 &mdash; but now with the 3-layer defense active. Click any to see exactly where the attack gets blocked.
         </p>
 
         <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-5 text-center mb-6">
-          <div className="text-cyan-400 text-4xl font-black mb-1">$2.2 Billion+ saved</div>
+          <div className="text-cyan-400 text-4xl font-black mb-1">$3.7 Billion+ saved</div>
           <p className="text-gray-400 text-lg">
-            Every exploit blocked before execution &mdash; agents frozen, incidents recorded on-chain
+            Every exploit blocked before execution &mdash; $2.2B historical + $1.5B+ from 2025 incidents
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-6">
+        {/* 2025 AI Agent Incidents */}
+        <div className="mb-3">
+          <h4 className="text-xl font-bold text-red-400 mb-3 flex items-center gap-2">
+            <span className="bg-red-500/10 text-red-400 text-xs font-black px-2 py-0.5 rounded-full border border-red-500/30">2025</span>
+            AI Agent Incidents Prevented
+          </h4>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {AI_AGENT_INCIDENTS.map((e) => {
+              const open = !!expandedExploits[`prevent-${e.name}`]
+              return (
+                <div
+                  key={e.name}
+                  className={`bg-cyan-500/5 rounded-xl border-l-4 border-cyan-500 border border-gray-800 overflow-hidden`}
+                >
+                  <button
+                    onClick={() => toggleExploit(`prevent-${e.name}`)}
+                    className="w-full flex items-center justify-between p-4 text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="text-cyan-400 text-3xl font-black font-mono shrink-0">
+                        {e.amount}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-bold text-xl">{e.name}</span>
+                          <span className="text-cyan-400 text-xs font-black bg-cyan-400/10 px-2 py-0.5 rounded-full border border-cyan-400/30">
+                            BLOCKED
+                          </span>
+                        </div>
+                        <div className="text-gray-400 text-lg">Stopped at: <span className="text-cyan-300 font-bold text-lg">{e.stoppedAt}</span></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex gap-1 flex-wrap justify-end">
+                        {e.caughtBy.map((layer) => {
+                          const style = LAYER_TAG_STYLES[layer]
+                          return (
+                            <span
+                              key={layer}
+                              className={`${style.bg} ${style.text} ${style.border} border text-xs font-bold px-2 py-0.5 rounded-full`}
+                            >
+                              {style.label}
+                            </span>
+                          )
+                        })}
+                      </div>
+                      <ChevronIcon open={open} />
+                    </div>
+                  </button>
+                  <div
+                    className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                      open ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <div className="px-4 pb-4 border-t border-gray-800/50 pt-3">
+                      <div className="text-cyan-300/90 text-base leading-relaxed flex items-start gap-2">
+                        <span className="text-cyan-400 mt-0.5 shrink-0">{'\u2705'}</span>
+                        {e.prevention}
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <span className="text-gray-500 text-base uppercase tracking-wider font-bold">Layers triggered:</span>
+                        {e.caughtBy.map((layer) => {
+                          const style = LAYER_TAG_STYLES[layer]
+                          return (
+                            <span
+                              key={layer}
+                              className={`${style.bg} ${style.text} ${style.border} border text-base font-bold px-2.5 py-0.5 rounded-full`}
+                            >
+                              {style.label}
+                            </span>
+                          )
+                        })}
+                      </div>
+                      <div className="mt-2 bg-gray-900/60 rounded-lg px-3 py-2 border border-gray-800">
+                        <span className="text-gray-500 text-base uppercase tracking-wider font-bold mr-2">Original:</span>
+                        <span className="text-gray-400 text-base">{e.method} &mdash; {e.date}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Historical DeFi Exploits */}
+        <div className="mb-3">
+          <h4 className="text-xl font-bold text-gray-400 mb-3 flex items-center gap-2">
+            <span className="bg-gray-500/10 text-gray-400 text-xs font-black px-2 py-0.5 rounded-full border border-gray-500/30">2021&ndash;2024</span>
+            Historical DeFi Exploits Prevented
+          </h4>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {EXPLOITS.map((e) => {
             const open = !!expandedExploits[`prevent-${e.name}`]
             return (
@@ -1233,13 +1380,13 @@ export default function ArchitecturePanel() {
                       {e.prevention}
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <span className="text-gray-500 text-sm uppercase tracking-wider font-bold">Layers triggered:</span>
+                      <span className="text-gray-500 text-base uppercase tracking-wider font-bold">Layers triggered:</span>
                       {e.caughtBy.map((layer) => {
                         const style = LAYER_TAG_STYLES[layer]
                         return (
                           <span
                             key={layer}
-                            className={`${style.bg} ${style.text} ${style.border} border text-sm font-bold px-2.5 py-0.5 rounded-full`}
+                            className={`${style.bg} ${style.text} ${style.border} border text-base font-bold px-2.5 py-0.5 rounded-full`}
                           >
                             {style.label}
                           </span>
@@ -1247,7 +1394,7 @@ export default function ArchitecturePanel() {
                       })}
                     </div>
                     <div className="mt-2 bg-gray-900/60 rounded-lg px-3 py-2 border border-gray-800">
-                      <span className="text-gray-500 text-sm uppercase tracking-wider font-bold mr-2">Original:</span>
+                      <span className="text-gray-500 text-base uppercase tracking-wider font-bold mr-2">Original:</span>
                       <span className="text-gray-400 text-base">{e.method} &mdash; {e.date}</span>
                     </div>
                   </div>
@@ -1255,6 +1402,7 @@ export default function ArchitecturePanel() {
               </div>
             )
           })}
+        </div>
         </div>
 
         <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 text-center">

@@ -106,7 +106,7 @@ export default function TabNavigation({
                 if (el) tabRefs.current.set(tab.id, el)
               }}
               onClick={() => onTabChange(tab.id)}
-              className={`flex items-center gap-2.5 px-5 py-3.5 text-lg font-semibold transition-colors duration-200 relative ${
+              className={`flex items-center gap-2.5 px-5 py-3.5 text-xl font-semibold transition-colors duration-200 relative ${
                 activeTab === tab.id
                   ? 'text-red-400'
                   : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
@@ -118,7 +118,7 @@ export default function TabNavigation({
                 {tab.icon}
               </span>
               {tab.label}
-              <span className={`text-sm font-normal transition-colors duration-200 ${
+              <span className={`text-base font-normal transition-colors duration-200 ${
                 activeTab === tab.id ? 'text-red-400/50' : 'text-gray-600'
               }`}>
                 {tab.desc}

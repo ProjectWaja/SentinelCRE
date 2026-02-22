@@ -113,12 +113,12 @@ export default function IncidentLogPanel({
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <span
-                      className={`text-sm px-3 py-1 rounded-full font-bold ${TYPE_STYLES[inc.incidentLabel] ?? 'text-gray-400 bg-gray-400/10'}`}
+                      className={`text-base px-3 py-1 rounded-full font-bold ${TYPE_STYLES[inc.incidentLabel] ?? 'text-gray-400 bg-gray-400/10'}`}
                     >
                       {inc.incidentLabel}
                     </span>
                     {isSession && (
-                      <span className="text-sm px-3 py-1 rounded-full text-yellow-400 bg-yellow-400/10 font-bold">
+                      <span className="text-base px-3 py-1 rounded-full text-yellow-400 bg-yellow-400/10 font-bold">
                         Demo
                       </span>
                     )}
@@ -126,14 +126,14 @@ export default function IncidentLogPanel({
                       {agentName(inc.agentId)}
                     </span>
                   </div>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-base text-gray-500">
                     {inc.timestamp > 0
                       ? new Date(inc.timestamp * 1000).toLocaleString()
                       : 'N/A'}
                   </span>
                 </div>
                 <p className="text-base text-gray-300">{inc.reason}</p>
-                <p className="text-sm text-gray-500 font-mono mt-2">
+                <p className="text-base text-gray-500 font-mono mt-2">
                   Target: {inc.targetContract.slice(0, 18)}...{inc.targetContract.slice(-8)}
                 </p>
               </div>

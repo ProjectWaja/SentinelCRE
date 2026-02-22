@@ -5,6 +5,7 @@ dist/
 # Foundry
 contracts/out/
 contracts/cache/
+contracts/slither_*
 
 # Environment & secrets
 .env
@@ -20,14 +21,24 @@ deployments/*.json
 .DS_Store
 Thumbs.db
 
-# IDE
+# IDE & tooling
 .vscode/
 .idea/
+/.claude/
 
-# Build artifacts
+# Build artifacts & caches
 *.wasm
+**/*.tsbuildinfo
+**/next-env.d.ts
 sentinelcre-build-prompt.md
 
 # Next.js
 dashboard/.next/
 dashboard/out/
+
+# Lockfile duplicates (project uses root bun.lock)
+dashboard/bun.lock
+dashboard/package-lock.json
+
+# Binary files
+*.pptx

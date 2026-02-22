@@ -108,7 +108,7 @@ export default function DemoControlPanel({
                     >
                       <div className="flex items-center justify-between mb-0.5">
                         <span
-                          className={`text-sm font-medium ${isAttack ? 'text-red-400' : 'text-green-400'}`}
+                          className={`text-base font-medium ${isAttack ? 'text-red-400' : 'text-green-400'}`}
                         >
                           {status === 'loading' ? 'Evaluating...' : btn.label}
                         </span>

@@ -37,7 +37,7 @@ export default function ChainlinkServicesSlide() {
                 {s.status}
               </span>
             </div>
-            <p className="text-sm text-gray-400">{s.desc}</p>
+            <p className="text-base text-gray-400">{s.desc}</p>
           </div>
         ))}
       </div>

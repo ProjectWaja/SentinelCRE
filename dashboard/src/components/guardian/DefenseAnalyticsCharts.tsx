@@ -81,7 +81,7 @@ function VerdictDistribution({ verdicts }: { verdicts: VerdictEntry[] }) {
             {total}
           </text>
         </svg>
-        <div className="flex items-center gap-4 text-sm text-gray-300">
+        <div className="flex items-center gap-4 text-base text-gray-300">
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
             Approved ({approved})
@@ -119,7 +119,7 @@ function SeverityBreakdown({ verdicts }: { verdicts: VerdictEntry[] }) {
       <div className="space-y-3">
         {rows.map((row) => (
           <div key={row.label} className="flex items-center gap-3">
-            <span className="text-sm text-gray-400 w-16 shrink-0 font-mono">
+            <span className="text-base text-gray-400 w-16 shrink-0 font-mono">
               {row.label}
             </span>
             <div className="flex-1 bg-gray-700/50 rounded-full h-5 overflow-hidden">
@@ -134,7 +134,7 @@ function SeverityBreakdown({ verdicts }: { verdicts: VerdictEntry[] }) {
                 }}
               />
             </div>
-            <span className="text-sm text-gray-300 w-6 text-right font-mono">
+            <span className="text-base text-gray-300 w-6 text-right font-mono">
               {row.count}
             </span>
           </div>
@@ -264,7 +264,7 @@ function DefenseLayerEffectiveness({
         {layers.map((layer) => (
           <div
             key={layer.label}
-            className="flex items-center justify-between text-sm"
+            className="flex items-center justify-between text-base"
           >
             <span className="flex items-center gap-2">
               <span className={`w-2.5 h-2.5 rounded-full ${layer.dot}`} />

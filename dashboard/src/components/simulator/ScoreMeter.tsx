@@ -136,7 +136,7 @@ export default function ScoreMeter({ score, maxScore = 100 }: ScoreMeterProps) {
       </div>
 
       {/* Scale labels */}
-      <div className="flex justify-between mt-2 text-sm font-semibold">
+      <div className="flex justify-between mt-2 text-base font-semibold">
         <span className="text-green-500">0</span>
         <span className="text-yellow-500">25</span>
         <span className="text-white/50 relative" style={{ left: '0%' }}>

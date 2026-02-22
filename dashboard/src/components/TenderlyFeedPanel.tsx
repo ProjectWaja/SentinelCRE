@@ -90,11 +90,11 @@ export default function TenderlyFeedPanel() {
         </div>
         <div className="flex items-center gap-2">
           {loading && !data ? (
-            <span className="text-sm text-gray-500">Loading...</span>
+            <span className="text-base text-gray-500">Loading...</span>
           ) : (
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" title={secondsAgo !== null ? `Updated ${secondsAgo}s ago` : ''} />
           )}
-          <span className="text-sm font-bold text-purple-400 bg-purple-400/10 px-3 py-1 rounded-full border border-purple-400/30">
+          <span className="text-base font-bold text-purple-400 bg-purple-400/10 px-3 py-1 rounded-full border border-purple-400/30">
             Virtual Sepolia
           </span>
         </div>
@@ -130,14 +130,14 @@ export default function TenderlyFeedPanel() {
               <span className="text-base font-bold text-white group-hover:text-purple-400 transition-colors">
                 {c.name}
               </span>
-              <span className="text-sm font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded border border-green-400/20">
+              <span className="text-base font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded border border-green-400/20">
                 {getTxCount(c.key)} txs
               </span>
             </div>
-            <code className="text-sm text-purple-400/70 font-mono block truncate group-hover:text-purple-400 transition-colors">
+            <code className="text-base text-purple-400/70 font-mono block truncate group-hover:text-purple-400 transition-colors">
               {c.address}
             </code>
-            <p className="text-sm text-gray-500 mt-1">{c.role}</p>
+            <p className="text-base text-gray-500 mt-1">{c.role}</p>
           </a>
         ))}
       </div>
@@ -146,12 +146,12 @@ export default function TenderlyFeedPanel() {
       {data && data.recentTxs.length > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-800">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">Recent Transactions</span>
-            <span className="text-sm text-gray-600">Block {data.latestBlock.toLocaleString()}</span>
+            <span className="text-base font-bold text-gray-400 uppercase tracking-wider">Recent Transactions</span>
+            <span className="text-base text-gray-600">Block {data.latestBlock.toLocaleString()}</span>
           </div>
           <div className="space-y-1">
             {data.recentTxs.map((tx) => (
-              <div key={tx.fullHash} className="flex items-center justify-between text-sm py-1 px-2 rounded bg-gray-800/30">
+              <div key={tx.fullHash} className="flex items-center justify-between text-base py-1 px-2 rounded bg-gray-800/30">
                 <div className="flex items-center gap-2">
                   <span className={`font-mono font-bold ${FN_COLORS[tx.fn] ?? 'text-gray-400'}`}>
                     {tx.fn}

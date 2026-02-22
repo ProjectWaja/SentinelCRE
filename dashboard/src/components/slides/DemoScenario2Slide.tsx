@@ -13,23 +13,23 @@ export default function DemoScenario2Slide() {
       <div className="grid grid-cols-2 gap-8">
         <div className="space-y-4">
           <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-5">
-            <p className="text-sm text-gray-400 mb-1">Attack</p>
+            <p className="text-base text-gray-400 mb-1">Attack</p>
             <p className="text-2xl font-bold text-red-400">
               Mint 1,000,000,000 tokens
             </p>
-            <p className="text-sm text-gray-500 mt-1">Policy cap: 1,000,000</p>
+            <p className="text-base text-gray-500 mt-1">Policy cap: 1,000,000</p>
           </div>
 
           <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-5">
-            <p className="text-sm text-gray-400 mb-2">Layer 1: AI Consensus</p>
+            <p className="text-base text-gray-400 mb-2">Layer 3: Dual-AI Consensus</p>
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-base">
                 <span className="text-gray-300">Claude</span>
                 <span className="text-red-400 font-semibold">
                   DENIED (99%)
                 </span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-base">
                 <span className="text-gray-300">GPT-4</span>
                 <span className="text-red-400 font-semibold">
                   DENIED (99%)
@@ -42,10 +42,10 @@ export default function DemoScenario2Slide() {
           </div>
 
           <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-5">
-            <p className="text-sm text-gray-400 mb-2">
-              Layer 2: On-Chain Policy
+            <p className="text-base text-gray-400 mb-2">
+              Layer 1: On-Chain Policy
             </p>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-base">
               <span className="text-gray-300">checkMintAmount()</span>
               <span className="text-red-400 font-semibold">FAIL</span>
             </div>
@@ -62,7 +62,7 @@ export default function DemoScenario2Slide() {
               CIRCUIT BREAKER
             </p>
             <p className="text-lg text-gray-300 mb-4">Agent Frozen</p>
-            <div className="space-y-1 text-sm text-gray-400">
+            <div className="space-y-1 text-base text-gray-400">
               <p>Incident logged immutably</p>
               <p>Admin-only recovery</p>
               <p className="text-green-400 font-semibold mt-2">

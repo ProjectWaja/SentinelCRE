@@ -91,7 +91,7 @@ export default function PresentationPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <span className="text-sm text-gray-500 font-mono">
+        <span className="text-base text-gray-500 font-mono">
           {current + 1} / {slides.length}
         </span>
         <button

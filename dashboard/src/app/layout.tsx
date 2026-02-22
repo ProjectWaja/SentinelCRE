@@ -35,7 +35,7 @@ export default function RootLayout({
                 <h1 className="text-2xl font-black text-white tracking-tight leading-none">
                   SentinelCRE
                 </h1>
-                <span className="text-sm text-gray-500 font-medium">
+                <span className="text-base text-gray-500 font-medium">
                   AI Guardian Protocol
                 </span>
               </div>
@@ -47,7 +47,7 @@ export default function RootLayout({
               >
                 Presentation
               </a>
-              <span className="text-sm text-purple-400 bg-purple-400/10 px-4 py-1.5 rounded-full font-bold border border-purple-400/20">
+              <span className="text-base text-purple-400 bg-purple-400/10 px-4 py-1.5 rounded-full font-bold border border-purple-400/20">
                 Tenderly TestNet
               </span>
             </div>

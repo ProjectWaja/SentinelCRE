@@ -78,8 +78,8 @@ function BehavioralSparkline({ verdicts }: { verdicts: VerdictEntry[] }) {
         })}
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-sm text-green-400/60">Trusted</span>
-        <span className="text-sm text-red-400/60">Compromised</span>
+        <span className="text-base text-green-400/60">Trusted</span>
+        <span className="text-base text-red-400/60">Compromised</span>
       </div>
     </div>
   )
@@ -97,7 +97,7 @@ function ScenarioBadge({ scenarioId }: { scenarioId: number }) {
 
   return (
     <span
-      className={`inline-flex text-sm px-2 py-0.5 rounded-full border font-medium ${colors.text} ${colors.bg} ${colors.border}`}
+      className={`inline-flex text-base px-2 py-0.5 rounded-full border font-medium ${colors.text} ${colors.bg} ${colors.border}`}
     >
       {shortTitle}
     </span>
@@ -144,7 +144,7 @@ function AgentCard({
       {/* 3. Threat Profile */}
       <div className="mb-4">
         <span
-          className={`inline-flex text-sm font-bold px-3 py-1 rounded-full border ${threatColors}`}
+          className={`inline-flex text-base font-bold px-3 py-1 rounded-full border ${threatColors}`}
         >
           {profile.threatProfile}
         </span>
@@ -161,7 +161,7 @@ function AgentCard({
                 : 'bg-gray-800/50'
             }`}
           >
-            <p className="text-sm text-gray-500 mb-0.5">{item.label}</p>
+            <p className="text-base text-gray-500 mb-0.5">{item.label}</p>
             <p
               className={`text-base ${
                 item.emphasis
@@ -177,23 +177,23 @@ function AgentCard({
 
       {/* 5. Session Stats Row */}
       <div className="flex flex-wrap gap-3 mb-4">
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full bg-green-400/10 text-green-400 border border-green-400/30">
+        <span className="inline-flex items-center gap-1.5 text-base font-semibold px-3 py-1 rounded-full bg-green-400/10 text-green-400 border border-green-400/30">
           {stats.approved} approved
         </span>
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full bg-red-400/10 text-red-400 border border-red-400/30">
+        <span className="inline-flex items-center gap-1.5 text-base font-semibold px-3 py-1 rounded-full bg-red-400/10 text-red-400 border border-red-400/30">
           {stats.denied} denied
         </span>
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full bg-gray-800 text-gray-300 border border-gray-700">
+        <span className="inline-flex items-center gap-1.5 text-base font-semibold px-3 py-1 rounded-full bg-gray-800 text-gray-300 border border-gray-700">
           Avg anomaly: {stats.avgAnomalyScore}
         </span>
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1 rounded-full bg-orange-400/10 text-orange-400 border border-orange-400/30">
+        <span className="inline-flex items-center gap-1.5 text-base font-semibold px-3 py-1 rounded-full bg-orange-400/10 text-orange-400 border border-orange-400/30">
           {stats.anomalyFlaggedCount} flagged
         </span>
       </div>
 
       {/* 6. Behavioral Score Trend Sparkline */}
       <div className="mb-4">
-        <p className="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-2">
+        <p className="text-base text-gray-500 font-semibold uppercase tracking-wider mb-2">
           Behavioral Score Trend
         </p>
         <div className="bg-gray-800/40 rounded-lg p-3 border border-gray-700/50">
@@ -204,7 +204,7 @@ function AgentCard({
       {/* 7. Scenario Badges */}
       {profile.targetedScenarios.length > 0 && (
         <div>
-          <p className="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-2">
+          <p className="text-base text-gray-500 font-semibold uppercase tracking-wider mb-2">
             Targeted Scenarios
           </p>
           <div className="flex flex-wrap gap-1.5">
