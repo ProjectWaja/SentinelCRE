@@ -40,6 +40,18 @@ function ScoreDelta({ before, after }: { before: number; after: number }) {
   )
 }
 
+function getL1Label(reason?: string): string {
+  if (!reason) return 'L1'
+  if (reason.includes('Rate limit')) return 'L1:Rate'
+  if (reason.includes('Daily volume')) return 'L1:Vol'
+  if (reason.includes('reserves')) return 'L1:PoR'
+  if (reason.includes('Value')) return 'L1:Val'
+  if (reason.includes('Mint')) return 'L1:Mint'
+  if (reason.includes('Target')) return 'L1:Wht'
+  if (reason.includes('Function')) return 'L1:Fn'
+  return 'L1'
+}
+
 function LayerBadge({
   label,
   info,
@@ -73,7 +85,7 @@ function LayerPipeline({ info }: { info: LayerCatchInfo }) {
 
   return (
     <div className="flex items-center gap-0.5 mt-1.5">
-      <LayerBadge label="L1" info={info.layer1} />
+      <LayerBadge label={info.layer1.caught ? getL1Label(info.layer1.reason) : 'L1'} info={info.layer1} />
       {arrow}
       <LayerBadge label="L2" info={info.layer2} />
       {arrow}

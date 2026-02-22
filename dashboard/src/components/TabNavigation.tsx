@@ -51,7 +51,7 @@ const TABS: Tab[] = [
   {
     id: 'simulator',
     label: 'Simulator',
-    desc: 'Training ground',
+    desc: 'Security console',
     icon: (
       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path

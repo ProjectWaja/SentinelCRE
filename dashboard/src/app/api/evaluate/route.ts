@@ -204,6 +204,70 @@ function deterministicEvaluate(proposal: any, overrides?: PolicyOverrides): {
   }
   if (checkFunction) layerInfo.layer1.checked = true
 
+  // Rate Limit check
+  const checkRate = overrides?.rateLimitEnabled ?? false
+  if (checkRate) {
+    layerInfo.layer1.checked = true
+    const actionCount = (recentValues.length || 0) + 1
+    const effectiveRateLimit = overrides?.rateLimit ?? 100
+    if (actionCount > effectiveRateLimit) {
+      const windowSec = overrides?.rateLimitWindow ?? 3600
+      const windowLabel = windowSec >= 86400 ? `${Math.round(windowSec / 86400)}d` : windowSec >= 3600 ? `${Math.round(windowSec / 3600)}h` : `${Math.round(windowSec / 60)}m`
+      const reason = `Rate limit exceeded: ${actionCount} actions exceeds ${effectiveRateLimit}/${windowLabel} limit`
+      layerInfo.layer1 = { checked: true, caught: true, reason }
+      layerInfo.caughtBy = 'layer1'
+      return {
+        v1: { verdict: 'DENIED', confidence: 0, /* REDACTED */ reason },
+        v2: { verdict: 'DENIED', confidence: 0, /* REDACTED */ reason },
+        anomalyScore: 0, anomalyFlagged: false, anomalyDimensions: [],
+        layerCatchInfo: layerInfo,
+      }
+    }
+  }
+
+  // Daily Volume check
+  const checkDailyVol = overrides?.dailyVolumeEnabled ?? false
+  if (checkDailyVol) {
+    layerInfo.layer1.checked = true
+    const currentEthValue = Number(value) / 1e18
+    const cumulativeEth = recentValues.reduce((a, b) => a + b, 0) + currentEthValue
+    const effectiveDailyVol = overrides?.dailyVolumeEth ?? 10
+    if (cumulativeEth > effectiveDailyVol) {
+      const reason = `Daily volume ${cumulativeEth.toFixed(1)} ETH exceeds ${effectiveDailyVol.toLocaleString()} ETH cap`
+      layerInfo.layer1 = { checked: true, caught: true, reason }
+      layerInfo.caughtBy = 'layer1'
+      return {
+        v1: { verdict: 'DENIED', confidence: 91, reason },
+        v2: { verdict: 'DENIED', confidence: 89, reason },
+        anomalyScore: 0, anomalyFlagged: false, anomalyDimensions: [],
+        layerCatchInfo: layerInfo,
+      }
+    }
+  }
+
+  // Proof of Reserves check (only for mint operations)
+  const checkPoR = overrides?.porEnabled ?? false
+  if (checkPoR && mint > 0n) {
+    layerInfo.layer1.checked = true
+    const ratio = overrides?.minReserveRatio ?? 10000
+    // Simulated reserve: 1M tokens at 1e18 precision
+    const simulatedReserves = 1_000_000n * BigInt(1e18)
+    const requiredReserves = mint * BigInt(ratio) / 10000n
+    if (requiredReserves > simulatedReserves) {
+      const pct = (ratio / 100).toFixed(0)
+      const mintTokens = Number(mint / BigInt(1e18)).toLocaleString()
+      const reason = `Insufficient reserves: minting ${mintTokens} tokens at ${pct}% collateralization exceeds available reserves`
+      layerInfo.layer1 = { checked: true, caught: true, reason }
+      layerInfo.caughtBy = 'layer1'
+      return {
+        v1: { verdict: 'DENIED', confidence: 94, reason },
+        v2: { verdict: 'DENIED', confidence: 0, /* REDACTED */ reason },
+        anomalyScore: 0, anomalyFlagged: false, anomalyDimensions: [],
+        layerCatchInfo: layerInfo,
+      }
+    }
+  }
+
   // Layer 2: Behavioral risk scoring
   layerInfo.layer2.checked = true
 

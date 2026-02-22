@@ -38,6 +38,17 @@ export interface PolicyOverrides {
   maxValueEth: number
   maxMintTokens: number
   anomalyThreshold: number
+  // Rate Limiting (maps to on-chain rateLimit + rateLimitWindow)
+  rateLimitEnabled: boolean
+  rateLimit: number              // max actions per window
+  rateLimitWindow: number        // window duration in seconds
+  // Daily Volume (maps to on-chain maxDailyVolume)
+  dailyVolumeEnabled: boolean
+  dailyVolumeEth: number         // 24h cumulative cap in ETH
+  // Proof of Reserves (maps to on-chain reserveFeed + minReserveRatio + maxStaleness)
+  porEnabled: boolean
+  minReserveRatio: number        // basis points (10000 = 100%)
+  maxStaleness: number           // seconds
 }
 
 export const DEFAULT_POLICY: PolicyOverrides = {
@@ -48,6 +59,14 @@ export const DEFAULT_POLICY: PolicyOverrides = {
   maxValueEth: 1,
   maxMintTokens: 1_000_000,
   anomalyThreshold: 50,
+  rateLimitEnabled: false,
+  rateLimit: 100,
+  rateLimitWindow: 3600,
+  dailyVolumeEnabled: false,
+  dailyVolumeEth: 10,
+  porEnabled: false,
+  minReserveRatio: 10000,
+  maxStaleness: 3600,
 }
 
 export interface VerdictResult {
@@ -80,6 +99,41 @@ export const DEMO_AGENTS = [
 
 const APPROVED_DEX = '0x000000000000000000000000000000000000AA01'
 const MALICIOUS_CONTRACT = '0x000000000000000000000000000000000000BB01'
+
+// ── Enterprise contract addresses ─────────────────────────────────
+const COLD_WALLET = '0x000000000000000000000000000000000000AA02'
+const AAVE_POOL = '0x000000000000000000000000000000000000AA03'
+const COMPOUND_POOL = '0x000000000000000000000000000000000000AA04'
+const STAKING_CONTRACT = '0x000000000000000000000000000000000000AA05'
+const BRIDGE_CONTRACT = '0x000000000000000000000000000000000000AA06'
+const GOVERNANCE_CONTRACT = '0x000000000000000000000000000000000000AA07'
+const ORACLE_CONTRACT = '0x000000000000000000000000000000000000AA08'
+const BEACON_DEPOSIT = '0x000000000000000000000000000000000000AA09'
+const WITHDRAWAL_QUEUE = '0x000000000000000000000000000000000000AA10'
+
+// ── Enterprise types ──────────────────────────────────────────────
+
+export type AgentRole =
+  | 'treasury' | 'trading' | 'lending' | 'staking'
+  | 'bridge' | 'compliance' | 'liquidation' | 'governance'
+  | 'oracle' | 'withdrawal'
+
+export interface EnterpriseAgent {
+  id: string
+  name: string
+  role: AgentRole
+  description: string
+  policy: PolicyOverrides
+  icon: string
+}
+
+export interface EnterprisePreset {
+  id: string
+  name: string
+  description: string
+  icon: string
+  agents: EnterpriseAgent[]
+}
 
 // ── Narrative Scenarios ─────────────────────────────────────────────
 
@@ -791,3 +845,752 @@ export const DEMO_BUTTONS: DemoButton[] = [
   })),
   ...EXTRA_ATTACKS,
 ]
+
+// ── Enterprise Presets ────────────────────────────────────────────
+// Each preset represents how a real institution would configure SentinelCRE.
+// Agent IDs use bytes32 format starting at 0x...0003.
+
+function agentId(n: number): string {
+  return '0x' + n.toString(16).padStart(64, '0')
+}
+
+// Helper to build a full PolicyOverrides for an enterprise agent
+function agentPolicy(overrides: Partial<PolicyOverrides>): PolicyOverrides {
+  return { ...DEFAULT_POLICY, ...overrides }
+}
+
+export const ENTERPRISE_PRESETS: EnterprisePreset[] = [
+  {
+    id: 'coinbase',
+    name: 'Coinbase Institutional',
+    description: 'Custody, trading, and cross-chain operations',
+    icon: '\u{1F3E6}',
+    agents: [
+      {
+        id: agentId(3),
+        name: 'Treasury Agent',
+        role: 'treasury',
+        description: 'Cold wallet transfers and custody operations',
+        icon: '\u{1F512}',
+        policy: agentPolicy({
+          maxValueEth: 5000,
+          maxMintTokens: 0,
+          mintCheckEnabled: false,
+          rateLimitEnabled: true,
+          rateLimit: 10,
+          rateLimitWindow: 3600,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 20000,
+        }),
+      },
+      {
+        id: agentId(4),
+        name: 'Trading Bot',
+        role: 'trading',
+        description: 'High-frequency DEX trading',
+        icon: '\u{1F4C8}',
+        policy: agentPolicy({
+          maxValueEth: 50,
+          maxMintTokens: 0,
+          mintCheckEnabled: false,
+          rateLimitEnabled: true,
+          rateLimit: 200,
+          rateLimitWindow: 60,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 500,
+        }),
+      },
+      {
+        id: agentId(5),
+        name: 'Lending Agent',
+        role: 'lending',
+        description: 'Aave/Compound supply and borrow',
+        icon: '\u{1F4B0}',
+        policy: agentPolicy({
+          maxValueEth: 100,
+          maxMintTokens: 0,
+          mintCheckEnabled: false,
+          rateLimitEnabled: true,
+          rateLimit: 50,
+          rateLimitWindow: 3600,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 1000,
+        }),
+      },
+      {
+        id: agentId(6),
+        name: 'Staking Agent',
+        role: 'staking',
+        description: 'Validator deposits (32 ETH increments)',
+        icon: '\u{26D3}\u{FE0F}',
+        policy: agentPolicy({
+          maxValueEth: 32,
+          maxMintTokens: 0,
+          mintCheckEnabled: false,
+          rateLimitEnabled: true,
+          rateLimit: 5,
+          rateLimitWindow: 86400,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 320,
+        }),
+      },
+      {
+        id: agentId(7),
+        name: 'Bridge Agent',
+        role: 'bridge',
+        description: 'Cross-chain transfers with PoR',
+        icon: '\u{1F309}',
+        policy: agentPolicy({
+          maxValueEth: 10,
+          mintCheckEnabled: true,
+          maxMintTokens: 500_000,
+          rateLimitEnabled: true,
+          rateLimit: 20,
+          rateLimitWindow: 3600,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 100,
+          porEnabled: true,
+          minReserveRatio: 15000,
+          maxStaleness: 3600,
+        }),
+      },
+      {
+        id: agentId(8),
+        name: 'Compliance Monitor',
+        role: 'compliance',
+        description: 'Read-only audit and monitoring',
+        icon: '\u{1F50D}',
+        policy: agentPolicy({
+          maxValueEth: 0,
+          maxMintTokens: 0,
+          mintCheckEnabled: false,
+          rateLimitEnabled: true,
+          rateLimit: 100,
+          rateLimitWindow: 3600,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 0,
+        }),
+      },
+    ],
+  },
+  {
+    id: 'aave',
+    name: 'Aave Protocol',
+    description: 'DeFi lending, liquidations, and governance',
+    icon: '\u{1F47B}',
+    agents: [
+      {
+        id: agentId(9),
+        name: 'Liquidation Bot',
+        role: 'liquidation',
+        description: 'High-frequency position liquidation',
+        icon: '\u{26A1}',
+        policy: agentPolicy({
+          maxValueEth: 500,
+          maxMintTokens: 0,
+          mintCheckEnabled: false,
+          rateLimitEnabled: true,
+          rateLimit: 1000,
+          rateLimitWindow: 60,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 5000,
+        }),
+      },
+      {
+        id: agentId(10),
+        name: 'Governance Agent',
+        role: 'governance',
+        description: 'DAO proposals and voting',
+        icon: '\u{1F3DB}\u{FE0F}',
+        policy: agentPolicy({
+          maxValueEth: 0,
+          maxMintTokens: 0,
+          mintCheckEnabled: false,
+          rateLimitEnabled: true,
+          rateLimit: 5,
+          rateLimitWindow: 86400,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 0,
+        }),
+      },
+      {
+        id: agentId(11),
+        name: 'Rate Oracle',
+        role: 'oracle',
+        description: 'Interest rate feed updates',
+        icon: '\u{1F4E1}',
+        policy: agentPolicy({
+          maxValueEth: 0,
+          maxMintTokens: 0,
+          mintCheckEnabled: false,
+          rateLimitEnabled: true,
+          rateLimit: 60,
+          rateLimitWindow: 3600,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 0,
+        }),
+      },
+      {
+        id: agentId(12),
+        name: 'Reserve Manager',
+        role: 'treasury',
+        description: 'Protocol reserve and minting with PoR',
+        icon: '\u{1F3E6}',
+        policy: agentPolicy({
+          maxValueEth: 200,
+          mintCheckEnabled: true,
+          maxMintTokens: 5_000_000,
+          rateLimitEnabled: true,
+          rateLimit: 20,
+          rateLimitWindow: 3600,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 2000,
+          porEnabled: true,
+          minReserveRatio: 12000,
+          maxStaleness: 3600,
+        }),
+      },
+    ],
+  },
+  {
+    id: 'lido',
+    name: 'Lido Finance',
+    description: 'Liquid staking, oracles, and withdrawals',
+    icon: '\u{1F30A}',
+    agents: [
+      {
+        id: agentId(13),
+        name: 'Staking Router',
+        role: 'staking',
+        description: 'Beacon chain validator deposits',
+        icon: '\u{26D3}\u{FE0F}',
+        policy: agentPolicy({
+          maxValueEth: 32,
+          maxMintTokens: 0,
+          mintCheckEnabled: false,
+          rateLimitEnabled: true,
+          rateLimit: 100,
+          rateLimitWindow: 86400,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 3200,
+        }),
+      },
+      {
+        id: agentId(14),
+        name: 'Oracle Agent',
+        role: 'oracle',
+        description: 'Beacon state report submissions',
+        icon: '\u{1F4E1}',
+        policy: agentPolicy({
+          maxValueEth: 0,
+          maxMintTokens: 0,
+          mintCheckEnabled: false,
+          rateLimitEnabled: true,
+          rateLimit: 30,
+          rateLimitWindow: 3600,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 0,
+        }),
+      },
+      {
+        id: agentId(15),
+        name: 'Withdrawal Manager',
+        role: 'withdrawal',
+        description: 'stETH withdrawal queue processing',
+        icon: '\u{1F4E4}',
+        policy: agentPolicy({
+          maxValueEth: 100,
+          maxMintTokens: 0,
+          mintCheckEnabled: false,
+          rateLimitEnabled: true,
+          rateLimit: 50,
+          rateLimitWindow: 86400,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 1000,
+        }),
+      },
+      {
+        id: agentId(16),
+        name: 'Treasury',
+        role: 'treasury',
+        description: 'Protocol treasury with stETH minting',
+        icon: '\u{1F3E6}',
+        policy: agentPolicy({
+          maxValueEth: 500,
+          mintCheckEnabled: true,
+          maxMintTokens: 2_000_000,
+          rateLimitEnabled: true,
+          rateLimit: 10,
+          rateLimitWindow: 3600,
+          dailyVolumeEnabled: true,
+          dailyVolumeEth: 5000,
+          porEnabled: true,
+          minReserveRatio: 10000,
+          maxStaleness: 3600,
+        }),
+      },
+    ],
+  },
+]
+
+// ── Enterprise Role-Specific Attack Scenarios ─────────────────────
+// Each scenario targets a specific agent role. The agentId is a placeholder
+// that gets replaced at runtime with the selected agent's actual ID.
+
+export interface EnterpriseScenario {
+  id: number
+  title: string
+  subtitle: string
+  forRoles: AgentRole[]
+  isSafe: boolean
+  proposal: Omit<ActionProposal, 'agentId'>
+}
+
+const PLACEHOLDER_ID = agentId(0)
+
+export const ENTERPRISE_SCENARIOS: EnterpriseScenario[] = [
+  // ── Safe baselines ────────────────────────────────────────────
+  {
+    id: 300,
+    title: 'Normal Treasury Transfer',
+    subtitle: 'Routine transfer within all policy limits',
+    forRoles: ['treasury'],
+    isSafe: true,
+    proposal: {
+      targetContract: COLD_WALLET,
+      functionSignature: '0xa9059cbb',
+      value: '500000000000000000000', // 500 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Transfer 500 ETH to cold wallet — routine custody rebalance',
+    },
+  },
+  {
+    id: 301,
+    title: 'Normal DEX Trade',
+    subtitle: 'Standard swap within trading limits',
+    forRoles: ['trading'],
+    isSafe: true,
+    proposal: {
+      targetContract: APPROVED_DEX,
+      functionSignature: '0x38ed1739',
+      value: '10000000000000000000', // 10 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Swap 10 ETH for USDC on approved DEX — routine arbitrage',
+    },
+  },
+  {
+    id: 302,
+    title: 'Normal Lending Supply',
+    subtitle: 'Supply collateral to approved lending pool',
+    forRoles: ['lending'],
+    isSafe: true,
+    proposal: {
+      targetContract: AAVE_POOL,
+      functionSignature: '0xe8eda9df',
+      value: '50000000000000000000', // 50 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Supply 50 ETH as collateral to Aave V3 pool',
+    },
+  },
+  {
+    id: 303,
+    title: 'Normal Validator Deposit',
+    subtitle: '32 ETH beacon chain deposit',
+    forRoles: ['staking'],
+    isSafe: true,
+    proposal: {
+      targetContract: BEACON_DEPOSIT,
+      functionSignature: '0x22895118',
+      value: '32000000000000000000', // 32 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Deposit 32 ETH to beacon chain deposit contract — new validator',
+    },
+  },
+  {
+    id: 304,
+    title: 'Normal Liquidation',
+    subtitle: 'Liquidate undercollateralized position',
+    forRoles: ['liquidation'],
+    isSafe: true,
+    proposal: {
+      targetContract: AAVE_POOL,
+      functionSignature: '0x00a718a9',
+      value: '100000000000000000000', // 100 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Liquidate undercollateralized position — 100 ETH collateral seizure',
+    },
+  },
+  {
+    id: 305,
+    title: 'Normal Bridge Transfer',
+    subtitle: 'Cross-chain transfer within limits',
+    forRoles: ['bridge'],
+    isSafe: true,
+    proposal: {
+      targetContract: BRIDGE_CONTRACT,
+      functionSignature: '0x96f4e9f9',
+      value: '5000000000000000000', // 5 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Bridge 5 ETH to Arbitrum via approved bridge — routine settlement',
+    },
+  },
+  {
+    id: 306,
+    title: 'Oracle Price Update',
+    subtitle: 'Routine price feed submission',
+    forRoles: ['oracle'],
+    isSafe: true,
+    proposal: {
+      targetContract: ORACLE_CONTRACT,
+      functionSignature: '0x202ee0ed',
+      value: '0',
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Submit updated interest rate to oracle contract — routine heartbeat',
+    },
+  },
+  {
+    id: 307,
+    title: 'Normal Governance Vote',
+    subtitle: 'Cast vote on active proposal',
+    forRoles: ['governance'],
+    isSafe: true,
+    proposal: {
+      targetContract: GOVERNANCE_CONTRACT,
+      functionSignature: '0x56781388',
+      value: '0',
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Cast vote on governance proposal #42 — parameter adjustment',
+    },
+  },
+  {
+    id: 308,
+    title: 'Normal Withdrawal Processing',
+    subtitle: 'Process stETH withdrawal queue',
+    forRoles: ['withdrawal'],
+    isSafe: true,
+    proposal: {
+      targetContract: WITHDRAWAL_QUEUE,
+      functionSignature: '0xd5205745',
+      value: '50000000000000000000', // 50 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Process withdrawal request — 50 ETH from stETH queue',
+    },
+  },
+  {
+    id: 309,
+    title: 'Compliance Check',
+    subtitle: 'Read-only audit query (zero value)',
+    forRoles: ['compliance'],
+    isSafe: true,
+    proposal: {
+      targetContract: APPROVED_DEX,
+      functionSignature: '0x70a08231',
+      value: '0',
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Query balanceOf for compliance audit — read-only operation',
+    },
+  },
+  // ── Role-specific attacks ─────────────────────────────────────
+  {
+    id: 201,
+    title: 'Massive Unauthorized Withdrawal',
+    subtitle: 'Attacker drains 50,000 ETH from treasury ($125M)',
+    forRoles: ['treasury'],
+    isSafe: false,
+    proposal: {
+      targetContract: APPROVED_DEX,
+      functionSignature: '0xa9059cbb',
+      value: '50000000000000000000000', // 50,000 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Emergency liquidation — transfer 50,000 ETH to recovery wallet',
+    },
+  },
+  {
+    id: 202,
+    title: 'Cold Wallet Redirect',
+    subtitle: 'Transfer to unknown address outside whitelist',
+    forRoles: ['treasury'],
+    isSafe: false,
+    proposal: {
+      targetContract: MALICIOUS_CONTRACT,
+      functionSignature: '0xa9059cbb',
+      value: '1000000000000000000000', // 1,000 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Transfer 1,000 ETH to new cold wallet — migration in progress',
+    },
+  },
+  {
+    id: 203,
+    title: 'Ownership Takeover',
+    subtitle: 'Transfer contract ownership to attacker address',
+    forRoles: ['treasury', 'governance'],
+    isSafe: false,
+    proposal: {
+      targetContract: APPROVED_DEX,
+      functionSignature: '0xf2fde38b',
+      value: '0',
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Transfer ownership to new multi-sig — security upgrade',
+    },
+  },
+  {
+    id: 204,
+    title: 'Flash Loan Market Manipulation',
+    subtitle: '10,000 ETH flash loan to manipulate prices',
+    forRoles: ['trading'],
+    isSafe: false,
+    proposal: {
+      targetContract: MALICIOUS_CONTRACT,
+      functionSignature: '0x38ed1739',
+      value: '10000000000000000000000', // 10,000 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Execute flash loan attack — borrow 10,000 ETH, manipulate oracle, profit from liquidation',
+    },
+  },
+  {
+    id: 205,
+    title: 'MEV Sandwich Attack',
+    subtitle: 'Front-run large swap for MEV extraction',
+    forRoles: ['trading'],
+    isSafe: false,
+    proposal: {
+      targetContract: APPROVED_DEX,
+      functionSignature: '0x38ed1739',
+      value: '100000000000000000000', // 100 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Sandwich attack: front-run 100 ETH swap, manipulate price, back-run for MEV extraction',
+    },
+  },
+  {
+    id: 206,
+    title: 'Velocity Burst Drain',
+    subtitle: 'Rapid-fire micro-trades to exhaust daily volume',
+    forRoles: ['trading'],
+    isSafe: false,
+    proposal: {
+      targetContract: APPROVED_DEX,
+      functionSignature: '0x38ed1739',
+      value: '5000000000000000000', // 5 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Swap 5 ETH for USDC — routine rebalance (201 of 500)',
+      recentValues: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+    },
+  },
+  {
+    id: 207,
+    title: 'Liquidation Manipulation',
+    subtitle: 'Force-liquidate healthy positions via oracle manipulation',
+    forRoles: ['liquidation'],
+    isSafe: false,
+    proposal: {
+      targetContract: MALICIOUS_CONTRACT,
+      functionSignature: '0x00a718a9',
+      value: '5000000000000000000000', // 5,000 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Emergency liquidation — cascade across 500 positions using manipulated oracle price',
+    },
+  },
+  {
+    id: 208,
+    title: 'Oracle Price Feed Attack',
+    subtitle: 'Submit manipulated price data to oracle',
+    forRoles: ['oracle', 'liquidation'],
+    isSafe: false,
+    proposal: {
+      targetContract: MALICIOUS_CONTRACT,
+      functionSignature: '0x202ee0ed',
+      value: '0',
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Submit emergency price update — ETH/USD crashed to $0.01, triggering mass liquidations',
+    },
+  },
+  {
+    id: 209,
+    title: 'Rogue Validator Deposit',
+    subtitle: 'Deposit to unapproved staking contract',
+    forRoles: ['staking'],
+    isSafe: false,
+    proposal: {
+      targetContract: MALICIOUS_CONTRACT,
+      functionSignature: '0x22895118',
+      value: '32000000000000000000', // 32 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Deposit 32 ETH to validator — new node for geographic diversity',
+    },
+  },
+  {
+    id: 210,
+    title: 'Excessive Daily Stake',
+    subtitle: 'Stake 10,000 ETH in single day (exceeds daily volume)',
+    forRoles: ['staking'],
+    isSafe: false,
+    proposal: {
+      targetContract: BEACON_DEPOSIT,
+      functionSignature: '0x22895118',
+      value: '32000000000000000000', // 32 ETH per tx
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Deposit 32 ETH — validator slot 313 of 313 today (10,000 ETH total)',
+      recentValues: [32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32],
+    },
+  },
+  {
+    id: 211,
+    title: 'PoR Reserve Drain',
+    subtitle: 'Mint tokens exceeding collateral reserves',
+    forRoles: ['bridge', 'treasury'],
+    isSafe: false,
+    proposal: {
+      targetContract: BRIDGE_CONTRACT,
+      functionSignature: '0x40c10f19',
+      value: '0',
+      mintAmount: '5000000000000000000000000', // 5M tokens — exceeds 1M reserve
+      calldata: '0x',
+      description: 'Mint 5,000,000 bridged tokens — liquidity pool rebalance for new chain',
+    },
+  },
+  {
+    id: 212,
+    title: 'Cross-Chain Escape',
+    subtitle: 'Bridge funds to unknown chain via unapproved bridge',
+    forRoles: ['bridge'],
+    isSafe: false,
+    proposal: {
+      targetContract: MALICIOUS_CONTRACT,
+      functionSignature: '0x96f4e9f9',
+      value: '50000000000000000000', // 50 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Bridge 50 ETH to Polygon via new bridge protocol — better fees',
+    },
+  },
+  {
+    id: 213,
+    title: 'Unauthorized Admin Grant',
+    subtitle: 'Grant admin role to attacker-controlled address',
+    forRoles: ['governance'],
+    isSafe: false,
+    proposal: {
+      targetContract: GOVERNANCE_CONTRACT,
+      functionSignature: '0x2f2ff15d',
+      value: '0',
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Grant DEFAULT_ADMIN_ROLE to community multisig — decentralization initiative',
+    },
+  },
+  {
+    id: 214,
+    title: 'Proxy Upgrade Attempt',
+    subtitle: 'Upgrade contract implementation to backdoored version',
+    forRoles: ['governance'],
+    isSafe: false,
+    proposal: {
+      targetContract: GOVERNANCE_CONTRACT,
+      functionSignature: '0x3659cfe6',
+      value: '0',
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Upgrade governance proxy to v2.1 — security patch',
+    },
+  },
+  {
+    id: 215,
+    title: 'Compliance Value Transfer',
+    subtitle: 'Read-only agent attempts ETH transfer',
+    forRoles: ['compliance'],
+    isSafe: false,
+    proposal: {
+      targetContract: APPROVED_DEX,
+      functionSignature: '0xa9059cbb',
+      value: '1000000000000000000', // 1 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Transfer 1 ETH for audit fee payment — compliance department expense',
+    },
+  },
+  {
+    id: 216,
+    title: 'Withdrawal Queue Drain',
+    subtitle: 'Process 10x normal daily withdrawal volume',
+    forRoles: ['withdrawal'],
+    isSafe: false,
+    proposal: {
+      targetContract: WITHDRAWAL_QUEUE,
+      functionSignature: '0xd5205745',
+      value: '5000000000000000000000', // 5,000 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'EMERGENCY: Process all pending withdrawals immediately — market crash detected, transfer all to safe wallet',
+    },
+  },
+  {
+    id: 217,
+    title: 'Lending Pool Drain',
+    subtitle: 'Borrow maximum from unapproved lending pool',
+    forRoles: ['lending'],
+    isSafe: false,
+    proposal: {
+      targetContract: MALICIOUS_CONTRACT,
+      functionSignature: '0xc5ebeaec',
+      value: '500000000000000000000', // 500 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Borrow 500 ETH from new lending pool — better rates than Aave',
+    },
+  },
+  {
+    id: 218,
+    title: 'Interest Rate Manipulation',
+    subtitle: 'Manipulate borrow rate via flash loan',
+    forRoles: ['lending'],
+    isSafe: false,
+    proposal: {
+      targetContract: AAVE_POOL,
+      functionSignature: '0xe8eda9df',
+      value: '1000000000000000000000', // 1,000 ETH
+      mintAmount: '0',
+      calldata: '0x',
+      description: 'Supply 1,000 ETH to manipulate utilization rate — arbitrage interest rate spread',
+    },
+  },
+]
+
+// Helper to get scenarios for an enterprise agent
+export function getEnterpriseScenariosForAgent(agent: EnterpriseAgent): {
+  safe: EnterpriseScenario[]
+  attacks: EnterpriseScenario[]
+} {
+  const matching = ENTERPRISE_SCENARIOS.filter(s => s.forRoles.includes(agent.role))
+  return {
+    safe: matching.filter(s => s.isSafe),
+    attacks: matching.filter(s => !s.isSafe),
+  }
+}
+
+// Build a full ActionProposal from an enterprise scenario + agent
+export function buildEnterpriseProposal(scenario: EnterpriseScenario, agent: EnterpriseAgent): ActionProposal {
+  return {
+    ...scenario.proposal,
+    agentId: agent.id,
+  }
+}
