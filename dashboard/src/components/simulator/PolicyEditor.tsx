@@ -30,7 +30,8 @@ function Toggle({
 
 // Logarithmic slider helpers for value range
 function valueToSlider(val: number, min: number, max: number): number {
-  return (Math.log(val / min) / Math.log(max / min)) * 100
+  const clampedVal = Math.max(min, Math.min(max, val))
+  return (Math.log(clampedVal / min) / Math.log(max / min)) * 100
 }
 
 function sliderToValue(pos: number, min: number, max: number): number {
@@ -38,6 +39,7 @@ function sliderToValue(pos: number, min: number, max: number): number {
 }
 
 function formatEth(val: number): string {
+  if (val >= 1000) return `${(val / 1000).toFixed(0)}K ETH`
   if (val >= 10) return `${Math.round(val)} ETH`
   if (val >= 1) return `${val.toFixed(1)} ETH`
   return `${val.toFixed(2)} ETH`
@@ -45,18 +47,34 @@ function formatEth(val: number): string {
 
 function formatTokens(val: number): string {
   if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(1)}M`
-  return `${(val / 1_000).toFixed(0)}K`
+  if (val >= 1_000) return `${(val / 1_000).toFixed(0)}K`
+  return `${val}`
 }
 
-function isPolicyModified(overrides: PolicyOverrides): boolean {
+function formatDuration(seconds: number): string {
+  if (seconds >= 86400) return `${Math.round(seconds / 86400)}d`
+  if (seconds >= 3600) return `${Math.round(seconds / 3600)}h`
+  return `${Math.round(seconds / 60)}m`
+}
+
+export function isPolicyModified(overrides: PolicyOverrides, baseline?: PolicyOverrides): boolean {
+  const base = baseline ?? DEFAULT_POLICY
   return (
-    overrides.valueCheckEnabled !== DEFAULT_POLICY.valueCheckEnabled ||
-    overrides.mintCheckEnabled !== DEFAULT_POLICY.mintCheckEnabled ||
-    overrides.targetWhitelistEnabled !== DEFAULT_POLICY.targetWhitelistEnabled ||
-    overrides.functionBlocklistEnabled !== DEFAULT_POLICY.functionBlocklistEnabled ||
-    overrides.maxValueEth !== DEFAULT_POLICY.maxValueEth ||
-    overrides.maxMintTokens !== DEFAULT_POLICY.maxMintTokens ||
-    overrides.anomalyThreshold !== DEFAULT_POLICY.anomalyThreshold
+    overrides.valueCheckEnabled !== base.valueCheckEnabled ||
+    overrides.mintCheckEnabled !== base.mintCheckEnabled ||
+    overrides.targetWhitelistEnabled !== base.targetWhitelistEnabled ||
+    overrides.functionBlocklistEnabled !== base.functionBlocklistEnabled ||
+    overrides.maxValueEth !== base.maxValueEth ||
+    overrides.maxMintTokens !== base.maxMintTokens ||
+    overrides.anomalyThreshold !== base.anomalyThreshold ||
+    overrides.rateLimitEnabled !== base.rateLimitEnabled ||
+    overrides.rateLimit !== base.rateLimit ||
+    overrides.rateLimitWindow !== base.rateLimitWindow ||
+    overrides.dailyVolumeEnabled !== base.dailyVolumeEnabled ||
+    overrides.dailyVolumeEth !== base.dailyVolumeEth ||
+    overrides.porEnabled !== base.porEnabled ||
+    overrides.minReserveRatio !== base.minReserveRatio ||
+    overrides.maxStaleness !== base.maxStaleness
   )
 }
 
@@ -64,12 +82,16 @@ export default function PolicyEditor({
   overrides,
   onChange,
   disabled,
+  agentName,
+  baselinePolicy,
 }: {
   overrides: PolicyOverrides
   onChange: (o: PolicyOverrides) => void
   disabled: boolean
+  agentName?: string
+  baselinePolicy?: PolicyOverrides
 }) {
-  const modified = isPolicyModified(overrides)
+  const modified = isPolicyModified(overrides, baselinePolicy)
 
   const update = (partial: Partial<PolicyOverrides>) => {
     onChange({ ...overrides, ...partial })
@@ -80,7 +102,7 @@ export default function PolicyEditor({
       <summary className="p-5 cursor-pointer select-none flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-base font-bold uppercase tracking-wider text-gray-400">
-            Policy Configuration
+            {agentName ? `Policy — ${agentName}` : 'Policy Configuration'}
           </span>
           <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20 font-semibold">
             WHAT-IF
@@ -130,10 +152,10 @@ export default function PolicyEditor({
                       type="range"
                       min={0}
                       max={100}
-                      value={valueToSlider(overrides.maxValueEth, 0.1, 100)}
+                      value={valueToSlider(overrides.maxValueEth, 0.1, 100000)}
                       onChange={(e) =>
                         update({
-                          maxValueEth: Math.round(sliderToValue(Number(e.target.value), 0.1, 100) * 100) / 100,
+                          maxValueEth: Math.round(sliderToValue(Number(e.target.value), 0.1, 100000) * 100) / 100,
                         })
                       }
                       disabled={disabled}
@@ -162,10 +184,10 @@ export default function PolicyEditor({
                       type="range"
                       min={0}
                       max={100}
-                      value={valueToSlider(overrides.maxMintTokens, 100_000, 100_000_000)}
+                      value={valueToSlider(overrides.maxMintTokens, 1_000, 100_000_000)}
                       onChange={(e) =>
                         update({
-                          maxMintTokens: Math.round(sliderToValue(Number(e.target.value), 100_000, 100_000_000)),
+                          maxMintTokens: Math.round(sliderToValue(Number(e.target.value), 1_000, 100_000_000)),
                         })
                       }
                       disabled={disabled}
@@ -202,6 +224,138 @@ export default function PolicyEditor({
                   onChange={(v) => update({ functionBlocklistEnabled: v })}
                   disabled={disabled}
                 />
+              </div>
+
+              {/* Rate Limiting */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm text-gray-300 font-medium">Rate Limiting</label>
+                  <Toggle
+                    enabled={overrides.rateLimitEnabled}
+                    onChange={(v) => update({ rateLimitEnabled: v })}
+                    disabled={disabled}
+                  />
+                </div>
+                {overrides.rateLimitEnabled && (
+                  <div className="space-y-2 mt-2">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={valueToSlider(overrides.rateLimit, 1, 1000)}
+                        onChange={(e) =>
+                          update({ rateLimit: Math.round(sliderToValue(Number(e.target.value), 1, 1000)) })
+                        }
+                        disabled={disabled}
+                        className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-500 disabled:opacity-50"
+                      />
+                      <span className="text-sm font-mono text-white w-20 text-right">
+                        {overrides.rateLimit} ops
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={valueToSlider(overrides.rateLimitWindow, 60, 86400)}
+                        onChange={(e) =>
+                          update({ rateLimitWindow: Math.round(sliderToValue(Number(e.target.value), 60, 86400)) })
+                        }
+                        disabled={disabled}
+                        className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-500 disabled:opacity-50"
+                      />
+                      <span className="text-sm font-mono text-white w-20 text-right">
+                        / {formatDuration(overrides.rateLimitWindow)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Daily Volume */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm text-gray-300 font-medium">Daily Volume Cap</label>
+                  <Toggle
+                    enabled={overrides.dailyVolumeEnabled}
+                    onChange={(v) => update({ dailyVolumeEnabled: v })}
+                    disabled={disabled}
+                  />
+                </div>
+                {overrides.dailyVolumeEnabled && (
+                  <div className="flex items-center gap-3 mt-2">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={valueToSlider(overrides.dailyVolumeEth, 1, 100000)}
+                      onChange={(e) =>
+                        update({
+                          dailyVolumeEth: Math.round(sliderToValue(Number(e.target.value), 1, 100000)),
+                        })
+                      }
+                      disabled={disabled}
+                      className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-500 disabled:opacity-50"
+                    />
+                    <span className="text-sm font-mono text-white w-20 text-right">
+                      {formatEth(overrides.dailyVolumeEth)}/d
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Proof of Reserves */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <div>
+                    <label className="text-sm text-gray-300 font-medium">Proof of Reserves</label>
+                    <p className="text-xs text-blue-400/60">Chainlink PoR</p>
+                  </div>
+                  <Toggle
+                    enabled={overrides.porEnabled}
+                    onChange={(v) => update({ porEnabled: v })}
+                    disabled={disabled}
+                  />
+                </div>
+                {overrides.porEnabled && (
+                  <div className="space-y-2 mt-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-gray-500 w-12">Ratio</span>
+                      <input
+                        type="range"
+                        min={5000}
+                        max={15000}
+                        step={100}
+                        value={overrides.minReserveRatio}
+                        onChange={(e) => update({ minReserveRatio: Number(e.target.value) })}
+                        disabled={disabled}
+                        className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500 disabled:opacity-50"
+                      />
+                      <span className="text-sm font-mono text-white w-16 text-right">
+                        {(overrides.minReserveRatio / 100).toFixed(0)}%
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-gray-500 w-12">Fresh</span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={valueToSlider(overrides.maxStaleness, 60, 7200)}
+                        onChange={(e) =>
+                          update({ maxStaleness: Math.round(sliderToValue(Number(e.target.value), 60, 7200)) })
+                        }
+                        disabled={disabled}
+                        className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500 disabled:opacity-50"
+                      />
+                      <span className="text-sm font-mono text-white w-16 text-right">
+                        {formatDuration(overrides.maxStaleness)}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -246,13 +400,45 @@ export default function PolicyEditor({
               </p>
             </div>
 
+            {/* Active checks summary */}
+            <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4">
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                Active Checks
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {overrides.valueCheckEnabled && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400/80 border border-green-500/20">Val</span>
+                )}
+                {overrides.mintCheckEnabled && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400/80 border border-green-500/20">Mint</span>
+                )}
+                {overrides.targetWhitelistEnabled && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400/80 border border-green-500/20">Wht</span>
+                )}
+                {overrides.functionBlocklistEnabled && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400/80 border border-green-500/20">Fn</span>
+                )}
+                {overrides.rateLimitEnabled && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400/80 border border-green-500/20">Rate</span>
+                )}
+                {overrides.dailyVolumeEnabled && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400/80 border border-green-500/20">Vol</span>
+                )}
+                {overrides.porEnabled && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-400/80 border border-blue-500/20">PoR</span>
+                )}
+                <span className="text-xs px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-400/80 border border-yellow-500/20">L2</span>
+                <span className="text-xs px-2 py-0.5 rounded bg-purple-500/10 text-purple-400/80 border border-purple-500/20">L3</span>
+              </div>
+            </div>
+
             {modified && (
               <button
-                onClick={() => onChange(DEFAULT_POLICY)}
+                onClick={() => onChange(baselinePolicy ?? DEFAULT_POLICY)}
                 disabled={disabled}
                 className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-400 hover:text-gray-200 text-sm font-semibold rounded-xl border border-gray-700 transition-colors"
               >
-                Reset to Defaults
+                Reset to {baselinePolicy ? 'Agent Defaults' : 'Defaults'}
               </button>
             )}
           </div>
