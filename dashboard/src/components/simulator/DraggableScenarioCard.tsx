@@ -96,13 +96,13 @@ export default function DraggableScenarioCard({
           <span className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
         )}
         {isDone && (
-          <span className={`text-sm font-bold ${result?.success ? 'text-green-400' : 'text-red-400'}`}>
+          <span className={`text-base font-bold ${result?.success ? 'text-green-400' : 'text-red-400'}`}>
             {result?.success ? 'SUCCESS' : 'REVERTED'}
           </span>
         )}
       </div>
-      <p className="text-sm text-gray-400 mb-2">{btn.description}</p>
-      <div className="flex items-center gap-3 text-sm">
+      <p className="text-base text-gray-400 mb-2">{btn.description}</p>
+      <div className="flex items-center gap-3 text-base">
         <span className="text-gray-500">
           {agentName(btn.proposal.agentId)}
         </span>

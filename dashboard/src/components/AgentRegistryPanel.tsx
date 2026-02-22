@@ -112,12 +112,12 @@ export default function AgentRegistryPanel({
                     <div className="flex items-center gap-3">
                       <h3 className="text-xl font-bold text-white">{agent.name}</h3>
                       <span
-                        className={`text-sm px-3 py-1 rounded-full font-bold ${STATE_STYLES[effectiveState]}`}
+                        className={`text-base px-3 py-1 rounded-full font-bold ${STATE_STYLES[effectiveState]}`}
                       >
                         {effectiveState}
                       </span>
                       {sessionFrozen && agent.state === 'Active' && (
-                        <span className="text-sm px-3 py-1 rounded-full text-yellow-400 bg-yellow-400/10 font-bold">
+                        <span className="text-base px-3 py-1 rounded-full text-yellow-400 bg-yellow-400/10 font-bold">
                           Demo
                         </span>
                       )}
@@ -125,7 +125,7 @@ export default function AgentRegistryPanel({
                     <p className="text-base text-gray-400 mt-1">
                       {agent.description}
                     </p>
-                    <p className="text-sm text-gray-600 font-mono mt-1">
+                    <p className="text-base text-gray-600 font-mono mt-1">
                       {agent.agentId.slice(0, 18)}...{agent.agentId.slice(-8)}
                     </p>
                   </div>
@@ -133,13 +133,13 @@ export default function AgentRegistryPanel({
                     <p className="text-green-400 font-semibold">
                       {agent.stats.totalApproved + (session?.approved ?? 0)} approved
                       {session && session.approved > 0 && (
-                        <span className="text-yellow-400 text-sm ml-2">(+{session.approved})</span>
+                        <span className="text-yellow-400 text-base ml-2">(+{session.approved})</span>
                       )}
                     </p>
                     <p className="text-red-400 font-semibold">
                       {agent.stats.totalDenied + (session?.denied ?? 0)} denied
                       {session && session.denied > 0 && (
-                        <span className="text-yellow-400 text-sm ml-2">(+{session.denied})</span>
+                        <span className="text-yellow-400 text-base ml-2">(+{session.denied})</span>
                       )}
                     </p>
                     {(agent.incidentCount > 0 || (session && session.denied > 0)) && (

@@ -72,7 +72,7 @@ export default function VerdictFeedPanel({
             </svg>
           </div>
           <p className="text-base text-gray-500">No verdicts yet</p>
-          <p className="text-sm text-gray-600">Run scenarios to see verdict history</p>
+          <p className="text-base text-gray-600">Run scenarios to see verdict history</p>
         </div>
       ) : (
         <div className="space-y-3 max-h-[500px] overflow-y-auto">

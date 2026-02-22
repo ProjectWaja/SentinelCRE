@@ -28,7 +28,7 @@ export default function TeamSlide() {
           </p>
         </div>
 
-        <div className="flex items-center justify-center gap-8 text-sm">
+        <div className="flex items-center justify-center gap-8 text-base">
           <a
             href="https://github.com/ProjectWaja/SentinelCRE"
             className="text-blue-400 hover:text-blue-300 transition-colors"
@@ -48,7 +48,7 @@ export default function TeamSlide() {
           <span>&#x2022;</span>
           <span>CRE SDK</span>
           <span>&#x2022;</span>
-          <span>61 Tests</span>
+          <span>85 Tests</span>
           <span>&#x2022;</span>
           <span>OpenZeppelin v5.5</span>
         </div>

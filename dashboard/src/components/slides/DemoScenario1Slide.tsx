@@ -25,14 +25,14 @@ export default function DemoScenario1Slide() {
               className="flex items-center justify-between bg-gray-900/80 rounded-lg p-3"
             >
               <div className="flex items-center gap-4">
-                <span className="text-red-400 font-mono text-sm w-44">
+                <span className="text-red-400 font-mono text-base w-44">
                   {row.attack}
                 </span>
-                <span className="text-gray-500 text-sm">{row.limit}</span>
+                <span className="text-gray-500 text-base">{row.limit}</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-gray-400">{row.confidence}</span>
-                <span className="text-red-400 font-bold bg-red-400/10 px-3 py-1 rounded text-sm">
+                <span className="text-red-400 font-bold bg-red-400/10 px-3 py-1 rounded text-base">
                   {row.result}
                 </span>
               </div>

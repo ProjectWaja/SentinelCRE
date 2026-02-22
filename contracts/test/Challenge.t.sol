@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {SentinelGuardian, AgentState, IncidentType} from "../src/SentinelGuardian.sol";
+import {SentinelGuardian, AgentState} from "../src/SentinelGuardian.sol";
 import {AgentPolicy} from "../src/libraries/PolicyLib.sol";
 import {Severity, ChallengeStatus, ChallengeWindow} from "../src/interfaces/IChallenge.sol";
 

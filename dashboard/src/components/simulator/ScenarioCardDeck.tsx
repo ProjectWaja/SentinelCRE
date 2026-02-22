@@ -40,7 +40,7 @@ export default function ScenarioCardDeck({
         if (group.items.length === 0) return null
         return (
           <div key={group.label}>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3">
+            <h3 className="text-base font-bold uppercase tracking-wider text-gray-400 mb-3">
               {group.label}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -22,7 +22,7 @@ export default function ArchitectureSlide() {
           <div key={step.num} className="flex items-center gap-2">
             <div className={`${step.bg} border ${step.border} rounded-xl p-4 text-center min-w-[120px]`}>
               <div className={`text-xs ${step.color} mb-1`}>Step {step.num}</div>
-              <div className="text-white font-semibold text-sm">{step.label}</div>
+              <div className="text-white font-semibold text-base">{step.label}</div>
               <div className="text-xs text-gray-500 mt-1">{step.desc}</div>
             </div>
             {i < steps.length - 1 && (
@@ -35,13 +35,13 @@ export default function ArchitectureSlide() {
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-5">
           <h3 className="text-green-400 font-semibold mb-2">APPROVED Path</h3>
-          <p className="text-sm text-gray-300">
+          <p className="text-base text-gray-300">
             Action forwarded to target contract. Stats updated, rate limit window tracked, daily volume recorded.
           </p>
         </div>
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-5">
           <h3 className="text-red-400 font-semibold mb-2">DENIED Path</h3>
-          <p className="text-sm text-gray-300">
+          <p className="text-base text-gray-300">
             Circuit breaker fires. Agent frozen instantly. Incident logged immutably. Admin-only recovery.
           </p>
         </div>

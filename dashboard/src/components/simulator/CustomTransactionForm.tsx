@@ -15,13 +15,13 @@ export default function CustomTransactionForm({
 
   return (
     <details className="bg-gray-900 rounded-2xl border border-gray-800">
-      <summary className="p-6 cursor-pointer text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-gray-300 select-none">
+      <summary className="p-6 cursor-pointer text-base font-bold uppercase tracking-wider text-gray-400 hover:text-gray-300 select-none">
         Custom Transaction
       </summary>
       <div className="px-6 pb-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="text-sm text-gray-500 uppercase tracking-wider font-semibold">To Address</label>
+            <label className="text-base text-gray-500 uppercase tracking-wider font-semibold">To Address</label>
             <input
               type="text"
               value={customTo}
@@ -31,7 +31,7 @@ export default function CustomTransactionForm({
             />
           </div>
           <div>
-            <label className="text-sm text-gray-500 uppercase tracking-wider font-semibold">Calldata</label>
+            <label className="text-base text-gray-500 uppercase tracking-wider font-semibold">Calldata</label>
             <input
               type="text"
               value={customInput}
@@ -41,7 +41,7 @@ export default function CustomTransactionForm({
             />
           </div>
           <div>
-            <label className="text-sm text-gray-500 uppercase tracking-wider font-semibold">Value (wei)</label>
+            <label className="text-base text-gray-500 uppercase tracking-wider font-semibold">Value (wei)</label>
             <div className="flex gap-3 mt-1">
               <input
                 type="text"

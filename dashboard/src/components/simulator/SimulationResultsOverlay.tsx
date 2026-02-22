@@ -31,7 +31,7 @@ export default function SimulationResultsOverlay({
             : 'bg-red-500/10 border border-red-500/30'
         }`}>
           <div className="flex items-center gap-3">
-            <span className={`text-sm px-3 py-1 rounded-full font-bold ${
+            <span className={`text-base px-3 py-1 rounded-full font-bold ${
               variant === 'attack' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'
             }`}>
               {variant === 'attack' ? 'ATTACK' : 'SAFE'}
@@ -67,7 +67,7 @@ export default function SimulationResultsOverlay({
                     {log.decoded?.args && (
                       <div className="mt-2 space-y-1">
                         {Object.entries(log.decoded.args).map(([k, v]) => (
-                          <p key={k} className="text-sm text-gray-500">
+                          <p key={k} className="text-base text-gray-500">
                             <span className="text-gray-400">{k}:</span>{' '}
                             <span className="font-mono text-gray-300">
                               {String(v).slice(0, 66)}{String(v).length > 66 ? '...' : ''}
@@ -76,7 +76,7 @@ export default function SimulationResultsOverlay({
                         ))}
                       </div>
                     )}
-                    <p className="text-sm text-gray-600 mt-2 font-mono">
+                    <p className="text-base text-gray-600 mt-2 font-mono">
                       {log.address.slice(0, 20)}...
                     </p>
                   </div>
@@ -94,10 +94,10 @@ export default function SimulationResultsOverlay({
               <div className="space-y-3 max-h-60 overflow-y-auto">
                 {result.stateChanges.map((sc, i) => (
                   <div key={i} className="bg-gray-800/50 rounded-xl p-4">
-                    <p className="text-sm text-gray-500 font-mono">
+                    <p className="text-base text-gray-500 font-mono">
                       {sc.address.slice(0, 16)}... / {sc.key}
                     </p>
-                    <div className="flex gap-3 mt-1 text-sm font-mono">
+                    <div className="flex gap-3 mt-1 text-base font-mono">
                       <span className="text-red-400">{sc.before.slice(0, 18)}...</span>
                       <span className="text-gray-600">{'->'}</span>
                       <span className="text-green-400">{sc.after.slice(0, 18)}...</span>

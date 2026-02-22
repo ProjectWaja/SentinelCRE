@@ -3,8 +3,9 @@
 import { useState, useCallback, useRef, type ReactNode } from 'react'
 import ScoreMeter from './ScoreMeter'
 import ActionQueue, { type ActionItem } from './ActionQueue'
-import { SAFE_SCENARIOS, DEMO_SCENARIOS, DEMO_AGENTS } from '@/lib/demo-scenarios'
-import type { VerdictResult } from '@/lib/demo-scenarios'
+import { SAFE_SCENARIOS, DEMO_SCENARIOS, DEMO_AGENTS, DEFAULT_POLICY } from '@/lib/demo-scenarios'
+import type { VerdictResult, PolicyOverrides } from '@/lib/demo-scenarios'
+import PolicyEditor from './PolicyEditor'
 
 // ── Agent type ────────────────────────────────────────────────────────
 
@@ -84,6 +85,7 @@ export default function BehavioralTrainingPanel() {
   const [isResetting, setIsResetting] = useState(false)
   const [lockoutShake, setLockoutShake] = useState(false)
   const lockoutTriggeredRef = useRef(false)
+  const [policyOverrides, setPolicyOverrides] = useState<PolicyOverrides>(DEFAULT_POLICY)
 
   // Switch agent
   const handleAgentChange = useCallback((agent: AgentName) => {
@@ -92,6 +94,7 @@ export default function BehavioralTrainingPanel() {
     setCumulativeScore(0)
     setIsLockout(false)
     lockoutTriggeredRef.current = false
+    setPolicyOverrides(DEFAULT_POLICY)
   }, [])
 
   // Run a single action
@@ -113,10 +116,23 @@ export default function BehavioralTrainingPanel() {
       const scoreBefore = cumulativeScore
 
       try {
+        // Check if policy is modified from defaults
+        const isPolicyModified =
+          policyOverrides.valueCheckEnabled !== DEFAULT_POLICY.valueCheckEnabled ||
+          policyOverrides.mintCheckEnabled !== DEFAULT_POLICY.mintCheckEnabled ||
+          policyOverrides.targetWhitelistEnabled !== DEFAULT_POLICY.targetWhitelistEnabled ||
+          policyOverrides.functionBlocklistEnabled !== DEFAULT_POLICY.functionBlocklistEnabled ||
+          policyOverrides.maxValueEth !== DEFAULT_POLICY.maxValueEth ||
+          policyOverrides.maxMintTokens !== DEFAULT_POLICY.maxMintTokens ||
+          policyOverrides.anomalyThreshold !== DEFAULT_POLICY.anomalyThreshold
+
         const res = await fetch('/api/evaluate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ proposal: scenario.proposal }),
+          body: JSON.stringify({
+            proposal: scenario.proposal,
+            policyOverrides: isPolicyModified ? policyOverrides : undefined,
+          }),
         })
 
         const result: VerdictResult = await res.json()
@@ -137,6 +153,7 @@ export default function BehavioralTrainingPanel() {
                   scoreBefore,
                   scoreAfter: newScore,
                   verdict: result.consensus,
+                  layerCatchInfo: result.layerCatchInfo,
                 }
               : a,
           ),
@@ -182,7 +199,7 @@ export default function BehavioralTrainingPanel() {
         )
       }
     },
-    [actions, cumulativeScore, selectedAgent],
+    [actions, cumulativeScore, selectedAgent, policyOverrides],
   )
 
   // Reset training
@@ -198,6 +215,7 @@ export default function BehavioralTrainingPanel() {
     setIsLockout(false)
     lockoutTriggeredRef.current = false
     setLockoutShake(false)
+    setPolicyOverrides(DEFAULT_POLICY)
     setIsResetting(false)
   }, [selectedAgent])
 
@@ -288,6 +306,13 @@ export default function BehavioralTrainingPanel() {
           )
         })}
       </div>
+
+      {/* Policy Configuration */}
+      <PolicyEditor
+        overrides={policyOverrides}
+        onChange={setPolicyOverrides}
+        disabled={actions.some((a) => a.status === 'running')}
+      />
 
       {/* Lockout Banner */}
       {isLockout && (

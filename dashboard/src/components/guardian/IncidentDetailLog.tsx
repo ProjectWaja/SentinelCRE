@@ -46,7 +46,7 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
         <h2 className="text-xl font-black text-white uppercase tracking-widest">
           Incident Log
         </h2>
-        <span className="text-sm font-bold text-red-400 bg-red-400/10 px-3 py-1 rounded-full border border-red-400/30">
+        <span className="text-base font-bold text-red-400 bg-red-400/10 px-3 py-1 rounded-full border border-red-400/30">
           {incidents.length} incidents
         </span>
       </div>
@@ -57,7 +57,7 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`text-sm font-bold px-3 py-1.5 rounded-full border transition-colors ${
+            className={`text-base font-bold px-3 py-1.5 rounded-full border transition-colors ${
               filter === f.key
                 ? 'text-white bg-gray-700 border-gray-600'
                 : 'text-gray-500 bg-transparent border-gray-800 hover:border-gray-700'
@@ -82,7 +82,7 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
               : 'No incidents match this filter'}
           </p>
           {incidents.length === 0 && (
-            <p className="text-sm text-gray-600">Attack scenarios from the Live Demo will appear here as incidents</p>
+            <p className="text-base text-gray-600">Attack scenarios from the Live Demo will appear here as incidents</p>
           )}
         </div>
       ) : (
@@ -101,7 +101,7 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
                   className="w-full text-left p-3 flex items-center justify-between gap-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className={`text-sm font-bold px-2 py-0.5 rounded ${
+                    <span className={`text-base font-bold px-2 py-0.5 rounded ${
                       v.severity === 'CRITICAL' ? 'text-red-400 bg-red-400/10' :
                       v.severity === 'MEDIUM' ? 'text-orange-400 bg-orange-400/10' :
                       'text-yellow-400 bg-yellow-400/10'
@@ -111,10 +111,10 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
                     <span className="text-base font-bold text-white truncate">
                       {scenario?.title.split(': ')[1] ?? v.proposal?.description?.slice(0, 40) ?? 'Unknown'}
                     </span>
-                    <span className="text-sm text-gray-500">{agentName}</span>
+                    <span className="text-base text-gray-500">{agentName}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className={`text-sm font-bold px-2 py-0.5 rounded ${layerMeta.bg} ${layerMeta.color} border ${layerMeta.border}`}>
+                    <span className={`text-base font-bold px-2 py-0.5 rounded ${layerMeta.bg} ${layerMeta.color} border ${layerMeta.border}`}>
                       {layerMeta.label}
                     </span>
                     <svg
@@ -129,9 +129,9 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
                 {isExpanded && (
                   <div className="px-3 pb-3 space-y-2 border-t border-gray-700/50 pt-2">
                     {scenario && (
-                      <p className="text-sm text-gray-400">{scenario.attackType}</p>
+                      <p className="text-base text-gray-400">{scenario.attackType}</p>
                     )}
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="grid grid-cols-2 gap-2 text-base">
                       <div>
                         <span className="text-gray-500">Model 1:</span>{' '}
                         <span className="text-red-400 font-bold">{v.model1.verdict}</span>{' '}
@@ -143,13 +143,13 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
                         <span className="text-gray-500">{v.model2.confidence}%</span>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-base text-gray-400">
                       {v.model1.reason}
                     </p>
                     {v.anomalyScore != null && (
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">Anomaly Score:</span>
-                        <span className={`text-sm font-bold px-2 py-0.5 rounded ${
+                        <span className="text-base text-gray-500">Anomaly Score:</span>
+                        <span className={`text-base font-bold px-2 py-0.5 rounded ${
                           v.anomalyScore >= threshold ? 'text-red-400 bg-red-400/10' :
                           v.anomalyScore >= 25 ? 'text-orange-400 bg-orange-400/10' :
                           'text-green-400 bg-green-400/10'
@@ -161,7 +161,7 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
                     {v.anomalyDimensions && v.anomalyDimensions.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {v.anomalyDimensions.filter((d) => d.fired).map((d) => (
-                          <span key={d.name} className="text-sm text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded">
+                          <span key={d.name} className="text-base text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded">
                             {d.name} +{d.score}
                           </span>
                         ))}

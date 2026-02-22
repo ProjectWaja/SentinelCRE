@@ -113,6 +113,27 @@ export default function ChainlinkActivityPanel({
   const [blockedStep, setBlockedStep] = useState(-1)
   const prevRunId = useRef<string | null>(null)
   const prevLiveStep = useRef<number>(-1)
+  const pendingTimeouts = useRef<ReturnType<typeof setTimeout>[]>([])
+
+  // Clear all pending animation timeouts
+  function clearAnimations() {
+    for (const t of pendingTimeouts.current) clearTimeout(t)
+    pendingTimeouts.current = []
+  }
+
+  // Reset pipeline state immediately when a new run starts (pending or final)
+  useEffect(() => {
+    if (!currentRun) return
+    if (currentRun.id === prevRunId.current) return
+
+    // New run detected — cancel stale animations and reset state
+    clearAnimations()
+    setActiveStep(-1)
+    setCompletedSteps([])
+    setBlockedStep(-1)
+    prevLiveStep.current = -1
+    prevRunId.current = currentRun.id
+  }, [currentRun?.id])
 
   // Live step tracking — animate pipeline in real-time during scenario execution
   useEffect(() => {
@@ -120,15 +141,6 @@ export default function ChainlinkActivityPanel({
     if (currentRun.liveStep == null || currentRun.totalSteps == null) return
 
     const pipelineIdx = mapToPipelineStep(currentRun.liveStep, currentRun.totalSteps)
-
-    // Reset on new run
-    if (currentRun.id !== prevRunId.current) {
-      prevRunId.current = currentRun.id
-      prevLiveStep.current = -1
-      setActiveStep(-1)
-      setCompletedSteps([])
-      setBlockedStep(-1)
-    }
 
     // Mark previous pipeline steps as completed, set current as active
     if (pipelineIdx !== prevLiveStep.current) {
@@ -146,10 +158,12 @@ export default function ChainlinkActivityPanel({
   useEffect(() => {
     if (!currentRun || !currentRun.consensus) return
     // Only run the final animation once per run
-    if (currentRun.id === prevRunId.current && prevLiveStep.current === -2) return
+    if (prevLiveStep.current === -2) return
 
-    prevRunId.current = currentRun.id
     prevLiveStep.current = -2 // sentinel: final animation played
+
+    // Cancel any in-progress live step animations
+    clearAnimations()
 
     const lastStep = currentRun.catchStep ?? PIPELINE_STEPS.length - 1
     const shouldBlock = currentRun.consensus === 'DENIED' && currentRun.catchStep !== undefined
@@ -160,25 +174,25 @@ export default function ChainlinkActivityPanel({
     for (let i = 0; i <= lastStep; i++) {
       const delay = i * 150 // fast sweep
 
-      setTimeout(() => {
+      pendingTimeouts.current.push(setTimeout(() => {
         setActiveStep(i)
         setCompletedSteps((prev) => {
           const s = new Set(prev)
           for (let j = 0; j < i; j++) s.add(j)
           return [...s]
         })
-      }, delay)
+      }, delay))
 
-      setTimeout(() => {
+      pendingTimeouts.current.push(setTimeout(() => {
         if (i === lastStep && shouldBlock) {
           setBlockedStep(i)
         } else {
           setCompletedSteps((prev) => [...new Set([...prev, i])])
         }
         if (i === lastStep) {
-          setTimeout(() => setActiveStep(-1), 800)
+          pendingTimeouts.current.push(setTimeout(() => setActiveStep(-1), 800))
         }
-      }, delay + 120)
+      }, delay + 120))
     }
   }, [currentRun?.id, currentRun?.consensus])
 
@@ -311,7 +325,7 @@ export default function ChainlinkActivityPanel({
                     )}
                   </div>
                   <span
-                    className={`font-mono text-sm transition-colors duration-300 ${
+                    className={`font-mono text-base transition-colors duration-300 ${
                       isBlocked
                         ? 'text-red-400/60'
                         : isActive
@@ -339,7 +353,7 @@ export default function ChainlinkActivityPanel({
                 )}
                 {isActive && (
                   <code
-                    className={`text-sm ${colors.text} mt-0.5 block font-mono font-bold`}
+                    className={`text-base ${colors.text} mt-0.5 block font-mono font-bold`}
                   >
                     {step.action}
                   </code>

@@ -45,7 +45,7 @@ function PhaseDivider({ label }: PhaseDividerProps) {
     <div className="relative flex items-center py-4">
       <div className="absolute left-[5px] w-3 h-3 rounded-full bg-gray-600 border-2 border-gray-500 z-10" />
       <div className="ml-10 flex items-center gap-3 w-full">
-        <span className="text-sm font-black uppercase tracking-[0.2em] text-gray-500 whitespace-nowrap">
+        <span className="text-base font-black uppercase tracking-[0.2em] text-gray-500 whitespace-nowrap">
           {label}
         </span>
         <div className="flex-1 h-px bg-gray-700" />
@@ -167,7 +167,7 @@ export default function ThreatTimeline({
                         <p className="text-base font-bold text-white leading-tight">
                           {title}
                         </p>
-                        <span className="text-sm text-gray-500 whitespace-nowrap font-mono">
+                        <span className="text-base text-gray-500 whitespace-nowrap font-mono">
                           {formatTime(v.timestamp)}
                         </span>
                       </div>
@@ -175,7 +175,7 @@ export default function ThreatTimeline({
                       {/* Badges row */}
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span
-                          className={`px-2 py-0.5 rounded text-sm font-bold ${
+                          className={`px-2 py-0.5 rounded text-base font-bold ${
                             isDenied
                               ? 'bg-red-400/10 text-red-400'
                               : 'bg-green-400/10 text-green-400'
@@ -185,7 +185,7 @@ export default function ThreatTimeline({
                         </span>
                         {isDenied && sevStyle && v.severity && (
                           <span
-                            className={`px-2 py-0.5 rounded border text-sm font-bold ${sevStyle.bg} ${sevStyle.text} ${sevStyle.border}`}
+                            className={`px-2 py-0.5 rounded border text-base font-bold ${sevStyle.bg} ${sevStyle.text} ${sevStyle.border}`}
                           >
                             {v.severity}
                           </span>
@@ -193,7 +193,7 @@ export default function ThreatTimeline({
                       </div>
 
                       {/* Agent name */}
-                      <p className="text-sm text-gray-500">
+                      <p className="text-base text-gray-500">
                         Agent: <span className="text-gray-400 font-semibold">{agentName}</span>
                       </p>
 
@@ -202,7 +202,7 @@ export default function ThreatTimeline({
                         <div className="mt-3">
                           <button
                             onClick={() => toggleExpanded(v.id)}
-                            className="text-sm text-gray-500 hover:text-gray-300 transition-colors font-semibold flex items-center gap-1"
+                            className="text-base text-gray-500 hover:text-gray-300 transition-colors font-semibold flex items-center gap-1"
                           >
                             <svg
                               className={`w-3 h-3 transition-transform ${
@@ -221,7 +221,7 @@ export default function ThreatTimeline({
                           </button>
 
                           {isExpanded && (
-                            <div className="mt-3 space-y-2 text-sm">
+                            <div className="mt-3 space-y-2 text-base">
                               {/* Defense layer */}
                               {(() => {
                                 const layer = getDefenseLayer(v)

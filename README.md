@@ -8,8 +8,8 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 
 | | |
 |---|---|
-| **Demo Video** | [Coming Soon](#) |
 | **Live Dashboard** | `bun run mock-api && bun run dashboard` → http://localhost:3000 |
+| **Presentation Mode** | http://localhost:3000/presentation (10 interactive slides) |
 | **Tenderly Explorer** | [Virtual TestNet Transactions](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions) |
 | **Contracts** | `0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8` (Guardian) · `0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6` (Registry) |
 | **Deployer** | `0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446` |

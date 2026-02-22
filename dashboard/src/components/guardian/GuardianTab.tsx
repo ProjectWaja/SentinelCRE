@@ -39,7 +39,7 @@ function WalletInfoBar() {
         </div>
         <div className="flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-sm font-bold text-purple-400 bg-purple-400/10 px-3 py-1 rounded-full border border-purple-400/30">
+          <span className="text-base font-bold text-purple-400 bg-purple-400/10 px-3 py-1 rounded-full border border-purple-400/30">
             Tenderly Virtual Sepolia
           </span>
         </div>
@@ -53,10 +53,10 @@ function WalletInfoBar() {
             rel="noopener noreferrer"
             className="flex flex-col p-3 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:border-purple-500/30 transition-colors group"
           >
-            <span className="text-sm text-gray-500 font-bold uppercase tracking-wider mb-1">
+            <span className="text-base text-gray-500 font-bold uppercase tracking-wider mb-1">
               {w.label}
             </span>
-            <code className={`text-sm font-mono ${w.color} truncate group-hover:text-purple-400 transition-colors`}>
+            <code className={`text-base font-mono ${w.color} truncate group-hover:text-purple-400 transition-colors`}>
               {w.address}
             </code>
           </a>
@@ -133,10 +133,10 @@ function SessionPerformance({ verdicts }: { verdicts: VerdictEntry[] }) {
           <div key={m.label} className="bg-gray-800/50 rounded-lg border border-gray-700/50 p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className={m.color}>{m.icon}</span>
-              <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">{m.label}</span>
+              <span className="text-base font-bold text-gray-500 uppercase tracking-wider">{m.label}</span>
             </div>
             <p className={`text-2xl font-black ${m.color} leading-none mb-1`}>{m.value}</p>
-            <p className="text-sm text-gray-500">{m.sub}</p>
+            <p className="text-base text-gray-500">{m.sub}</p>
           </div>
         ))}
       </div>

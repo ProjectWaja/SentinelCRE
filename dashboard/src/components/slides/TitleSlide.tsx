@@ -19,7 +19,7 @@ export default function TitleSlide() {
         <p className="text-2xl text-gray-300 mb-8">
           Decentralized AI Guardian Protocol for Web3
         </p>
-        <div className="flex items-center justify-center gap-6 text-sm">
+        <div className="flex items-center justify-center gap-6 text-base">
           <span className="text-purple-400 bg-purple-400/10 px-4 py-2 rounded-full">
             Chainlink Convergence Hackathon
           </span>
