@@ -411,6 +411,8 @@ Every demo verdict fires real `processVerdict()` and `unfreezeAgent()` transacti
 
 ## Quick Start
 
+> **No testnet funds needed.** The dashboard is pre-configured to use a Tenderly Virtual TestNet (Sepolia fork) with funded accounts. Clone, install, and run — everything works out of the box.
+
 ```bash
 # Install dependencies
 cd SentinelCRE && bun install
@@ -418,7 +420,7 @@ cd SentinelCRE && bun install
 # Run smart contract tests (85 tests)
 cd contracts && forge test -v
 
-# Start the risk monitoring dashboard
+# Start the risk monitoring dashboard (2 terminals)
 bun run mock-api          # Terminal 1: AI evaluation + behavioral engine (port 3002)
 bun run dashboard         # Terminal 2: Dashboard (http://localhost:3000)
 

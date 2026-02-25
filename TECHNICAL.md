@@ -38,8 +38,8 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/) (Feb 2026).
 
 | Contract | Address |
 |----------|---------|
-| **SentinelGuardian** | [`0x3e2D7CE3CcB520f26dE6fe499bAA38A28cfd476f`](https://dashboard.tenderly.co/) |
-| **AgentRegistry** | [`0xb008CE7EE90C66A219C842E69a4fBAF7E5359bbE`](https://dashboard.tenderly.co/) |
+| **SentinelGuardian** | [`0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8`](https://dashboard.tenderly.co/) |
+| **AgentRegistry** | [`0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6`](https://dashboard.tenderly.co/) |
 
 **Deployer:** `0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446`
 **Network:** Sepolia (Chain ID 11155111) via Tenderly Virtual TestNet
