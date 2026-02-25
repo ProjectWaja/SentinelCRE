@@ -31,7 +31,7 @@ export default function DemoScenario1Slide() {
                 <span className="text-gray-500 text-base">{row.limit}</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-400">{row.confidence}</span>
+                <span className="text-sm text-gray-400">{row.confidence}</span>
                 <span className="text-red-400 font-bold bg-red-400/10 px-3 py-1 rounded text-base">
                   {row.result}
                 </span>

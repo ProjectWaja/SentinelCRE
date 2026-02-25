@@ -80,7 +80,7 @@ export default function GuardianStatsBar({ sessionVerdicts }: Props) {
           <p className={`text-2xl font-black ${s.color} leading-none mb-1`}>
             {s.value}
           </p>
-          <p className="text-base text-gray-500">{s.sub}</p>
+          <p className="text-base text-gray-400">{s.sub}</p>
           {'barApproved' in s && total > 0 && (
             <div className="flex h-1.5 rounded-full overflow-hidden mt-2 bg-gray-800">
               <div

@@ -120,7 +120,7 @@ export default function ThreatTimeline({
             </svg>
           </div>
           <p className="text-lg text-gray-500">No events recorded yet</p>
-          <p className="text-base text-gray-600">Run the Live Demo to see threats detected in real-time</p>
+          <p className="text-base text-gray-500">Run the Live Demo to see threats detected in real-time</p>
         </div>
       ) : (
         <div className="relative">

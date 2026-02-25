@@ -138,8 +138,8 @@ function deterministicEvaluate(proposal: any, overrides?: PolicyOverrides): {
   const checkMint = overrides?.mintCheckEnabled ?? true
   const checkTarget = overrides?.targetWhitelistEnabled ?? true
   const checkFunction = overrides?.functionBlocklistEnabled ?? true
-  const effectiveMaxValue = BigInt(Math.floor((overrides?.maxValueEth ?? 1) * 1e18).toString())
-  const effectiveMaxMint = BigInt(Math.floor((overrides?.maxMintTokens ?? 1_000_000) * 1e18).toString())
+  const effectiveMaxValue = BigInt(Math.round((overrides?.maxValueEth ?? 1) * 1e9)) * BigInt(1e9)
+  const effectiveMaxMint = BigInt(overrides?.maxMintTokens ?? 1_000_000) * BigInt(1e18)
   const effectiveAnomalyThreshold = overrides?.anomalyThreshold ?? 50
 
   const layerInfo: LayerCatchInfo = {

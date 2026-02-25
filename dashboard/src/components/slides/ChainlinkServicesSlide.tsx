@@ -28,7 +28,7 @@ export default function ChainlinkServicesSlide() {
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-white font-semibold">{s.name}</h3>
               <span
-                className={`text-xs px-2 py-0.5 rounded-full ${
+                className={`text-sm px-2.5 py-0.5 rounded-full font-semibold ${
                   s.status === 'Real'
                     ? 'text-green-400 bg-green-400/10'
                     : 'text-yellow-400 bg-yellow-400/10'

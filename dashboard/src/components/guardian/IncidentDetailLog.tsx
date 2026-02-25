@@ -82,7 +82,7 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
               : 'No incidents match this filter'}
           </p>
           {incidents.length === 0 && (
-            <p className="text-base text-gray-600">Attack scenarios from the Live Demo will appear here as incidents</p>
+            <p className="text-base text-gray-500">Attack scenarios from the Live Demo will appear here as incidents</p>
           )}
         </div>
       ) : (
