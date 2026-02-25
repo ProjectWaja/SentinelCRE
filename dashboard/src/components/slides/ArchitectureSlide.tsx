@@ -21,9 +21,9 @@ export default function ArchitectureSlide() {
         {steps.map((step, i) => (
           <div key={step.num} className="flex items-center gap-2">
             <div className={`${step.bg} border ${step.border} rounded-xl p-4 text-center min-w-[120px]`}>
-              <div className={`text-xs ${step.color} mb-1`}>Step {step.num}</div>
+              <div className={`text-sm ${step.color} mb-1`}>Step {step.num}</div>
               <div className="text-white font-semibold text-base">{step.label}</div>
-              <div className="text-xs text-gray-500 mt-1">{step.desc}</div>
+              <div className="text-sm text-gray-400 mt-1">{step.desc}</div>
             </div>
             {i < steps.length - 1 && (
               <span className="text-gray-600 text-lg">&rarr;</span>

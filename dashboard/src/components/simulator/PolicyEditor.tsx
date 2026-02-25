@@ -101,14 +101,14 @@ export default function PolicyEditor({
     <details className="bg-gray-900 rounded-2xl border border-gray-800">
       <summary className="p-5 cursor-pointer select-none flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-base font-bold uppercase tracking-wider text-gray-400">
+          <span className="text-xl font-bold uppercase tracking-wider text-gray-300">
             {agentName ? `Policy — ${agentName}` : 'Policy Configuration'}
           </span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20 font-semibold">
+          <span className="text-base px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20 font-semibold">
             WHAT-IF
           </span>
           {modified && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 font-semibold">
+            <span className="text-base px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 font-semibold">
               MODIFIED
             </span>
           )}
@@ -124,14 +124,14 @@ export default function PolicyEditor({
       </summary>
 
       <div className="px-5 pb-5">
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-base text-gray-400 mb-4">
           Toggle checks on/off and adjust thresholds to see how each defense layer responds independently.
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Layer 1: On-Chain Policy */}
           <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-5">
-            <h4 className="text-sm font-bold text-green-400 uppercase tracking-wider mb-4">
+            <h4 className="text-lg font-bold text-green-400 uppercase tracking-wider mb-4">
               Layer 1 — On-Chain Policy
             </h4>
 
@@ -139,7 +139,7 @@ export default function PolicyEditor({
               {/* Value Limit */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-sm text-gray-300 font-medium">Value Limit</label>
+                  <label className="text-lg text-gray-300 font-medium">Value Limit</label>
                   <Toggle
                     enabled={overrides.valueCheckEnabled}
                     onChange={(v) => update({ valueCheckEnabled: v })}
@@ -161,7 +161,7 @@ export default function PolicyEditor({
                       disabled={disabled}
                       className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-500 disabled:opacity-50"
                     />
-                    <span className="text-sm font-mono text-white w-20 text-right">
+                    <span className="text-lg font-mono text-white w-20 text-right">
                       {formatEth(overrides.maxValueEth)}
                     </span>
                   </div>
@@ -171,7 +171,7 @@ export default function PolicyEditor({
               {/* Mint Cap */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-sm text-gray-300 font-medium">Mint Cap</label>
+                  <label className="text-lg text-gray-300 font-medium">Mint Cap</label>
                   <Toggle
                     enabled={overrides.mintCheckEnabled}
                     onChange={(v) => update({ mintCheckEnabled: v })}
@@ -193,7 +193,7 @@ export default function PolicyEditor({
                       disabled={disabled}
                       className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-500 disabled:opacity-50"
                     />
-                    <span className="text-sm font-mono text-white w-20 text-right">
+                    <span className="text-lg font-mono text-white w-20 text-right">
                       {formatTokens(overrides.maxMintTokens)}
                     </span>
                   </div>
@@ -203,8 +203,8 @@ export default function PolicyEditor({
               {/* Target Whitelist */}
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-sm text-gray-300 font-medium">Target Whitelist</label>
-                  <p className="text-xs text-gray-600">Only approved contracts</p>
+                  <label className="text-lg text-gray-300 font-medium">Target Whitelist</label>
+                  <p className="text-base text-gray-400">Only approved contracts</p>
                 </div>
                 <Toggle
                   enabled={overrides.targetWhitelistEnabled}
@@ -216,8 +216,8 @@ export default function PolicyEditor({
               {/* Function Blocklist */}
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-sm text-gray-300 font-medium">Function Blocklist</label>
-                  <p className="text-xs text-gray-600">Block upgradeTo, transferOwnership</p>
+                  <label className="text-lg text-gray-300 font-medium">Function Blocklist</label>
+                  <p className="text-base text-gray-400">Block upgradeTo, transferOwnership</p>
                 </div>
                 <Toggle
                   enabled={overrides.functionBlocklistEnabled}
@@ -229,7 +229,7 @@ export default function PolicyEditor({
               {/* Rate Limiting */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-sm text-gray-300 font-medium">Rate Limiting</label>
+                  <label className="text-lg text-gray-300 font-medium">Rate Limiting</label>
                   <Toggle
                     enabled={overrides.rateLimitEnabled}
                     onChange={(v) => update({ rateLimitEnabled: v })}
@@ -250,7 +250,7 @@ export default function PolicyEditor({
                         disabled={disabled}
                         className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-500 disabled:opacity-50"
                       />
-                      <span className="text-sm font-mono text-white w-20 text-right">
+                      <span className="text-lg font-mono text-white w-20 text-right">
                         {overrides.rateLimit} ops
                       </span>
                     </div>
@@ -266,7 +266,7 @@ export default function PolicyEditor({
                         disabled={disabled}
                         className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-500 disabled:opacity-50"
                       />
-                      <span className="text-sm font-mono text-white w-20 text-right">
+                      <span className="text-lg font-mono text-white w-20 text-right">
                         / {formatDuration(overrides.rateLimitWindow)}
                       </span>
                     </div>
@@ -277,7 +277,7 @@ export default function PolicyEditor({
               {/* Daily Volume */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-sm text-gray-300 font-medium">Daily Volume Cap</label>
+                  <label className="text-lg text-gray-300 font-medium">Daily Volume Cap</label>
                   <Toggle
                     enabled={overrides.dailyVolumeEnabled}
                     onChange={(v) => update({ dailyVolumeEnabled: v })}
@@ -299,7 +299,7 @@ export default function PolicyEditor({
                       disabled={disabled}
                       className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-500 disabled:opacity-50"
                     />
-                    <span className="text-sm font-mono text-white w-20 text-right">
+                    <span className="text-lg font-mono text-white w-20 text-right">
                       {formatEth(overrides.dailyVolumeEth)}/d
                     </span>
                   </div>
@@ -310,8 +310,8 @@ export default function PolicyEditor({
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <div>
-                    <label className="text-sm text-gray-300 font-medium">Proof of Reserves</label>
-                    <p className="text-xs text-blue-400/60">Chainlink PoR</p>
+                    <label className="text-lg text-gray-300 font-medium">Proof of Reserves</label>
+                    <p className="text-base text-blue-400">Chainlink PoR</p>
                   </div>
                   <Toggle
                     enabled={overrides.porEnabled}
@@ -322,7 +322,7 @@ export default function PolicyEditor({
                 {overrides.porEnabled && (
                   <div className="space-y-2 mt-2">
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-gray-500 w-12">Ratio</span>
+                      <span className="text-base text-gray-400 w-14">Ratio</span>
                       <input
                         type="range"
                         min={5000}
@@ -333,12 +333,12 @@ export default function PolicyEditor({
                         disabled={disabled}
                         className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500 disabled:opacity-50"
                       />
-                      <span className="text-sm font-mono text-white w-16 text-right">
+                      <span className="text-lg font-mono text-white w-16 text-right">
                         {(overrides.minReserveRatio / 100).toFixed(0)}%
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-gray-500 w-12">Fresh</span>
+                      <span className="text-base text-gray-400 w-14">Fresh</span>
                       <input
                         type="range"
                         min={0}
@@ -350,7 +350,7 @@ export default function PolicyEditor({
                         disabled={disabled}
                         className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500 disabled:opacity-50"
                       />
-                      <span className="text-sm font-mono text-white w-16 text-right">
+                      <span className="text-lg font-mono text-white w-16 text-right">
                         {formatDuration(overrides.maxStaleness)}
                       </span>
                     </div>
@@ -363,14 +363,14 @@ export default function PolicyEditor({
           {/* Layer 2: Behavioral + Layer 3 info */}
           <div className="space-y-4">
             <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-5">
-              <h4 className="text-sm font-bold text-yellow-400 uppercase tracking-wider mb-4">
+              <h4 className="text-lg font-bold text-yellow-400 uppercase tracking-wider mb-4">
                 Layer 2 — Behavioral Scoring
               </h4>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm text-gray-300 font-medium">Anomaly Threshold</label>
-                  <span className="text-sm font-mono text-white">
+                  <label className="text-lg text-gray-300 font-medium">Anomaly Threshold</label>
+                  <span className="text-lg font-mono text-white">
                     {overrides.anomalyThreshold}
                   </span>
                 </div>
@@ -383,7 +383,7 @@ export default function PolicyEditor({
                   disabled={disabled}
                   className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500 disabled:opacity-50"
                 />
-                <div className="flex justify-between text-xs text-gray-600 mt-1">
+                <div className="flex justify-between text-base text-gray-400 mt-1">
                   <span>20 (strict)</span>
                   <span>50 (default)</span>
                   <span>100 (off)</span>
@@ -392,43 +392,43 @@ export default function PolicyEditor({
             </div>
 
             <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-5">
-              <h4 className="text-sm font-bold text-purple-400 uppercase tracking-wider mb-2">
+              <h4 className="text-lg font-bold text-purple-400 uppercase tracking-wider mb-2">
                 Layer 3 — Dual-AI Consensus
               </h4>
-              <p className="text-sm text-gray-500">
+              <p className="text-lg text-gray-400">
                 Always active. Both AI models must independently approve — cannot be disabled.
               </p>
             </div>
 
             {/* Active checks summary */}
             <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4">
-              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              <h4 className="text-base font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Active Checks
               </h4>
               <div className="flex flex-wrap gap-1.5">
                 {overrides.valueCheckEnabled && (
-                  <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400/80 border border-green-500/20">Val</span>
+                  <span className="text-base px-3 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">Val</span>
                 )}
                 {overrides.mintCheckEnabled && (
-                  <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400/80 border border-green-500/20">Mint</span>
+                  <span className="text-base px-3 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">Mint</span>
                 )}
                 {overrides.targetWhitelistEnabled && (
-                  <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400/80 border border-green-500/20">Wht</span>
+                  <span className="text-base px-3 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">Wht</span>
                 )}
                 {overrides.functionBlocklistEnabled && (
-                  <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400/80 border border-green-500/20">Fn</span>
+                  <span className="text-base px-3 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">Fn</span>
                 )}
                 {overrides.rateLimitEnabled && (
-                  <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400/80 border border-green-500/20">Rate</span>
+                  <span className="text-base px-3 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">Rate</span>
                 )}
                 {overrides.dailyVolumeEnabled && (
-                  <span className="text-xs px-2 py-0.5 rounded bg-green-500/10 text-green-400/80 border border-green-500/20">Vol</span>
+                  <span className="text-base px-3 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">Vol</span>
                 )}
                 {overrides.porEnabled && (
-                  <span className="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-400/80 border border-blue-500/20">PoR</span>
+                  <span className="text-base px-3 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">PoR</span>
                 )}
-                <span className="text-xs px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-400/80 border border-yellow-500/20">L2</span>
-                <span className="text-xs px-2 py-0.5 rounded bg-purple-500/10 text-purple-400/80 border border-purple-500/20">L3</span>
+                <span className="text-base px-3 py-0.5 rounded bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">L2</span>
+                <span className="text-base px-3 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">L3</span>
               </div>
             </div>
 
@@ -436,7 +436,7 @@ export default function PolicyEditor({
               <button
                 onClick={() => onChange(baselinePolicy ?? DEFAULT_POLICY)}
                 disabled={disabled}
-                className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-400 hover:text-gray-200 text-sm font-semibold rounded-xl border border-gray-700 transition-colors"
+                className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-400 hover:text-gray-200 text-base font-semibold rounded-xl border border-gray-700 transition-colors"
               >
                 Reset to {baselinePolicy ? 'Agent Defaults' : 'Defaults'}
               </button>

@@ -59,7 +59,7 @@ export default function DemoControlPanel({
         <button
           onClick={runAllAttacks}
           disabled={runningAll}
-          className="text-xs bg-red-600 hover:bg-red-700 disabled:bg-gray-700 text-white px-3 py-1.5 rounded-lg transition-colors"
+          className="text-sm bg-red-600 hover:bg-red-700 disabled:bg-gray-700 text-white px-3 py-1.5 rounded-lg transition-colors font-semibold"
         >
           {runningAll ? 'Running...' : 'Run All Attacks'}
         </button>
@@ -75,7 +75,7 @@ export default function DemoControlPanel({
           return (
             <div key={cat.key}>
               <h3
-                className={`text-xs font-semibold uppercase tracking-wider mb-2 ${
+                className={`text-sm font-semibold uppercase tracking-wider mb-2 ${
                   cat.color === 'green'
                     ? 'text-green-400'
                     : cat.color === 'red'
@@ -116,12 +116,12 @@ export default function DemoControlPanel({
                           <span className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                         )}
                         {status === 'success' && (
-                          <span className={`text-xs ${isAttack ? 'text-red-400' : 'text-green-400'}`}>
+                          <span className={`text-sm font-bold ${isAttack ? 'text-red-400' : 'text-green-400'}`}>
                             {isAttack ? 'BLOCKED' : 'APPROVED'}
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500">{btn.description}</p>
+                      <p className="text-sm text-gray-400">{btn.description}</p>
                     </button>
                   )
                 })}

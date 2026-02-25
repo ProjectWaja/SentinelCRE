@@ -319,22 +319,22 @@ export default function BehavioralTrainingPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-black text-white">
+          <h2 className="text-4xl font-black text-white">
             Enterprise Security Console
           </h2>
-          <p className="text-lg text-gray-500 mt-1">
+          <p className="text-xl text-gray-300 mt-1">
             Configure per-agent policies and test against role-specific threats
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {completedCount > 0 && (
-            <span className="text-base text-gray-400 bg-gray-800 px-3 py-1.5 rounded-lg font-semibold">
+            <span className="text-lg text-gray-400 bg-gray-800 px-3 py-1.5 rounded-lg font-semibold">
               {completedCount}/{actions.length} actions
             </span>
           )}
           {attacksBlocked > 0 && (
-            <span className="text-base text-red-400 bg-red-400/10 px-3 py-1.5 rounded-lg font-bold">
+            <span className="text-lg text-red-400 bg-red-400/10 px-3 py-1.5 rounded-lg font-bold">
               {attacksBlocked} blocked
             </span>
           )}
@@ -361,10 +361,10 @@ export default function BehavioralTrainingPanel() {
               }`}
             >
               <div className="text-2xl mb-1">{p.icon}</div>
-              <div className={`text-base font-bold ${isSelected ? 'text-white' : 'text-gray-400'}`}>
+              <div className={`text-xl font-bold ${isSelected ? 'text-white' : 'text-gray-300'}`}>
                 {p.name}
               </div>
-              <div className={`text-xs mt-0.5 ${isSelected ? 'text-gray-400' : 'text-gray-600'}`}>
+              <div className={`text-base mt-0.5 ${isSelected ? 'text-gray-400' : 'text-gray-500'}`}>
                 {p.agents.length > 0 ? `${p.agents.length} agents` : 'Manual config'}
               </div>
             </button>
@@ -375,7 +375,7 @@ export default function BehavioralTrainingPanel() {
       {/* Agent Fleet Grid (enterprise mode) */}
       {isEnterprise && preset && (
         <div className="bg-gray-900 rounded-2xl border border-gray-800 p-5">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">
+          <h3 className="text-lg font-bold uppercase tracking-wider text-gray-300 mb-4">
             Agent Fleet — {preset.name}
           </h3>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -402,11 +402,11 @@ export default function BehavioralTrainingPanel() {
                       isSelected ? 'bg-green-500 animate-pulse' : 'bg-green-500/40'
                     }`} />
                   </div>
-                  <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-gray-300'}`}>
+                  <div className={`text-lg font-bold ${isSelected ? 'text-white' : 'text-gray-300'}`}>
                     {agent.name}
                   </div>
-                  <div className="text-xs text-gray-500 mt-0.5">{agent.description}</div>
-                  <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-2 text-xs text-gray-500 font-mono">
+                  <div className="text-base text-gray-400 mt-0.5">{agent.description}</div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 text-base text-gray-400 font-mono">
                     <span>{formatEthShort(agent.policy.maxValueEth)}/tx</span>
                     {agent.policy.dailyVolumeEnabled && (
                       <span>{formatEthShort(agent.policy.dailyVolumeEth)}/d</span>
@@ -415,7 +415,7 @@ export default function BehavioralTrainingPanel() {
                       <span>{formatRate(agent.policy.rateLimit, agent.policy.rateLimitWindow)}</span>
                     )}
                     {agent.policy.porEnabled && (
-                      <span className="text-blue-400/60">PoR</span>
+                      <span className="text-blue-400">PoR</span>
                     )}
                   </div>
                 </button>
@@ -521,27 +521,27 @@ export default function BehavioralTrainingPanel() {
       {/* Summary Stats Bar */}
       {allDone && (
         <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6">
-          <h3 className="text-lg font-bold text-white mb-4">
+          <h3 className="text-2xl font-bold text-white mb-4">
             Security Assessment{isEnterprise && selectedAgent ? ` — ${preset?.name} ${selectedAgent.name}` : ''}
           </h3>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <div className={`text-3xl font-black ${attacksBlocked === totalAttacks ? 'text-green-400' : 'text-red-400'}`}>
+              <div className={`text-4xl font-black ${attacksBlocked === totalAttacks ? 'text-green-400' : 'text-red-400'}`}>
                 {attacksBlocked}/{totalAttacks}
               </div>
-              <div className="text-sm text-gray-500 mt-1">Attacks Blocked</div>
+              <div className="text-base text-gray-400 mt-1">Attacks Blocked</div>
             </div>
             <div>
-              <div className={`text-3xl font-black ${safeApproved === totalSafe ? 'text-green-400' : 'text-yellow-400'}`}>
+              <div className={`text-4xl font-black ${safeApproved === totalSafe ? 'text-green-400' : 'text-yellow-400'}`}>
                 {safeApproved}/{totalSafe}
               </div>
-              <div className="text-sm text-gray-500 mt-1">Safe Ops Approved</div>
+              <div className="text-base text-gray-400 mt-1">Safe Ops Approved</div>
             </div>
             <div>
-              <div className="text-3xl font-black text-white">
+              <div className="text-4xl font-black text-white">
                 {protectedValueUsd > 0 ? formatUsd(protectedValueUsd) : 'N/A'}
               </div>
-              <div className="text-sm text-gray-500 mt-1">Value Protected</div>
+              <div className="text-base text-gray-400 mt-1">Value Protected</div>
             </div>
           </div>
         </div>

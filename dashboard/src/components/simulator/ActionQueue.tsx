@@ -24,7 +24,7 @@ function ScoreDelta({ before, after }: { before: number; after: number }) {
   const delta = after - before
   if (delta === 0) {
     return (
-      <span className="text-green-400 font-mono text-base font-bold">+0</span>
+      <span className="text-green-400 font-mono text-lg font-bold">+0</span>
     )
   }
   const color =
@@ -36,7 +36,7 @@ function ScoreDelta({ before, after }: { before: number; after: number }) {
           ? 'text-yellow-400'
           : 'text-green-400'
   return (
-    <span className={`${color} font-mono text-base font-bold`}>+{delta}</span>
+    <span className={`${color} font-mono text-lg font-bold`}>+{delta}</span>
   )
 }
 
@@ -61,27 +61,27 @@ function LayerBadge({
 }) {
   if (!info.checked) {
     return (
-      <span className="text-xs px-1.5 py-0.5 rounded text-yellow-400/80 bg-yellow-500/5 border border-dashed border-yellow-500/20 line-through">
+      <span className="text-sm px-2 py-0.5 rounded text-yellow-400/80 bg-yellow-500/5 border border-dashed border-yellow-500/20 line-through">
         {label}
       </span>
     )
   }
   if (info.caught) {
     return (
-      <span className="text-xs px-1.5 py-0.5 rounded text-red-400 bg-red-500/10 border border-red-500/20 font-bold">
+      <span className="text-sm px-2 py-0.5 rounded text-red-400 bg-red-500/10 border border-red-500/20 font-bold">
         {label}
       </span>
     )
   }
   return (
-    <span className="text-xs px-1.5 py-0.5 rounded text-green-400/60 bg-green-500/5 border border-green-500/10">
+    <span className="text-sm px-2 py-0.5 rounded text-green-400/60 bg-green-500/5 border border-green-500/10">
       {label}
     </span>
   )
 }
 
 function LayerPipeline({ info }: { info: LayerCatchInfo }) {
-  const arrow = <span className="text-gray-600 text-xs mx-0.5">&rsaquo;</span>
+  const arrow = <span className="text-gray-600 text-sm mx-0.5">&rsaquo;</span>
 
   return (
     <div className="flex items-center gap-0.5 mt-1.5">
@@ -91,7 +91,7 @@ function LayerPipeline({ info }: { info: LayerCatchInfo }) {
       {arrow}
       <LayerBadge label="L3" info={info.layer3} />
       {info.caughtBy !== 'none' && (
-        <span className="text-xs text-gray-500 ml-1.5">
+        <span className="text-sm text-gray-400 ml-1.5">
           {!info.layer1.checked && info.caughtBy === 'layer2'
             ? 'Policy bypassed — behavioral caught'
             : !info.layer1.checked && !info.layer2.caught && info.caughtBy === 'layer3'
@@ -189,8 +189,8 @@ export default function ActionQueue({
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800/50">
         <div>
-          <h3 className="text-xl font-bold text-gray-300">Action Queue</h3>
-          <p className="text-base text-gray-500 mt-0.5">
+          <h3 className="text-2xl font-bold text-gray-200">Action Queue</h3>
+          <p className="text-lg text-gray-400 mt-0.5">
             {allDone
               ? 'All actions completed'
               : `${actions.filter((a) => a.status === 'done').length} of ${actions.length} completed`}
@@ -203,14 +203,14 @@ export default function ActionQueue({
               <button
                 onClick={handleRunNext}
                 disabled={isRunning || nextPending === -1}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 text-white text-base font-bold rounded-xl transition-colors"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 text-white text-lg font-bold rounded-xl transition-colors"
               >
                 Run Next
               </button>
               <button
                 onClick={handleRunAll}
                 disabled={isRunning || nextPending === -1}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white text-base font-bold rounded-xl transition-colors"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white text-lg font-bold rounded-xl transition-colors"
               >
                 Run All
               </button>
@@ -219,7 +219,7 @@ export default function ActionQueue({
           {isRunningAll && (
             <button
               onClick={handleStop}
-              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-base font-bold rounded-xl transition-colors"
+              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-lg font-bold rounded-xl transition-colors"
             >
               Stop
             </button>
@@ -260,7 +260,7 @@ export default function ActionQueue({
               <div className="flex items-start gap-4">
                 {/* Index + Status Icon */}
                 <div className="flex items-center gap-2 pt-0.5 shrink-0">
-                  <span className="text-base text-gray-600 font-mono w-5 text-right">
+                  <span className="text-lg text-gray-500 font-mono w-6 text-right">
                     {index + 1}.
                   </span>
                   <StatusIcon
@@ -274,7 +274,7 @@ export default function ActionQueue({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span
-                      className={`text-base font-bold ${
+                      className={`text-lg font-bold ${
                         isCurrentlyRunning
                           ? 'text-blue-300'
                           : isDone
@@ -287,22 +287,22 @@ export default function ActionQueue({
                       {action.title}
                     </span>
                     {action.isSafe ? (
-                      <span className="text-base px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 font-semibold">
+                      <span className="text-base px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-400 font-bold">
                         SAFE
                       </span>
                     ) : (
-                      <span className="text-base px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 font-semibold">
+                      <span className="text-base px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-400 font-bold">
                         ATTACK
                       </span>
                     )}
                     {isCurrentlyRunning && (
-                      <span className="text-base text-blue-400 font-semibold animate-pulse">
+                      <span className="text-lg text-blue-400 font-semibold animate-pulse">
                         Evaluating...
                       </span>
                     )}
                   </div>
                   <p
-                    className={`text-base ${
+                    className={`text-lg ${
                       isDone ? 'text-gray-500' : 'text-gray-400'
                     } truncate`}
                   >
@@ -316,11 +316,11 @@ export default function ActionQueue({
                 {/* Score delta and verdict (right side) */}
                 <div className="flex items-center gap-3 shrink-0 pt-0.5">
                   {isDone && action.scoreBefore !== undefined && action.scoreAfter !== undefined && (
-                    <div className="flex items-center gap-2 text-base">
-                      <span className="text-gray-500 font-mono">
+                    <div className="flex items-center gap-2 text-lg">
+                      <span className="text-gray-400 font-mono">
                         {action.scoreBefore}
                       </span>
-                      <svg className="w-3 h-3 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                       </svg>
                       <span
@@ -334,13 +334,13 @@ export default function ActionQueue({
                       >
                         {action.scoreAfter}
                       </span>
-                      <span className="text-gray-600 mx-0.5">|</span>
+                      <span className="text-gray-500 mx-0.5">|</span>
                       <ScoreDelta before={action.scoreBefore} after={action.scoreAfter} />
                     </div>
                   )}
                   {isDone && action.verdict && (
                     <span
-                      className={`text-base font-bold px-2.5 py-1 rounded-lg ${
+                      className={`text-lg font-bold px-3 py-1 rounded-lg ${
                         action.verdict === 'APPROVED'
                           ? 'bg-green-500/10 text-green-400'
                           : 'bg-red-500/10 text-red-400'

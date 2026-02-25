@@ -125,7 +125,7 @@ export default function AgentRegistryPanel({
                     <p className="text-base text-gray-400 mt-1">
                       {agent.description}
                     </p>
-                    <p className="text-base text-gray-600 font-mono mt-1">
+                    <p className="text-base text-gray-500 font-mono mt-1">
                       {agent.agentId.slice(0, 18)}...{agent.agentId.slice(-8)}
                     </p>
                   </div>
@@ -152,23 +152,23 @@ export default function AgentRegistryPanel({
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-base text-gray-400">
                   <div>
-                    <span className="text-gray-600 font-semibold">Max Tx:</span>{' '}
+                    <span className="text-gray-500 font-semibold">Max Tx:</span>{' '}
                     {agent.policy.maxTransactionValue === '0'
                       ? 'N/A'
                       : formatWei(agent.policy.maxTransactionValue)}
                   </div>
                   <div>
-                    <span className="text-gray-600 font-semibold">Daily Vol:</span>{' '}
+                    <span className="text-gray-500 font-semibold">Daily Vol:</span>{' '}
                     {agent.policy.maxDailyVolume === '0'
                       ? 'N/A'
                       : formatWei(agent.policy.maxDailyVolume)}
                   </div>
                   <div>
-                    <span className="text-gray-600 font-semibold">Mint Cap:</span>{' '}
+                    <span className="text-gray-500 font-semibold">Mint Cap:</span>{' '}
                     {formatTokens(agent.policy.maxMintAmount)}
                   </div>
                   <div>
-                    <span className="text-gray-600 font-semibold">Rate:</span>{' '}
+                    <span className="text-gray-500 font-semibold">Rate:</span>{' '}
                     {agent.policy.rateLimit}/{agent.policy.rateLimitWindow}s
                   </div>
                 </div>
