@@ -4,7 +4,7 @@
 
 Three-layer risk evaluation pipeline that detects and blocks malicious AI agent actions *before* they execute on-chain — combining on-chain compliance checks, behavioral risk scoring, and multi-AI consensus through Chainlink CRE.
 
-**Tracks:** Risk & Compliance | CRE & AI | Privacy
+**Tracks:** Risk & Compliance | CRE & AI | Privacy | Autonomous Agents
 
 | | |
 |---|---|
@@ -13,6 +13,64 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 | **Tenderly Explorer** | [Virtual TestNet Transactions](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions) |
 | **Contracts** | `0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8` (Guardian) · `0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6` (Registry) |
 | **Deployer** | `0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446` |
+
+---
+
+## Files Using Chainlink
+
+> Required by hackathon submission rules — every file that integrates a Chainlink service.
+
+### CRE Workflow (SDK v1.0.9)
+
+| File | Chainlink Services Used |
+|------|------------------------|
+| [`sentinel-workflow/main.ts`](sentinel-workflow/main.ts) | `HTTPClient`, `ConfidentialHTTPClient`, `EVMClient`, `HTTPCapability`, `CronCapability`, `ConsensusAggregationByFields`, `identical`, `median`, `encodeCallMsg`, `getNetwork`, `LAST_FINALIZED_BLOCK_NUMBER`, `Runner`, `handler` — full CRE workflow with HTTP + Cron triggers, on-chain read/write, dual-AI consensus, and confidential compute |
+| [`sentinel-workflow/behavioral.ts`](sentinel-workflow/behavioral.ts) | Pure behavioral engine executed inside CRE workflow context — 7 anomaly dimensions scored during CRE pipeline (no async, no Date.now(), CRE WASM compatible) |
+| [`sentinel-workflow/workflow.yaml`](sentinel-workflow/workflow.yaml) | CRE workflow configuration — local and staging settings, workflow path, config path, secrets path |
+
+### Smart Contracts (Solidity)
+
+| File | Chainlink Services Used |
+|------|------------------------|
+| [`contracts/src/SentinelGuardian.sol`](contracts/src/SentinelGuardian.sol) | Receives CRE workflow verdicts via `processVerdict()` (WORKFLOW_ROLE), enforces on-chain policy, processes challenge resolutions from CRE re-evaluation. Automation-ready `finalizeExpiredChallenge()` for Chainlink Automation (checkUpkeep/performUpkeep pattern) |
+| [`contracts/src/libraries/PolicyLib.sol`](contracts/src/libraries/PolicyLib.sol) | `checkReserves()` calls **Chainlink Data Feeds** via `IAggregatorV3.latestRoundData()` for Proof of Reserves — verifies reserve backing before mints with cumulative tracking, staleness checks, and configurable collateralization ratios |
+| [`contracts/src/interfaces/IAggregatorV3.sol`](contracts/src/interfaces/IAggregatorV3.sol) | **Chainlink AggregatorV3Interface** — `latestRoundData()` + `decimals()` for Proof of Reserves data feed integration |
+
+### Configuration
+
+| File | Chainlink Services Used |
+|------|------------------------|
+| [`config/sentinel.config.json`](config/sentinel.config.json) | Production CRE config — `enableConfidentialCompute: true`, AI endpoints, chain selector, contract addresses |
+| [`config/sentinel.local.config.json`](config/sentinel.local.config.json) | Local dev CRE config — mock API endpoints, `enableConfidentialCompute: false` fallback |
+| [`project.yaml`](project.yaml) | CRE project settings — RPC endpoints for `ethereum-testnet-sepolia` |
+
+### Tests
+
+| File | Chainlink Services Used |
+|------|------------------------|
+| [`contracts/test/ProofOfReserves.t.sol`](contracts/test/ProofOfReserves.t.sol) | 10 tests for **Chainlink Data Feeds** integration — reserve verification, cumulative drain prevention, feed price updates, collateralization ratios, stale data handling |
+| [`contracts/test/mocks/MockV3Aggregator.sol`](contracts/test/mocks/MockV3Aggregator.sol) | Mock **Chainlink AggregatorV3** for testing Proof of Reserves without live feed |
+| [`contracts/test/SentinelGuardian.t.sol`](contracts/test/SentinelGuardian.t.sol) | 45 tests exercising CRE verdict processing, policy enforcement, circuit breakers |
+| [`contracts/test/Integration.t.sol`](contracts/test/Integration.t.sol) | Full lifecycle tests — register → CRE verdict → freeze → challenge → CRE re-evaluation → resolve |
+
+### Dashboard (reads CRE-managed on-chain state)
+
+| File | Chainlink Services Used |
+|------|------------------------|
+| [`dashboard/src/lib/contracts.ts`](dashboard/src/lib/contracts.ts) | ABIs for SentinelGuardian + AgentRegistry — reads CRE-written on-chain state (verdicts, policies, incidents) |
+| [`dashboard/src/app/api/agents/route.ts`](dashboard/src/app/api/agents/route.ts) | Reads agent data from CRE-managed contracts via Tenderly RPC |
+| [`dashboard/src/app/api/incidents/route.ts`](dashboard/src/app/api/incidents/route.ts) | Reads incident history written by CRE workflow verdicts |
+| [`dashboard/src/app/api/evaluate/route.ts`](dashboard/src/app/api/evaluate/route.ts) | Forwards proposals to AI evaluation server (mirrors CRE workflow pipeline) |
+| [`dashboard/src/app/api/challenge/route.ts`](dashboard/src/app/api/challenge/route.ts) | Submits challenge appeals for CRE re-evaluation |
+
+### Documentation
+
+| File | Chainlink Services Used |
+|------|------------------------|
+| [`docs/CONFIDENTIAL-COMPUTE.md`](docs/CONFIDENTIAL-COMPUTE.md) | Deep dive on ConfidentialHTTPClient integration, TEE boundaries, Vault DON secret templates |
+| [`docs/CRE_INTEGRATION.md`](docs/CRE_INTEGRATION.md) | Full CRE services integration reference (HTTPClient, EVMClient, CronCapability, ConsensusAggregationByFields) |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 3-layer defense architecture with CRE pipeline diagrams |
+| [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md) | Fail-safe design principles, severity classification, CRE-powered challenge resolution |
 
 ---
 
@@ -153,6 +211,87 @@ CRE's `ConsensusAggregationByFields` is the critical enabler. It ensures the dua
 3. API keys are injected via Vault DON secret templates (`{{ANTHROPIC_API_KEY}}`), never exposed to node operators
 4. No single DON node can override the consensus (BFT aggregation)
 5. All verdicts are written immutably on-chain (audit trail)
+
+---
+
+## Privacy & Confidential Compute
+
+> SentinelCRE uses Chainlink Confidential Compute to make the entire risk evaluation pipeline opaque to the agents being monitored.
+
+### The Privacy Problem in AI Agent Security
+
+Traditional AI agent guardrails leak information. If an agent can observe its own limits — policy thresholds, evaluation prompts, AI reasoning — it can systematically probe, evade, or manipulate those guardrails. This is not theoretical:
+
+| Leak Vector | What an Agent Learns | How It Exploits It |
+|-------------|---------------------|--------------------|
+| On-chain policy parameters | Exact value/mint limits | Submits transactions at 99.9% of the limit |
+| Evaluation prompts | What criteria the AI evaluator checks | Crafts actions that satisfy every listed criterion |
+| AI model responses | Confidence scores, reasoning | Reverse-engineers guardrail boundaries via binary search |
+| API keys in transit | Credentials for AI model providers | Exfiltrates keys for unauthorized model access |
+
+### How SentinelCRE Solves It
+
+SentinelCRE's Layer 3 (Multi-AI Consensus) executes inside a **TEE (Trusted Execution Environment)** via CRE's `ConfidentialHTTPClient`. The entire evaluation — prompt construction, API calls, AI responses, verdict reasoning — stays inside the enclave. Only a single bit exits: **APPROVED or DENIED**.
+
+```
+┌─────────────────────────────────── TEE Enclave ───────────────────────────────────┐
+│                                                                                    │
+│  1. Policy thresholds embedded in evaluation prompt (hidden from agent)             │
+│  2. Behavioral risk breakdown injected into AI context (hidden from agent)          │
+│  3. API keys resolved from Vault DON: {{ANTHROPIC_API_KEY}} (hidden from nodes)    │
+│  4. Claude + secondary model evaluate independently (reasoning hidden)             │
+│  5. ConsensusAggregationByFields enforces DON-level BFT agreement                 │
+│                                                                                    │
+└────────────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                  APPROVED / DENIED
+                                       │
+                              Agent sees ONLY this
+```
+
+**Implementation** (live in [`sentinel-workflow/main.ts`](sentinel-workflow/main.ts)):
+
+```typescript
+// Feature-flagged: enableConfidentialCompute in config
+const confClient = new ConfidentialHTTPClient();
+
+const confRequest = {
+  vaultDonSecrets: [{ key: 'ANTHROPIC_API_KEY', namespace: 'sentinel' }],
+  request: {
+    url: config.aiEndpoint1,
+    method: 'POST',
+    bodyString: requestBody,  // Contains evaluation prompt — hidden inside TEE
+    multiHeaders: {
+      'x-api-key': { values: ['{{ANTHROPIC_API_KEY}}'] },  // Resolved from Vault DON
+    },
+  },
+};
+
+// Both AI model calls execute inside the enclave
+const response1 = sendRequester.sendRequest(confRequest).result();
+```
+
+### What's Protected
+
+| Data | Without Confidential Compute | With Confidential Compute |
+|------|------------------------------|--------------------------|
+| Policy thresholds (value limits, mint caps) | Embedded in prompts visible to node operators | Hidden inside TEE — only verdict exits |
+| Behavioral risk scores | Included in AI context, visible during execution | Computed and consumed entirely within enclave |
+| AI evaluation prompts | Visible to DON node operators | Never leave the TEE |
+| API keys (Anthropic, etc.) | Passed as secrets, visible during execution | Injected via Vault DON `{{TEMPLATE}}` syntax inside enclave |
+| AI model reasoning | Confidence scores and explanations visible | Only APPROVED/DENIED exits — no reasoning leaked |
+| Agent behavioral baselines | Accessible through prompt inspection | Opaque — agent cannot learn its own profile |
+
+### Why This Matters for Risk & Compliance
+
+In regulated environments (DeFi protocols, institutional custody, tokenized assets), the security model itself is sensitive. Revealing guardrail parameters to monitored agents is equivalent to publishing the alarm codes alongside the security system. Confidential Compute ensures that:
+
+1. **Agents can't game what they can't see** — No binary search for limits, no prompt injection against hidden prompts
+2. **Node operators can't front-run** — Even DON participants can't extract policy parameters during execution
+3. **Forensic data stays access-controlled** — Incident reports with guardrail details don't leak via on-chain transparency
+4. **Compliance auditors get cryptographic proof** — TEE attestation proves the correct evaluation was performed without revealing the evaluation itself
+
+For full integration details, see [`docs/CONFIDENTIAL-COMPUTE.md`](docs/CONFIDENTIAL-COMPUTE.md).
 
 ---
 
