@@ -19,6 +19,24 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 
 ---
 
+## Table of Contents
+
+- [Files Using Chainlink](#files-using-chainlink) — every file that integrates a Chainlink service
+- [The Problem](#the-problem) — why AI agents need decentralized risk monitoring
+- [Architecture](#architecture) — three-layer defense pipeline diagram
+- [Three-Layer Defense](#three-layer-defense) — compliance pre-check, behavioral scoring, multi-AI consensus
+- [Chainlink Services — Deep Integration](#chainlink-services--deep-integration) — 5 CRE capabilities + Data Feeds + Automation
+- [Privacy & Confidential Compute](#privacy--confidential-compute) — TEE-backed evaluation via ConfidentialHTTPClient
+- [Attack Coverage](#attack-coverage) — 14 demo scenarios across 3 phases
+- [Smart Contracts](#smart-contracts) — SentinelGuardian, PolicyLib, AgentRegistry + 85 tests
+- [Interactive Risk Monitoring Dashboard](#interactive-risk-monitoring-dashboard) — 4-tab dashboard overview
+- [Tenderly Integration — Deep Usage](#tenderly-integration--deep-usage) — Virtual TestNet, Simulation API, monitoring, debugging
+- [Quick Start](#quick-start) — clone, install, run
+- [Tech Stack](#tech-stack)
+- [What Makes SentinelCRE Different](#what-makes-sentinelcre-different) — 7 differentiators
+
+---
+
 ## Files Using Chainlink
 
 > Required by hackathon submission rules — every file that integrates a Chainlink service.
