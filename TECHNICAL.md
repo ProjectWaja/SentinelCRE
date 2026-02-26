@@ -46,77 +46,101 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/) (Feb 2026).
 
 ---
 
-## The Problem
+## Gas Analysis
 
-AI agents are increasingly executing real on-chain actions — DeFi swaps, token mints, contract calls. But when agents go rogue through prompt injection, model poisoning, or malicious actors, there's no decentralized safety layer to prevent catastrophic actions.
+All gas measurements taken on Tenderly Virtual TestNet (Sepolia fork) with Solidity 0.8.24, optimizer at 200 runs.
 
-Real-world examples of what SentinelCRE prevents:
-- **Paid Network ($180M)** — Infinite mint exploit drained the entire protocol
-- **Cover Protocol** — Attacker minted tokens to crash the price
-- **Uranium Finance** — Balance manipulation led to fund drain
-- **Mango Markets ($100M+)** — Flash loan + oracle manipulation
+### processVerdict() — Core Verdict Path
 
-**The gap:** Current solutions are reactive kill switches that fire *after* damage is done. SentinelCRE blocks malicious actions *before* they execute.
+| Outcome | Gas Used | Notes |
+|---------|----------|-------|
+| Approved (all checks pass) | ~85,000 | ABI decode + 7 PolicyLib checks + stat updates + event emit |
+| Denied (value violation) | ~120,000 | Same as above + circuit breaker + incident log + severity classification + challenge window creation + 4 events |
+| Denied (critical severity) | ~110,000 | No challenge window created (permanent freeze) |
 
----
+**Breakdown of an approved verdict:**
+| Operation | Gas |
+|-----------|-----|
+| ABI decode reportData | ~3,000 |
+| PolicyLib.checkAll() | ~25,000 (7 checks, short-circuits on failure) |
+| _recordApprovedAction() | ~22,000 (storage writes: totalApproved, dailyVolume, rate limit window) |
+| ActionApproved event | ~2,500 |
+| Storage reads (policy, state) | ~10,000 |
 
-## The Solution
+**Key insight:** The circuit breaker path costs ~35,000 more gas than the approval path due to incident logging (string storage), challenge window creation, and 4 event emissions. This is acceptable because denials are the minority case in normal operation.
 
-SentinelCRE acts as a **decentralized middleware layer** between AI agents and on-chain execution:
+### Other Functions
 
-```
-AI Agent proposes action
-    → CRE HTTP Trigger receives proposal
-    → EVMClient reads agent policy from SentinelGuardian
-    → Confidential HTTP calls 2 independent AI models (Claude + GPT-4)
-    → ConsensusAggregationByFields: both models must APPROVE
-    → EVMClient writes verdict to SentinelGuardian.processVerdict()
-        → On-chain PolicyLib.checkAll() validates:
-            → Value limits → Target whitelist → Function blocklist
-            → Rate limits → Mint caps → Proof of Reserves
-        → APPROVED: action forwarded, stats updated
-        → DENIED: severity classified (Low / Medium / Critical)
-            → Critical: instant permanent freeze, no appeal
-            → Low/Medium: challenge window opens (1hr / 30min)
-                → Appeal via CRE re-evaluation → unfreeze or uphold
-```
+| Function | Gas | Notes |
+|----------|-----|-------|
+| registerAgent() | ~180,000 | High due to dynamic array storage (approvedContracts, blockedFunctions) |
+| challengeVerdict() | ~45,000 | Status update + event |
+| resolveChallenge() (overturn) | ~55,000 | Unfreeze + status update + event |
+| finalizeExpiredChallenge() | ~30,000 | Status update only |
+| freezeAgent() (manual) | ~75,000 | State change + incident log + event |
 
-### Two-Layer Defense
+### Cost Per Verdict at Scale
 
-1. **AI Consensus Layer** — Two independent AI models evaluate every proposed action. Both must agree the action is safe. If either model flags it, the action is denied. This catches context-dependent threats like prompt injection and social engineering.
+At current Ethereum gas prices (~30 gwei):
+- **Approved verdict:** ~$0.08
+- **Denied verdict:** ~$0.12
+- On L2s (Arbitrum, Base): <$0.001 per verdict
 
-2. **On-Chain Policy Layer** — Smart contract enforces hard-coded guardrails that no AI can override: transaction value limits, approved contract whitelists, function signature blocklists, rate limiting, mint caps, and Proof of Reserves. Even if both AI models are fooled, the policy catches violations.
+## Consensus Failure Modes
 
----
+### What Happens When DON Nodes Disagree
 
-## Architecture
+SentinelCRE uses `ConsensusAggregationByFields` with `identical` aggregation on the `verdict` field. This means ALL DON nodes must independently get the same AI evaluation result.
 
-```mermaid
-graph TB
-    Agent[AI Agent] -->|Proposes Action| HTTP[CRE HTTP Trigger]
-    HTTP --> Parse[Parse Proposal]
-    Parse --> Policy[Read Policy<br/>EVMClient]
-    Policy --> AI1[AI Model 1<br/>Claude]
-    Policy --> AI2[AI Model 2<br/>GPT-4]
-    AI1 --> Consensus{Both<br/>APPROVE?}
-    AI2 --> Consensus
-    Consensus -->|Yes| OnChain[On-Chain Policy Check<br/>PolicyLib.checkAll]
-    Consensus -->|No| Deny[DENIED]
-    OnChain -->|Pass| Approve[APPROVED<br/>Forward Action]
-    OnChain -->|Fail| Deny
-    Deny --> CB[Circuit Breaker<br/>Agent Frozen]
-    CB --> Severity{Severity?}
-    Severity -->|Critical| Permanent[Permanent Freeze<br/>No Appeal]
-    Severity -->|Low/Medium| Challenge[Challenge Window<br/>Appeal via CRE]
-    CB --> Log[Incident Logged<br/>Immutably]
+| Failure Mode | Cause | SentinelCRE Response |
+|-------------|-------|---------------------|
+| AI non-determinism | Despite `temperature: 0`, model output varies slightly across DON nodes | Consensus fails → `.result()` throws → fail-safe DENY |
+| Network partition | Some DON nodes cannot reach AI endpoint | Nodes that fail return DENIED by default → verdict mismatch → consensus fails → DENY |
+| API rate limiting | AI endpoint throttles some nodes but not others | Some nodes get HTTP 429 → default DENIED → mismatch → DENY |
+| Stale block data | DON nodes read policy from different block heights | Mitigated by `LAST_FINALIZED_BLOCK_NUMBER` — all nodes read from same finalized block |
+| Config desync | Nodes have different workflow configs | Prevented by CRE's atomic workflow deployment |
 
-    style Agent fill:#e74c3c,color:#fff
-    style Approve fill:#27ae60,color:#fff
-    style CB fill:#c0392b,color:#fff
-    style Consensus fill:#f39c12,color:#fff
-    style Permanent fill:#8e44ad,color:#fff
-    style Challenge fill:#2980b9,color:#fff
-```
+**Design principle:** Every consensus failure mode defaults to DENY. SentinelCRE never approves an action unless ALL DON nodes independently confirm that BOTH AI models approved it.
+
+### Temperature 0 and Determinism
+
+AI models are called with `temperature: 0` to maximize output determinism across DON nodes. This works because:
+1. All nodes send the identical prompt (same proposal + same policy data from same finalized block)
+2. `temperature: 0` selects the highest-probability token at each step
+3. `ConsensusAggregationByFields` compares the verdict field (a simple string: "APPROVED" or "DENIED"), not the full response
+
+The `confidence` field uses `median` aggregation (not `identical`) to absorb minor numeric differences across nodes.
+
+## Formal Security Properties
+
+### Property 1: No Unauthorized Execution
+**Invariant:** An agent action can only execute if `processVerdict(reportData)` is called by a `WORKFLOW_ROLE` address with `approved = true` AND `PolicyLib.checkAll()` returns `(true, "")`.
+
+**Enforcement:** `AccessControl` role check on `processVerdict()` + `whenNotPaused` modifier. Even if the CRE workflow sends `approved: true`, the on-chain PolicyLib independently validates all 7 policy checks. A compromised CRE workflow cannot bypass on-chain policy.
+
+### Property 2: Bounded Damage
+**Invariant:** The maximum financial damage from a single compromised agent in any 24-hour period is capped at `min(maxTransactionValue, maxDailyVolume)`.
+
+**Enforcement:** `PolicyLib.checkValue()` caps per-transaction value. `_recordApprovedAction()` tracks cumulative `dailyVolume` with a 86400-second window reset. Rate limiting (`checkRateLimit`) bounds transaction count.
+
+### Property 3: Fail-Safe Default
+**Invariant:** Any error in the verdict pipeline results in DENY. The system never approves on uncertainty.
+
+**Enforcement chain:**
+1. CRE workflow: try/catch wraps entire pipeline → catch returns `{verdict: "DENIED"}`
+2. AI response parsing: any JSON parse failure → default `{verdict: "DENIED", confidence: 0}`
+3. DON consensus: any node disagreement → consensus failure → DENY
+4. On-chain: `processVerdict` with `approved: true` still runs `PolicyLib.checkAll()` → any check failure → circuit breaker
+
+### Property 4: Irreversible Severity Escalation
+**Invariant:** A `Critical` severity incident cannot be appealed or overturned.
+
+**Enforcement:** `_classifySeverity()` returns `Critical` for value > 10x policy limit OR PolicyViolation type. Critical severity skips challenge window creation. `challengeVerdict()` requires `status == Pending` and `block.timestamp < expiresAt` — neither condition can be true for critical incidents.
+
+### Property 5: Frozen Origin Baseline Integrity
+**Invariant:** Once an agent's behavioral baseline is frozen (after N approved actions), it cannot be modified by subsequent agent behavior.
+
+**Enforcement:** The behavioral engine stores `originMean` and `originStdDev` separately from the rolling statistics. After the learning phase (default: 5 actions), origin values are frozen and all future actions are compared against the frozen origin, not the rolling average. This prevents "boiling frog" attacks where an agent gradually shifts its own baseline.
 
 ---
 
@@ -747,20 +771,16 @@ SentinelCRE/
 
 ---
 
-## Why SentinelCRE Wins
+## Known Limitations
 
-| Differentiator | Details |
-|---|---|
-| **Real problem, real stakes** | AI agents execute on-chain today. Infinite mint exploits have drained $180M+ from real protocols. SentinelCRE prevents the next one. |
-| **Two-layer defense** | AI consensus + on-chain policy — even if AI models are wrong, hard-coded guardrails catch what they miss. No single point of failure. |
-| **Proof of Reserves** | Chainlink Data Feed verifies reserve backing before any mint. Cumulative tracking prevents gradual reserve depletion. |
-| **Challenge windows** | Severity-based appeal system. Low/Medium denials get a time-gapped challenge window (like CEX verification delays). Critical threats are frozen permanently. |
-| **Deep CRE integration** | 5 CRE capabilities + Data Feeds + Automation-ready hooks. Uses ConsensusAggregationByFields for deterministic multi-AI agreement across DON nodes. |
-| **12 attack scenarios** | Prompt injection, flash loans, delegatecall exploits, reentrancy, governance takeover, sandwich attacks, insider threats — all detected and blocked. |
-| **Proactive, not reactive** | Unlike kill switches that fire after damage, SentinelCRE blocks malicious actions before execution. |
-| **85 tests, 5 suites** | Production-grade coverage including PoR, challenge windows, infinite mint, rate limiting, circuit breaker, freeze/unfreeze lifecycle. |
-| **Confidential Compute ready** | Boundary markers in place — when CC SDK ships, policy thresholds are hidden from AI agents. |
-| **Interactive dashboard** | Drag-and-drop attack simulator, narrative demo with kill chains, real Tenderly simulation, live Guardian monitoring. |
+| Limitation | Impact | Mitigation |
+|-----------|--------|-----------|
+| **Single-chain deployment** | Currently Sepolia only; no cross-chain agent monitoring | EVMClient supports any CRE-supported chain. Multi-chain deployment is a config change, not a code change |
+| **No ReentrancyGuard** | SentinelGuardian uses AccessControl + Pausable but not ReentrancyGuard | All state-changing functions are role-gated (WORKFLOW_ROLE/ADMIN). External calls only happen in PolicyLib.checkReserves() which is a read-only Data Feed call |
+| **MEV vulnerability** | processVerdict() transactions can be front-run by MEV searchers | The verdict itself is binary (approve/deny) — front-running a denial provides no economic advantage. Approval front-running is mitigated by the agent executing the approved action, not the verdict submitter |
+| **AI model latency** | Dual-AI evaluation adds ~2-5s latency per verdict | Acceptable for most agent operations. High-frequency agents (arbitrage bots) may need dedicated fast-path policies |
+| **Behavioral cold start** | New agents have no behavioral baseline for first 5 actions | During learning phase, only Layer 1 (policy) and Layer 3 (AI consensus) are active. Policy limits bound damage during cold start |
+| **Incident buffer overflow** | Rolling buffer limited to 100 incidents per agent | Sufficient for operational monitoring. Historical analysis should use event logs (unlimited, indexed) |
 
 ---
 

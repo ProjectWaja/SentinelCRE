@@ -24,41 +24,53 @@
 
 ## Defense Layers
 
-### Layer 1: AI Consensus (Off-Chain via CRE)
-- Two independent AI models evaluate every action
-- Both must return `APPROVED` with structured reasoning
-- Temperature 0 ensures deterministic outputs for DON consensus
-- Default to DENY on any error or parsing failure (fail-safe)
-- CRE's BFT consensus ensures no single DON node can fake a verdict
-
-### Layer 2: On-Chain Policy (Smart Contract)
-- `PolicyLib.checkAll()` validates:
+### Layer 1: On-Chain Policy (Deterministic — Smart Contract)
+- `PolicyLib.checkAll()` runs inside `SentinelGuardian.processVerdict()`:
   - `checkValue()` — transaction value within limit
   - `checkTarget()` — contract address on whitelist
   - `checkFunction()` — function selector not blocked
   - `checkRateLimit()` — actions within rate window
   - `checkMintAmount()` — mint amount within cap
+  - `checkDailyVolume()` — cumulative value within 24h cap
+  - `checkReserves()` — Proof of Reserves via Chainlink Data Feeds
 - Even if AI consensus approves, policy violations trigger circuit breaker
-- Smart contract logic is immutable and cannot be bypassed
+- Smart contract logic is immutable and cannot be bypassed by AI
 
-### Layer 3: Circuit Breaker (Automated Response)
-- Freezes agent immediately on violation
-- Logs incident immutably (IncidentLog struct)
+### Layer 2: Behavioral Risk Scoring (Statistical — Off-Chain)
+- 7-dimension anomaly detection engine runs inside CRE workflow
+- Each agent builds a behavioral baseline from its first 5 approved actions
+- Baseline is **frozen permanently** — prevents slow drift poisoning
+- Detects: value deviation, unknown contracts, velocity bursts, unusual functions, off-hours activity, sequential probing, and cumulative drift
+- Risk threshold: score >= 50 triggers denial
+- Key insight: sequential probing detection (+35 weight) directly counters binary search attacks against invisible thresholds
+
+### Layer 3: Multi-AI Consensus (Contextual — Off-Chain via CRE)
+- Two independent AI models evaluate every action with behavioral context injected
+- Both must return `APPROVED` with structured reasoning
+- Temperature 0 ensures deterministic outputs for DON consensus
+- Default to DENY on any error or parsing failure (fail-safe)
+- CRE's BFT consensus ensures no single DON node can fake a verdict
+
+### Circuit Breaker (Automated Response)
+- Freezes agent immediately on any layer's violation
+- Logs incident immutably (IncidentLog struct, rolling buffer max 100)
+- Classifies severity: Critical (permanent freeze), Medium (30-min appeal), Low (1-hour appeal)
 - Emits events for monitoring (CircuitBreakerTriggered, AgentFrozen)
 - Only admin can unfreeze — no automated recovery
 - Revocation is permanent (AgentState.Revoked)
 
-### Layer 4: Confidential Compute (Privacy)
-- CRE Confidential HTTP hides API keys from DON nodes
-- Policy thresholds marked for Confidential Compute boundary
-- Prevents AI agents from learning their own constraints
-- Production upgrade: wrap policy reads in CC enclave
+### Confidential Compute (Cross-Cutting Privacy)
+- CRE `ConfidentialHTTPClient` hides API keys, evaluation prompts, and AI responses inside TEE
+- Policy thresholds embedded in evaluation prompts are invisible to agents and node operators
+- Prevents AI agents from learning their own constraints or reverse-engineering guardrail boundaries
+- API keys injected via Vault DON `{{TEMPLATE}}` syntax — never exposed outside enclave
 
 ## Design Principles
 
 1. **Fail-Safe** — Any error defaults to DENY. Guardian never approves on uncertainty.
-2. **Defense in Depth** — Two independent layers (AI + policy) must both pass.
+2. **Defense in Depth** — Three independent layers (policy + behavioral + AI) must all pass. No single point of failure.
 3. **Immutable Audit Trail** — All incidents logged on-chain with full context.
 4. **Minimal Trust** — CRE's BFT consensus, not single-node evaluation.
 5. **Bounded Damage** — Even if bypassed, policy limits cap maximum exposure.
 6. **Manual Recovery Only** — Frozen agents require human admin intervention.
+7. **Frozen Baselines** — Behavioral origin freezes after 5 actions, preventing slow drift poisoning.

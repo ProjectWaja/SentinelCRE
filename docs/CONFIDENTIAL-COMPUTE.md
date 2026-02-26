@@ -4,7 +4,7 @@
 
 Chainlink Confidential Compute (CC) is a breakthrough privacy service built natively into CRE. SentinelCRE leverages CC to make guardrail evaluation fundamentally opaque to the AI agents being protected.
 
-**Status**: Confidential HTTP is **live** in `@chainlink/cre-sdk` v1.0.9+ (simulator support) with secret injection fixed in v1.0.10 (Feb 9, 2026). SentinelCRE now has a feature-flagged implementation using `ConfidentialHTTPClient`. See [SDK Reference](https://docs.chain.link/cre/reference/sdk/confidential-http-client-ts) and [Usage Guide](https://docs.chain.link/cre/guides/workflow/using-confidential-http-client/making-requests-ts).
+**Status**: Confidential HTTP is **live** in `@chainlink/cre-sdk` v1.0.9+ (simulator support). SentinelCRE uses v1.0.9 with a feature-flagged `ConfidentialHTTPClient` implementation. See [SDK Reference](https://docs.chain.link/cre/reference/sdk/confidential-http-client-ts) and [Usage Guide](https://docs.chain.link/cre/guides/workflow/using-confidential-http-client/making-requests-ts).
 
 ## Why Confidential Compute Matters for SentinelCRE
 
@@ -30,7 +30,7 @@ const policyJson = runtime.getSecret("agent_policy_0").result();
 const policy: AgentPolicy = JSON.parse(policyJson);
 ```
 
-**Confidential Compute upgrade** (live in CRE SDK v1.0.10+):
+**Confidential Compute upgrade** (available in CRE SDK v1.0.9+):
 ```typescript
 import { ConfidentialHTTPClient } from "@chainlink/cre-sdk";
 
@@ -87,30 +87,30 @@ const verdict = runtime
   .result();
 ```
 
-**Confidential Compute upgrade** (live in CRE SDK v1.0.10+):
+**Confidential Compute upgrade** (implemented in `sentinel-workflow/main.ts`):
 ```typescript
 import { ConfidentialHTTPClient } from "@chainlink/cre-sdk";
 
 // [CONFIDENTIAL_COMPUTE] AI calls via Confidential HTTP
 // API key hidden via {{TEMPLATE}} secret injection, prompt hidden, full response hidden
-// Only the verdict exits the TEE
+// Only the parsed AIVerdict exits the TEE after consensus aggregation
 const confClient = new ConfidentialHTTPClient();
 
-const claudeResult = confClient.sendRequest({
-  url: "https://api.anthropic.com/v1/messages",
-  method: "POST",
-  headers: {
-    "x-api-key": "{{ANTHROPIC_API_KEY}}",
-    "Content-Type": "application/json",
-    "anthropic-version": "2023-06-01"
+const confRequest = {
+  vaultDonSecrets: [{ key: 'ANTHROPIC_API_KEY', namespace: 'sentinel' }],
+  request: {
+    url: config.aiEndpoint1,
+    method: 'POST',
+    bodyString: requestBody,  // Contains evaluation prompt — hidden inside TEE
+    multiHeaders: {
+      'Content-Type': { values: ['application/json'] },
+      'x-api-key': { values: ['{{ANTHROPIC_API_KEY}}'] },  // Resolved from Vault DON
+      'anthropic-version': { values: ['2023-06-01'] },
+    },
   },
-  body: JSON.stringify({
-    model: "claude-sonnet-4-20250514",
-    temperature: 0,
-    max_tokens: 500,
-    messages: [{ role: "user", content: evaluationPrompt }]
-  }),
-}).result();
+};
+
+const response1 = sendRequester.sendRequest(confRequest).result();
 ```
 
 This is now implemented in `sentinel-workflow/main.ts` behind the `enableConfidentialCompute` feature flag.
@@ -176,10 +176,10 @@ Full Vault DON integration with DKG threshold encryption for all secrets, custom
 
 ## What's Available Now vs. Later
 
-| Feature | CRE SDK v1.0.10 (Now) | SentinelCRE Status | General Access (Later 2026) |
+| Feature | CRE SDK v1.0.9 (Current) | SentinelCRE Status | General Access (Later 2026) |
 |---------|----------------------|-------------------|----------------------------|
 | Confidential HTTP | ✅ Live | ✅ Implemented | ✅ Yes |
-| Secret template injection | ✅ Live (fixed v1.0.10) | ✅ Implemented (`{{ANTHROPIC_API_KEY}}`) | ✅ Yes |
+| Secret template injection | ✅ Live | ✅ Implemented (`{{ANTHROPIC_API_KEY}}`) | ✅ Yes |
 | Simulator support | ✅ Live (v1.0.9+) | ✅ Ready to test | ✅ Yes |
 | TEE execution markers | ✅ Live | ✅ attestationHash in verdict | ✅ Yes |
 | Attestation proofs | ✅ Expected | ⏳ Stub verification | ✅ Yes |
