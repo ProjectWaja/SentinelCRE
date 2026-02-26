@@ -4,7 +4,8 @@
 
 Three-layer risk evaluation pipeline that detects and blocks malicious AI agent actions *before* they execute on-chain — combining on-chain compliance checks, behavioral risk scoring, and multi-AI consensus through Chainlink CRE.
 
-**Tracks:** Risk & Compliance | CRE & AI | Privacy | Autonomous Agents
+**Primary Track:** CRE & AI — dual-AI consensus via Chainlink CRE workflow with ConfidentialHTTPClient + ConsensusAggregation
+**Secondary Tracks:** Risk & Compliance (on-chain policy enforcement) · Privacy (Confidential Compute for model inputs)
 
 | | |
 |---|---|
