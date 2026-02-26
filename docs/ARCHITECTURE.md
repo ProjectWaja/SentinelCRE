@@ -110,11 +110,11 @@ sequenceDiagram
     W->>W: Consensus check (identical aggregation)
     
     alt Both APPROVED
-        W->>G: submitVerdict(approved=true, riskScore, attestation)
-        G-->>W: Action forwarded
+        W->>G: processVerdict(reportData) [approved=true]
+        G-->>W: Action forwarded, stats updated
     else Any DENIED or Disagreement
-        W->>G: submitVerdict(approved=false, riskScore, attestation)
-        G->>G: Circuit breaker → freeze agent
+        W->>G: processVerdict(reportData) [approved=false]
+        G->>G: Circuit breaker → freeze agent, log incident
     end
 ```
 
@@ -129,58 +129,89 @@ sequenceDiagram
 ```mermaid
 classDiagram
     class SentinelGuardian {
-        +address authorizedWorkflow
-        +uint256 nextAgentId
-        +uint256 totalVerdicts
-        +uint256 totalDenials
-        +uint256 totalCircuitBreaks
-        +mapping agents
-        +mapping agentVerdicts
-        +mapping incidents
-        
-        +registerAgent(name) uint256
-        +submitVerdict(agentId, approved, ...) 
-        +unfreezeAgent(agentId)
-        +resolveIncident(hash)
-        +getAgent(agentId) Agent
-        +getProtocolStats() (uint256, uint256, uint256, uint256)
+        +mapping~bytes32 => AgentState~ agentStates
+        +mapping~bytes32 => bool~ agentExists
+        +mapping~bytes32 => AgentPolicy~ _agentPolicies
+        +mapping~bytes32 => uint256~ totalApproved
+        +mapping~bytes32 => uint256~ totalDenied
+        +mapping~bytes32 => uint256~ dailyVolume
+        +mapping~bytes32 => IncidentLog[]~ _incidents
+        +mapping~bytes32 => ChallengeWindow~ _challenges
+
+        +processVerdict(bytes reportData)
+        +registerAgent(bytes32 agentId, AgentPolicy policy)
+        +updatePolicy(bytes32 agentId, AgentPolicy policy)
+        +freezeAgent(bytes32 agentId)
+        +unfreezeAgent(bytes32 agentId)
+        +revokeAgent(bytes32 agentId)
+        +challengeVerdict(bytes32 agentId)
+        +resolveChallenge(bytes32 agentId, bool approved, string reason)
+        +finalizeExpiredChallenge(bytes32 agentId)
+        +getAgentPolicy(bytes32 agentId) AgentPolicy
+        +getAgentState(bytes32 agentId) AgentState
+        +getActionStats(bytes32 agentId) (uint256, uint256, uint256, uint256)
+        +getIncident(bytes32 agentId, uint256 index) IncidentLog
     }
-    
-    class Agent {
-        +address owner
-        +string name
-        +bool active
-        +bool frozen
-        +uint256 totalActions
-        +uint256 totalDenied
+
+    class AgentState {
+        <<enumeration>>
+        Active
+        Frozen
+        Revoked
     }
-    
-    class Verdict {
-        +uint256 agentId
-        +bool approved
-        +uint8 riskScore
-        +string riskCategory
-        +bytes32 actionHash
-        +bytes32 attestationHash
+
+    class AgentPolicy {
+        +uint256 maxTransactionValue
+        +uint256 maxDailyVolume
+        +uint256 maxMintAmount
+        +uint256 rateLimit
+        +uint256 rateLimitWindow
+        +address[] approvedContracts
+        +bytes4[] blockedFunctions
+        +bool requireMultiAiConsensus
+        +bool isActive
+        +address reserveFeed
+        +uint256 minReserveRatio
     }
-    
-    class IncidentRecord {
-        +uint256 agentId
-        +bytes32 actionHash
-        +bytes32 attestationHash
-        +uint8 riskScore
+
+    class IncidentLog {
+        +uint64 timestamp
+        +bytes32 agentId
+        +IncidentType incidentType
         +string reason
-        +bool resolved
+        +address targetContract
+        +uint256 attemptedValue
     }
-    
-    SentinelGuardian --> Agent
-    SentinelGuardian --> Verdict
-    SentinelGuardian --> IncidentRecord
+
+    class ChallengeWindow {
+        +bytes32 agentId
+        +uint64 createdAt
+        +uint64 expiresAt
+        +ChallengeStatus status
+        +Severity severity
+        +string reason
+    }
+
+    class PolicyLib {
+        +checkValue(policy, value) (bool, string)
+        +checkTarget(policy, target) (bool, string)
+        +checkFunction(policy, funcSig) (bool, string)
+        +checkRateLimit(policy, count, start, now) (bool, string)
+        +checkMintAmount(policy, amount) (bool, string)
+        +checkReserves(policy, mint, cumMints) (bool, string)
+        +checkAll(policy, CheckParams) (bool, string)
+    }
+
+    SentinelGuardian --> AgentState
+    SentinelGuardian --> AgentPolicy
+    SentinelGuardian --> IncidentLog
+    SentinelGuardian --> ChallengeWindow
+    SentinelGuardian ..> PolicyLib : uses
 ```
 
-**Access control**: Only the authorized CRE workflow forwarder can submit verdicts. This prevents anyone from bypassing the evaluation pipeline and submitting fake approvals directly.
+**Access control**: Three roles govern the contract — `DEFAULT_ADMIN_ROLE` (register/freeze/revoke agents, update policies), `WORKFLOW_ROLE` (process CRE verdicts, freeze agents, resolve challenges), and `CHALLENGER_ROLE` (appeal denied verdicts). Only the authorized CRE workflow can submit verdicts.
 
-**Fail-safe principle**: The contract enforces that absence of verdict = denial by default. If the workflow is unavailable, no actions can be approved.
+**Fail-safe principle**: The contract enforces that absence of verdict = denial by default. If the workflow is unavailable, no actions can be approved. All errors in `processVerdict()` trigger the circuit breaker rather than silently failing.
 
 ## Confidential Compute Integration Map
 
@@ -256,7 +287,7 @@ sequenceDiagram
     
     Note over AI: Consensus: UNANIMOUS DENY
     
-    AI->>SG: submitVerdict(approved=false, riskScore=98, attestation)
+    AI->>SG: processVerdict(reportData) [approved=false, value=500 ETH]
     SG->>SG: _triggerCircuitBreaker()
     SG->>BC: AgentFrozen event
     SG->>BC: CircuitBreakerTriggered event
@@ -303,7 +334,7 @@ sequenceDiagram
 |-----------|-----------|-----|
 | Orchestration | Chainlink CRE (TypeScript SDK) | Decentralized execution with BFT consensus |
 | Privacy | Confidential HTTP + Vault DON | TEE-based confidential computation |
-| Smart Contract | Solidity 0.8.20 (Foundry) | Policy enforcement + circuit breaker |
+| Smart Contract | Solidity 0.8.24 (Foundry) | Policy enforcement + circuit breaker |
 | AI Models | Claude + secondary model | Independent multi-model consensus |
 | Chain | Ethereum Sepolia | Testnet for hackathon demo |
 | Testing | CRE CLI simulation + Foundry | End-to-end workflow + contract testing |

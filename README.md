@@ -15,6 +15,9 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 | **Contracts** | `0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8` (Guardian) · `0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6` (Registry) |
 | **Deployer** | `0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446` |
 
+<!-- Screenshot: Replace with actual dashboard screenshot before submission -->
+<!-- ![SentinelCRE Dashboard](docs/assets/dashboard-screenshot.png) -->
+
 ---
 
 ## Files Using Chainlink
@@ -413,7 +416,9 @@ Every demo verdict fires real `processVerdict()` and `unfreezeAgent()` transacti
 
 ## Quick Start
 
-> **No testnet funds needed.** The dashboard is pre-configured to use a Tenderly Virtual TestNet (Sepolia fork) with funded accounts. Clone, install, and run — everything works out of the box.
+> **No testnet funds needed.** The dashboard is pre-configured to use a Tenderly Virtual TestNet (Sepolia fork) with funded accounts. Clone, install, and run.
+
+**Prerequisites:** [Bun](https://bun.sh/) (runtime/package manager) · [Foundry](https://book.getfoundry.sh/) (for contract tests only)
 
 ```bash
 # Install dependencies

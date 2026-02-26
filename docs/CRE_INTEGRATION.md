@@ -90,15 +90,166 @@ runtime.now()                      // Timestamp (not Date.now())
 runtime.getSecret('API_KEY')       // Secrets (not process.env)
 ```
 
-## Confidential Compute Boundaries
+## Code-Level Walkthrough: Verdict Pipeline
 
-Production upgrade path marked in code:
+The full verdict pipeline in `sentinel-workflow/main.ts` executes in 7 steps. Here's exactly how each CRE capability is used:
+
+### Step 1: HTTP Trigger Receives Proposal
+
 ```typescript
-// --- [CONFIDENTIAL_COMPUTE_BOUNDARY_START] ---
-// When CC SDK ships, wrap this block in:
-//   confidentialRuntime.execute(fn, { visibility: 'attestation-only' })
-const policyContext = { ... }
-// --- [CONFIDENTIAL_COMPUTE_BOUNDARY_END] ---
+const httpCapability = new HTTPCapability()
+handler(httpCapability.trigger({ authorizedKeys: [] }), onActionProposal)
 ```
 
-This ensures SentinelCRE is ready for CC integration when the SDK reaches general availability.
+The workflow registers an HTTP trigger that receives `ActionProposal` payloads. The `authorizedKeys` field can restrict which signers can submit proposals in production.
+
+### Step 2: EVMClient Reads Agent Policy
+
+```typescript
+const chainSelector = getNetwork({
+  chainFamily: 'evm',
+  chainSelectorName: config.evmChainSelectorName,
+  isTestnet: true,
+})
+const evmClient = new EVMClient(chainSelector)
+
+const policyCallData = encodeFunctionData({
+  abi: GUARDIAN_ABI,
+  functionName: 'getAgentPolicy',
+  args: [proposal.agentId as `0x${string}`],
+})
+
+const policyResult = evmClient
+  .callContract(runtime, {
+    call: encodeCallMsg({
+      from: zeroAddress,
+      to: config.guardianContractAddress as Address,
+      data: policyCallData,
+    }),
+    blockNumber: LAST_FINALIZED_BLOCK_NUMBER,
+  })
+  .result()
+```
+
+`LAST_FINALIZED_BLOCK_NUMBER` ensures all DON nodes read from the same finalized block — preventing consensus failures from block propagation delays.
+
+### Step 3: Behavioral Risk Scoring (Layer 2)
+
+```typescript
+const behavioralResult = analyzeAll(proposal, behaviorCtx, now.getTime(), ANOMALY_THRESHOLD)
+```
+
+The behavioral engine (pure TypeScript, CRE WASM-compatible) runs 7 anomaly dimensions against the agent's behavioral context. The result is injected into the AI evaluation prompt so Layer 3 can factor behavioral intelligence into its verdict.
+
+### Step 4: Feature-Flagged AI Evaluation (Standard vs. Confidential)
+
+```typescript
+if (config.enableConfidentialCompute) {
+  const confClient = new ConfidentialHTTPClient()
+  aiVerdict = confClient
+    .sendRequest(
+      runtime,
+      (sendRequester: ConfidentialHTTPSendRequester) =>
+        evaluateWithConfidentialHttp(sendRequester, config, proposal, policyContext, behavioralResult),
+      ConsensusAggregationByFields<AIVerdict>({
+        verdict: identical,    // All DON nodes must agree on APPROVED/DENIED
+        confidence: median,    // Median confidence across nodes
+        reason: identical,     // Consistent reasoning required
+      }),
+    )()
+    .result()
+} else {
+  const httpClient = new HTTPClient()
+  aiVerdict = httpClient
+    .sendRequest(
+      runtime,
+      (sendRequester: HTTPSendRequester) =>
+        evaluateWithStandardHttp(sendRequester, config, proposal, policyContext, behavioralResult),
+      ConsensusAggregationByFields<AIVerdict>({
+        verdict: identical,
+        confidence: median,
+        reason: identical,
+      }),
+    )()
+    .result()
+}
+```
+
+**Both paths use the same consensus aggregation strategy.** `ConsensusAggregationByFields` ensures DON nodes compare the AI verdict field-by-field:
+- `verdict: identical` — all nodes must get the same APPROVED/DENIED result
+- `confidence: median` — median smooths out minor floating-point differences
+- `reason: identical` — ensures consistent reasoning across nodes
+
+### Step 5: Confidential HTTP Secret Injection
+
+Inside `evaluateWithConfidentialHttp()`, API keys use Vault DON template syntax:
+
+```typescript
+const confRequest = {
+  vaultDonSecrets: [{ key: 'ANTHROPIC_API_KEY', namespace: 'sentinel' }],
+  request: {
+    url: config.aiEndpoint1,
+    method: 'POST',
+    bodyString: requestBody,
+    multiHeaders: {
+      'x-api-key': { values: ['{{ANTHROPIC_API_KEY}}'] },
+    },
+  },
+}
+```
+
+`{{ANTHROPIC_API_KEY}}` is resolved inside the TEE from Vault DON. Node operators never see the decrypted key, the evaluation prompt, or the AI model's response.
+
+### Step 6: ABI-Encode Verdict Report
+
+```typescript
+const reportBytes = encodeAbiParameters(
+  parseAbiParameters(
+    'bytes32 agentId, bool approved, string reason, address target, bytes4 funcSig, uint256 value, uint256 mintAmount',
+  ),
+  [
+    proposal.agentId as `0x${string}`,
+    approved,
+    aiVerdict.reason,
+    proposal.targetContract as Address,
+    proposal.functionSignature as `0x${string}`,
+    BigInt(proposal.value),
+    BigInt(proposal.mintAmount),
+  ],
+)
+```
+
+The verdict is ABI-encoded so `SentinelGuardian.processVerdict(bytes reportData)` can `abi.decode` it on-chain and run `PolicyLib.checkAll()` against the decoded parameters.
+
+### Step 7: EVMClient Writes Verdict On-Chain
+
+```typescript
+evmClient
+  .writeReport(runtime, {
+    to: config.guardianContractAddress as Address,
+    data: writeCallData,
+  })
+  .result()
+```
+
+`writeReport()` submits a signed transaction as the CRE workflow's authorized address (must have `WORKFLOW_ROLE` on SentinelGuardian).
+
+## DON Consensus Failure Handling
+
+When DON nodes disagree on the AI verdict (e.g., non-deterministic AI output despite `temperature: 0`), the consensus aggregation fails. SentinelCRE handles this as a **fail-safe denial**:
+
+1. **`identical` aggregation on `verdict` field** — If any DON node gets a different AI response, `ConsensusAggregationByFields` fails to reach consensus
+2. **CRE runtime treats consensus failure as an error** — The `.result()` call throws
+3. **All errors in the pipeline default to DENIED** — The try/catch wrapping returns a denial response
+4. **This is intentional** — A consensus failure means we cannot be certain the AI approved the action, so the fail-safe default is denial
+
+This means SentinelCRE never approves an action unless ALL DON nodes independently agree that BOTH AI models approved it.
+
+## Cron Health Check
+
+```typescript
+const cronCapability = new CronCapability()
+handler(cronCapability.trigger({ schedule: config.schedule }), onHealthCheck)
+```
+
+The health check runs on a configurable cron schedule (default: `*/5 * * * *`, every 5 minutes). In production, this would iterate registered agents via EVMClient reads and proactively freeze agents exhibiting anomalous patterns — providing defense beyond the request-response verdict pipeline.
