@@ -543,14 +543,59 @@ Interactive dashboard for monitoring, demoing, and simulating SentinelCRE.
 | `/api/health` | GET | Checks mock API server connectivity |
 | `/api/tenderly` | GET | Reads recent Tenderly transactions for live feed panel |
 
-### Tenderly Integration
+### Tenderly Integration — Deep Usage
 
-Contracts are deployed on Tenderly's Virtual Sepolia TestNet with live on-chain verdict recording. Every demo verdict fires real `processVerdict()` and `unfreezeAgent()` transactions:
-- Encodes proposals as `processVerdict()` calldata
-- Simulates on the virtual Sepolia testnet
-- Returns decoded events, state changes, balance changes, and full call traces
-- Dashboard includes a live Tenderly feed panel polling transaction counts every 12 seconds
-- Judges can verify all on-chain activity via the [Tenderly Explorer](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions)
+Tenderly is deeply integrated across the entire stack — not just as a deployment target, but as the simulation engine, debugging tool, and live monitoring backend that powers the dashboard.
+
+#### Virtual TestNet (Deployment & RPC)
+
+All contracts are deployed on Tenderly's Virtual Sepolia TestNet (Sepolia fork, chain ID 11155111). The dashboard reads all on-chain state — agent registrations, policies, incident history, verdict events — via the Tenderly RPC endpoint. Every demo verdict fires real `processVerdict()` and `unfreezeAgent()` transactions that persist across sessions.
+
+**Why Virtual TestNet was essential:**
+- Pre-funded accounts eliminate faucet hunting and testnet unreliability
+- Instant transactions enable responsive demo UX (no block confirmation delays)
+- Persistent state means judges can inspect all historical transactions without re-deploying
+- Full Sepolia EVM compatibility (gas pricing, precompiles, storage model)
+
+#### Simulation API (`dashboard/src/lib/tenderly.ts` — 244 lines)
+
+The Tenderly Pro API client wraps `/simulate` and `/simulate-bundle` endpoints:
+
+```typescript
+// Single transaction simulation — used by /api/simulate
+simulateTransaction(tx: SimulationRequest): Promise<SimulationResult>
+
+// Sequential multi-tx simulation with shared state — used by enterprise simulator
+simulateBundle(transactions: SimulationRequest[]): Promise<SimulationResult[]>
+```
+
+**SimulationResult** includes:
+- `success` / `revertReason` — whether processVerdict succeeded or which policy check failed
+- `gasUsed` — exact gas for the verdict path (approved ~85K, denied ~120K)
+- `stateChanges[]` — decoded storage diffs (agent state, incident count, frozen status, challenge windows)
+- `balanceChanges[]` — ETH balance diffs per address
+- `callTrace` — recursive internal call tree (CALL → STATICCALL → DELEGATECALL) with decoded inputs/outputs
+- `logs[]` — decoded event emissions (VerdictProcessed, AgentFrozen, IncidentLogged, ChallengeCreated)
+
+The `/api/simulate` route accepts two modes:
+1. **Proposal mode** — auto-encodes `processVerdict(reportData)` calldata from agent/target/value/mint parameters
+2. **Custom mode** — arbitrary `to`/`input`/`value` for direct contract interaction
+
+#### Live Transaction Feed (`TenderlyFeedPanel.tsx`)
+
+The dashboard includes a real-time Tenderly transaction monitor:
+- `/api/tenderly` route scans the last 60 blocks via RPC (`eth_blockNumber` + `eth_getBlockByNumber`)
+- Decodes transaction calldata to identify function calls by 4-byte selector
+- Color-coded function names: `processVerdict` (yellow), `unfreezeAgent` (cyan), `registerAgent` (green), `grantRole` (blue), `updatePolicy` (orange)
+- Polls every 12 seconds with cumulative transaction counts per contract
+- Direct link to [Tenderly Explorer](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions) for full decoded transaction inspection
+
+#### Development & Debugging
+
+Tenderly's transaction debugging was critical during development:
+- Decoded call traces identified exactly where `processVerdict()` reverted during PolicyLib integration
+- State diff inspection verified circuit breaker logic wrote to correct storage slots
+- Gas profiling informed the check-ordering optimization in `PolicyLib.checkAll()` (cheapest checks first for early exit)
 
 ---
 
@@ -675,7 +720,7 @@ cd contracts && forge test -v
 | Contract interaction | viem |
 | Config validation | Zod |
 | Dashboard | Next.js 15 + React 19 + Tailwind CSS 4 |
-| Simulation | Tenderly Simulation API |
+| Simulation & Deployment | Tenderly Virtual TestNet (RPC + deployment), Simulation API (`/simulate` + `/simulate-bundle`), live tx monitoring |
 
 ---
 

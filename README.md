@@ -401,9 +401,13 @@ Four tabs built with Next.js 15 + React 19 + Tailwind CSS 4 (Architecture opens 
 
 ---
 
-## Tenderly Integration
+## Tenderly Integration — Deep Usage
 
-Contracts are deployed on Tenderly's Virtual Sepolia TestNet with live on-chain verdict recording:
+Tenderly is not just our deployment target — it powers the entire development, simulation, and monitoring pipeline. SentinelCRE uses **4 Tenderly capabilities**: Virtual TestNet, Simulation API, Transaction Debugging, and Live Monitoring.
+
+### 1. Virtual TestNet — Zero-Friction Development
+
+Contracts are deployed on Tenderly's Virtual Sepolia TestNet with pre-funded accounts:
 
 | Contract | Address |
 |----------|---------|
@@ -411,7 +415,44 @@ Contracts are deployed on Tenderly's Virtual Sepolia TestNet with live on-chain 
 | AgentRegistry | `0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6` |
 | Deployer | `0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446` |
 
-Every demo verdict fires real `processVerdict()` and `unfreezeAgent()` transactions to Tenderly. The dashboard includes a live Tenderly feed panel that polls transaction counts and recent function calls every 12 seconds. Judges can verify all on-chain activity via the [Tenderly Explorer](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions).
+**Why Virtual TestNet was essential:**
+- **No faucet hunting** — pre-funded accounts with unlimited ETH, zero setup friction
+- **Instant transactions** — no block confirmation delays during development/demo
+- **Persistent state** — contracts stay deployed across sessions. Judges can inspect all historical transactions without re-deploying
+- **Sepolia fork** — real network conditions (EVM version, gas pricing, precompiles) without public testnet unreliability
+
+Every demo verdict fires real `processVerdict()` and `unfreezeAgent()` transactions to Tenderly. All 14 demo scenarios + 28 enterprise simulator scenarios produce verifiable on-chain state.
+
+### 2. Simulation API — Transaction Pre-Execution
+
+The dashboard's **Simulator tab** is powered by Tenderly's Simulation API via a 244-line client library ([`dashboard/src/lib/tenderly.ts`](dashboard/src/lib/tenderly.ts)):
+
+| Feature | What It Returns | How SentinelCRE Uses It |
+|---------|----------------|------------------------|
+| `simulateTransaction()` | Gas used, success/revert, decoded events | Every `processVerdict()` call is simulated before display — judges see exact gas costs and emitted events |
+| `simulateBundle()` | Sequential multi-tx simulation with shared state | Enterprise simulator runs attack sequences (e.g., 3 probing txns) with each tx seeing the state from the previous one |
+| State diff parsing | Storage slot before/after values | Dashboard shows which contract storage slots changed (agent state, incident count, frozen status) |
+| Balance change tracking | ETH balance diffs per address | Visualizes the economic impact of each simulated action |
+| Call trace recursion | Full internal call tree (CALL, STATICCALL, DELEGATECALL) | Dashboard renders the execution path through SentinelGuardian → PolicyLib → external calls |
+
+**API route**: [`/api/simulate`](dashboard/src/app/api/simulate/route.ts) — accepts either a structured proposal (auto-encodes `processVerdict` calldata) or custom calldata for arbitrary contract interaction.
+
+### 3. Live Transaction Monitoring
+
+The [`TenderlyFeedPanel`](dashboard/src/components/TenderlyFeedPanel.tsx) component provides real-time on-chain visibility:
+- **Polls every 12 seconds** via [`/api/tenderly`](dashboard/src/app/api/tenderly/route.ts) — scans the last 60 blocks for transactions to Guardian and Registry contracts
+- **Color-coded function names** — `processVerdict` (yellow), `unfreezeAgent` (cyan), `registerAgent` (green), `grantRole` (blue), `updatePolicy` (orange)
+- **Transaction counts** per contract — judges see cumulative on-chain activity at a glance
+- **Direct Explorer link** — one click to view full transaction details, decoded calldata, and state changes in the [Tenderly Explorer](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions)
+
+### 4. Transaction Debugging & Verification
+
+Tenderly's transaction debugging was critical during development:
+- **Decoded call traces** revealed exactly where `processVerdict()` was reverting during PolicyLib integration — traced a `bytes32` encoding mismatch that would have taken hours to debug from raw revert data alone
+- **State diff inspection** verified that circuit breaker logic (agent freeze, incident logging, severity classification) was writing to the correct storage slots
+- **Gas profiling** informed optimization decisions: `processVerdict()` approved path ~85K gas, denied path ~120K gas, `registerAgent()` ~180K gas (dynamic array copy)
+
+**Judges can verify all on-chain activity** — every demo verdict, agent registration, and policy update is permanently recorded on the Virtual TestNet: [Tenderly Explorer](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions)
 
 ---
 
@@ -454,7 +495,7 @@ bun run behavioral:reset
 | CRE Workflow | Chainlink CRE SDK v1.0.9 (ConfidentialHTTPClient + HTTPClient + EVMClient), TypeScript, Bun |
 | Behavioral Engine | Pure TypeScript, 7 statistical dimensions |
 | Dashboard | Next.js 15, React 19, Tailwind CSS 4, viem |
-| Simulation | Tenderly Virtual TestNet + Simulation API |
+| Simulation & Deployment | Tenderly Virtual TestNet (RPC, persistent state), Simulation API (gas profiling, state diffs, call traces), live tx monitoring |
 | Testing | Foundry (forge test), 85 tests across 5 suites |
 
 ---
