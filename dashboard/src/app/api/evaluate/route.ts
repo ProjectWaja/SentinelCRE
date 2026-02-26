@@ -398,9 +398,20 @@ export async function POST(request: Request) {
     let v2: { verdict: string; confidence: number; reason: string }
     let usedFallback = false
 
-    // Always compute layer catch info for the defense-in-depth visualization
+    // Always compute deterministic policy analysis for defense-in-depth visualization
+    // and as a secondary behavioral scorer (uses recentValues for drift/probing detection)
     const policyAnalysis = deterministicEvaluate(proposal, policyOverrides)
     const layerCatchInfo = policyAnalysis.layerCatchInfo
+
+    // Use the higher of mock-API behavioral score vs deterministic recentValues-based score.
+    // The mock API tracks accumulated per-agent profiles, while the deterministic evaluator
+    // uses the scenario's recentValues array for drift/probing detection. Taking the max
+    // ensures attacks like slow drift are caught even when the accumulated profile is noisy.
+    if (behavioral && policyAnalysis.anomalyScore > behavioral.totalScore) {
+      behavioral.totalScore = policyAnalysis.anomalyScore
+      behavioral.flagged = policyAnalysis.anomalyScore >= (policyOverrides?.anomalyThreshold ?? 50)
+      behavioral.dimensions = policyAnalysis.anomalyDimensions
+    }
 
     try {
       const safeDescription = (proposal.description ?? '').replace(/[\x00-\x1f\x7f]/g, '').slice(0, 500)
