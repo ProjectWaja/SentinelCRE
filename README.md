@@ -75,6 +75,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 3-layer defense architecture with CRE pipeline diagrams |
 | [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md) | Fail-safe design principles, severity classification, CRE-powered challenge resolution |
 | [`docs/INTEGRATION-GUIDE.md`](docs/INTEGRATION-GUIDE.md) | Step-by-step onboarding: contract deployment, agent registration, policy configuration, behavioral learning, monitoring |
+| [`docs/CHALLENGES.md`](docs/CHALLENGES.md) | Development challenges: CRE SDK bleeding-edge constraints, behavioral scoring math, CC transparency tension, Next.js build issues |
 
 ---
 
@@ -201,7 +202,7 @@ We use **5 CRE capabilities** (including Confidential HTTP) plus Data Feeds and 
 | Service | How We Use It | Risk & Compliance Value |
 |---------|--------------|------------------------|
 | **CRE HTTPClient** | Calls 2 AI models with `ConsensusAggregationByFields` | DON-level BFT consensus on AI risk verdicts — no single node can approve a malicious action |
-| **CRE ConfidentialHTTPClient** | TEE-backed AI calls — API keys injected via Vault DON `{{ANTHROPIC_API_KEY}}` template, prompts and responses stay inside enclave | Agents cannot see evaluation prompts, policy thresholds, or AI reasoning. Feature-flagged via `enableConfidentialCompute` config |
+| **CRE ConfidentialHTTPClient** | TEE-backed AI calls — API keys injected via Vault DON `{{ANTHROPIC_API_KEY}}` template, prompts and responses stay inside enclave | Agents cannot see evaluation prompts, behavioral scoring weights, or AI reasoning. Feature-flagged via `enableConfidentialCompute` config |
 | **CRE EVMClient** | Reads agent policies, writes verdicts on-chain | Automated compliance enforcement with immutable audit trail |
 | **CRE CronCapability** | Periodic health checks and anomaly detection | Proactive risk monitoring beyond request-response |
 | **Data Feeds** | `AggregatorV3Interface` for Proof of Reserves | Real-time reserve verification before mints — cumulative tracking prevents gradual reserve depletion |
@@ -210,7 +211,7 @@ We use **5 CRE capabilities** (including Confidential HTTP) plus Data Feeds and 
 ### Why CRE Specifically?
 
 CRE's `ConsensusAggregationByFields` is the critical enabler. It ensures the dual-AI consensus isn't just application logic — it's enforced at the DON level. Combined with `ConfidentialHTTPClient` hiding the evaluation prompts inside a TEE, this creates a risk evaluation pipeline where:
-1. Agents can't see their limits (`ConfidentialHTTPClient` keeps policy thresholds inside the enclave)
+1. Agents can't see behavioral scoring weights or AI evaluation criteria (`ConfidentialHTTPClient` keeps Layer 2/3 logic inside the enclave)
 2. Agents can't game the AI evaluators (prompts never leave the TEE)
 3. API keys are injected via Vault DON secret templates (`{{ANTHROPIC_API_KEY}}`), never exposed to node operators
 4. No single DON node can override the consensus (BFT aggregation)
@@ -220,7 +221,7 @@ CRE's `ConsensusAggregationByFields` is the critical enabler. It ensures the dua
 
 ## Privacy & Confidential Compute
 
-> SentinelCRE uses Chainlink Confidential Compute to make the entire risk evaluation pipeline opaque to the agents being monitored.
+> SentinelCRE uses Chainlink Confidential Compute to make the behavioral scoring and AI evaluation layers opaque to agents and node operators. Layer 1 policy parameters are on-chain by design (transparent compliance), while Layer 2 behavioral thresholds and Layer 3 AI reasoning stay hidden inside the TEE.
 
 ### The Privacy Problem in AI Agent Security
 
@@ -240,8 +241,8 @@ SentinelCRE's Layer 3 (Multi-AI Consensus) executes inside a **TEE (Trusted Exec
 ```
 ┌─────────────────────────────────── TEE Enclave ───────────────────────────────────┐
 │                                                                                    │
-│  1. Policy thresholds embedded in evaluation prompt (hidden from agent)             │
-│  2. Behavioral risk breakdown injected into AI context (hidden from agent)          │
+│  1. Behavioral scoring weights + anomaly threshold (hidden from agent)              │
+│  2. AI evaluation prompt with risk context (hidden from agent + node operators)     │
 │  3. API keys resolved from Vault DON: {{ANTHROPIC_API_KEY}} (hidden from nodes)    │
 │  4. Claude + secondary model evaluate independently (reasoning hidden)             │
 │  5. ConsensusAggregationByFields enforces DON-level BFT agreement                 │
@@ -279,7 +280,8 @@ const response1 = sendRequester.sendRequest(confRequest).result();
 
 | Data | Without Confidential Compute | With Confidential Compute |
 |------|------------------------------|--------------------------|
-| Policy thresholds (value limits, mint caps) | Embedded in prompts visible to node operators | Hidden inside TEE — only verdict exits |
+| Layer 1 policy params (value limits, mint caps) | On-chain, publicly readable | On-chain, publicly readable (transparent compliance) |
+| Layer 2 behavioral thresholds (weights, anomaly score) | Embedded in prompts visible to node operators | Hidden inside TEE — only verdict exits |
 | Behavioral risk scores | Included in AI context, visible during execution | Computed and consumed entirely within enclave |
 | AI evaluation prompts | Visible to DON node operators | Never leave the TEE |
 | API keys (Anthropic, etc.) | Passed as secrets, visible during execution | Injected via Vault DON `{{TEMPLATE}}` syntax inside enclave |
@@ -290,7 +292,7 @@ const response1 = sendRequester.sendRequest(confRequest).result();
 
 In regulated environments (DeFi protocols, institutional custody, tokenized assets), the security model itself is sensitive. Revealing guardrail parameters to monitored agents is equivalent to publishing the alarm codes alongside the security system. Confidential Compute ensures that:
 
-1. **Agents can't game what they can't see** — No binary search for limits, no prompt injection against hidden prompts
+1. **Agents can't game what they can't see** — On-chain policy limits are transparent (agents can read them), but behavioral scoring criteria and AI evaluation logic are invisible. Knowing the value limit doesn't help bypass sequential probing detection or AI consensus
 2. **Node operators can't front-run** — Even DON participants can't extract policy parameters during execution
 3. **Forensic data stays access-controlled** — Incident reports with guardrail details don't leak via on-chain transparency
 4. **Compliance auditors get cryptographic proof** — TEE attestation proves the correct evaluation was performed without revealing the evaluation itself
@@ -465,7 +467,7 @@ bun run behavioral:reset
 
 3. **Deep CRE integration** — 5 CRE capabilities (HTTPClient, ConfidentialHTTPClient, EVMClient, CronCapability, HTTPCapability) + Data Feeds + Automation. Not a wrapper around a single Chainlink service. ConsensusAggregationByFields enforces AI verdict consensus at the DON level.
 
-4. **Confidential risk thresholds** — Policy limits and evaluation prompts execute inside a TEE via `ConfidentialHTTPClient`. API keys are injected from Vault DON secrets using `{{TEMPLATE}}` syntax. Agents can't binary-search for their own limits, can't extract API credentials, and can't craft prompt injections against prompts they can't see. See [`docs/CONFIDENTIAL-COMPUTE.md`](docs/CONFIDENTIAL-COMPUTE.md) for full integration details.
+4. **Confidential behavioral and AI evaluation** — Layer 1 policy params are on-chain (transparent compliance), but Layer 2 behavioral scoring weights and Layer 3 AI evaluation prompts execute inside a TEE via `ConfidentialHTTPClient`. API keys are injected from Vault DON secrets using `{{TEMPLATE}}` syntax. An agent can read its value limit from the contract, but it cannot see the 7 behavioral dimensions, the anomaly threshold, its own frozen baseline, or the AI evaluation criteria — so knowing Layer 1 limits doesn't help bypass Layers 2 and 3. See [`docs/CONFIDENTIAL-COMPUTE.md`](docs/CONFIDENTIAL-COMPUTE.md).
 
 5. **Behavioral intelligence** — Seven anomaly dimensions that learn per-agent baselines. Catches sophisticated attacks that pass every individual rule: sequential probing, slow drift injection, velocity bursts, off-hours activity.
 

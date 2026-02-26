@@ -6,7 +6,7 @@ SentinelCRE is an infrastructure-level sentinel guardian that sits between AI ag
 
 Built for the [Chainlink Convergence Hackathon](https://chain.link/) (Feb 2026).
 
-**Tracks:** AI + Web3 | Privacy / Confidential Compute
+**Tracks:** Risk & Compliance · CRE & AI · Privacy
 
 ---
 
@@ -396,7 +396,7 @@ The CRE workflow is the off-chain orchestration layer that connects AI evaluatio
 | **EVMClient** | Reads agent policies from SentinelGuardian, writes verdicts on-chain |
 | **CronCapability** | Periodic health checks, auto-freeze anomalous agents |
 | **ConsensusAggregationByFields** | Ensures DON nodes agree on AI verdict (BFT consensus) |
-| **Confidential HTTP** | Hides API keys and guardrail thresholds from DON nodes |
+| **Confidential HTTP** | Hides API keys, behavioral scoring weights, and AI evaluation prompts from DON nodes and agents |
 
 ### Triggers
 
@@ -418,9 +418,13 @@ The CRE workflow is the off-chain orchestration layer that connects AI evaluatio
 
 ### Confidential Compute Boundaries
 
-The workflow marks sensitive sections for future Confidential Compute integration:
-- API keys for AI model endpoints
-- Guardrail thresholds (policy limits) — prevents AI agents from learning their own limits and gaming them
+The workflow uses `ConfidentialHTTPClient` (feature-flagged) to hide sensitive evaluation data inside the TEE:
+- API keys for AI model endpoints (injected via Vault DON `{{TEMPLATE}}` syntax)
+- Behavioral scoring weights, anomaly thresholds, and frozen origin baselines
+- AI evaluation prompts containing risk context and policy data
+- AI model responses (confidence scores, reasoning, risk categories)
+
+**Note:** Layer 1 on-chain policy parameters (value limits, approved contracts, blocked functions) are publicly readable from `SentinelGuardian.getAgentPolicy()` — this is by design for transparent compliance. The defense-in-depth architecture ensures that knowing Layer 1 limits does not help bypass Layer 2 behavioral detection or Layer 3 AI evaluation.
 
 ---
 
@@ -568,8 +572,8 @@ The simulator uses the Tenderly Simulation API to execute transactions against t
 | **CRE CronCapability** | Periodic health checks — auto-freeze anomalous agents | Real |
 | **Data Feeds** | `AggregatorV3Interface` for Proof of Reserves — verifies reserve backing before mints | Real |
 | **Automation** | `finalizeExpiredChallenge()` follows checkUpkeep/performUpkeep pattern — ready to register | Interface ready |
-| **Confidential HTTP** | Hides API keys and guardrail thresholds from DON nodes | Real (SDK alpha) |
-| **Confidential Compute** | Hide policy parameters from AI agents to prevent gaming | Boundary markers |
+| **Confidential HTTP** | Hides API keys, behavioral scoring weights, and AI evaluation prompts from DON nodes | Real (SDK alpha) |
+| **Confidential Compute** | Hide Layer 2/3 evaluation logic from agents (on-chain Layer 1 params remain transparent) | Feature-flagged |
 
 ### Why CRE?
 
@@ -577,7 +581,7 @@ CRE provides exactly what SentinelCRE needs:
 - **BFT Consensus** — Multiple DON nodes must agree on AI verdicts (no single point of failure)
 - **HTTPClient** — Native multi-endpoint consensus for calling 2+ AI models
 - **EVMClient** — Read policies and write verdicts without external infrastructure
-- **Confidential HTTP** — Hide guardrail thresholds so AI agents can't learn their own limits
+- **Confidential HTTP** — Hide behavioral scoring weights and AI evaluation prompts so agents can't reverse-engineer Layer 2/3 criteria
 - **ConsensusAggregationByFields** — DON nodes compare AI verdicts field-by-field for deterministic agreement
 
 ---
@@ -596,7 +600,7 @@ SentinelCRE uses a **fail-safe** design:
 | **Immutable incidents** | Rolling buffer (max 100 per agent) cannot be modified or deleted |
 | **Rate limiting** | Per-window action count + daily volume accumulation with automatic reset |
 | **Pausable** | Emergency stop via `pause()` halts all verdict processing |
-| **Confidential thresholds** | Policy parameters hidden from AI agents (when CC SDK ships) to prevent gaming |
+| **Confidential evaluation** | Layer 2 behavioral thresholds and Layer 3 AI evaluation criteria hidden inside TEE via ConfidentialHTTPClient — agents can read on-chain policy (Layer 1) but cannot see behavioral scoring weights, anomaly thresholds, or AI prompts |
 
 ---
 
