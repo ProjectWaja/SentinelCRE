@@ -22,9 +22,9 @@ export default function TeamSlide() {
         </p>
 
         <div className="bg-gray-800/50 rounded-xl p-8 border border-gray-700/50 max-w-lg mx-auto mb-10">
-          <h3 className="text-2xl font-bold text-white mb-1">Willis</h3>
+          <h3 className="text-2xl font-bold text-white mb-1">Willis Tang</h3>
           <p className="text-gray-400 mb-3">
-            @ProjectWaja | Blockchain Musketeers
+            @ProjectWaja | Project Waja
           </p>
         </div>
 
