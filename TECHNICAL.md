@@ -12,9 +12,9 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/) (Feb 2026).
 
 ## Table of Contents
 
-- [The Problem](#the-problem)
-- [The Solution](#the-solution)
-- [Architecture](#architecture)
+- [Gas Analysis](#gas-analysis)
+- [Consensus Failure Modes](#consensus-failure-modes)
+- [Formal Security Properties](#formal-security-properties)
 - [Smart Contracts](#smart-contracts)
   - [SentinelGuardian.sol](#sentinelguardiansol)
   - [AgentRegistry.sol](#agentregistrysol)
@@ -31,6 +31,7 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/) (Feb 2026).
 - [Tech Stack](#tech-stack)
 - [Quick Start](#quick-start)
 - [Project Structure](#project-structure)
+- [Known Limitations](#known-limitations)
 
 ---
 
@@ -488,6 +489,15 @@ Simulates a compromised agent executing 10 attack scenarios:
 | 9 | Insider Threat | 0.9 ETH + 500K tokens (gradual) | Combined suspicion |
 | 10 | Social Engineering | Admin `upgradeTo` as "maintenance" | Admin function blocked |
 
+### Behavioral Simulators
+
+```bash
+bun run demo:probing    # Sequential probing → caught at probe 3
+bun run demo:drift      # 20-step slow drift → caught at ~probe 16
+```
+
+These simulators demonstrate Layer 2 behavioral detection catching attacks that pass all Layer 1 policy checks.
+
 ---
 
 ## Dashboard
@@ -499,25 +509,27 @@ Interactive dashboard for monitoring, demoing, and simulating SentinelCRE.
 
 ### Tabs
 
-| Tab | Description |
-|-----|-------------|
-| **Demo** | Narrative-driven 6-scenario walkthrough with kill chain visualization, dual-AI consensus display, and Chainlink pipeline activity. User-controlled pacing with "Continue" buttons between scenarios. |
-| **Guardian** | Real-time stats (approved/denied counts, active/frozen agents), agent registry with per-agent policy details, and incident log. Updates live after running the demo. |
-| **Simulator** | Drag-and-drop transaction simulator. Drag attack/safe scenario cards onto the SentinelGuardian wallet drop zone to trigger Tenderly simulations. 12 scenarios (2 safe + 10 attacks). Results show gas, events, state changes, and call traces. |
-| **Architecture** | Visual overview of Chainlink services used, smart contract details with test counts, and the full verdict pipeline flow. |
+| Tab | Subtitle | Description |
+|-----|----------|-------------|
+| **Architecture** | 3-layer defense | Problem statement with real DeFi exploits ($3.4B stolen in 2025, $625M Ronin, $320M Wormhole), three-layer defense diagram, 6-step verdict pipeline, 7 Chainlink integration cards with LIVE/READY status, expandable smart contracts with Solidity snippets, 7 behavioral dimension breakdown with weight bars, tech stack grid |
+| **Live Demo** | 15 attack scenarios | 3-phase narrative demo (Train → Test → Prove) with 14 scenario buttons (3 safe + 11 attacks), 8-step CRE pipeline animation, dual-AI verdict display (Claude + GPT-4), 7-dimension behavioral risk breakdown, "Run All Attacks" master button |
+| **Guardian** | Agent monitoring | Wallet info bar (deployer + contract addresses), session performance metrics (detection rate, false positive rate, avg latency, $ prevented), 6-stat session bar, agent profile cards with behavioral score sparklines, threat timeline with phase dividers, defense analytics charts (donut, severity bars, risk histogram, defense layer stacked bar), filterable incident detail log |
+| **Simulator** | Security console | Enterprise Security Console with 3 company presets (Coinbase: 6 agents, Aave: 4 agents, Lido: 4 agents) + custom mode. Agent fleet grid, editable policy parameters (value limits, mint caps, rate limiting, daily volume, PoR), cumulative behavioral score meter (CSS gradient gauge), action queue per agent, lockout banner at score 70+, summary stats (attacks blocked, safe ops approved, value protected) |
 
 ### Key Components
 
 | Component | Description |
 |-----------|-------------|
-| `ScenarioDemoPanel` | Main demo panel — shows scenarios with narrative text, animated kill chain steps, dual-AI verdict display (Claude + GPT-4), and severity-based outcomes |
-| `ChainlinkActivityPanel` | Pipeline visualization showing CRE services activating in sequence |
-| `VerdictFeedPanel` | Live verdict history with consensus details and appeal status |
-| `StatsOverview` | Four stat cards (approved, denied, active, frozen) merging on-chain data with demo session results |
-| `AgentRegistryPanel` | Agent cards showing TradingBot and MintBot with policies, session stats overlay, and freeze status |
-| `IncidentLogPanel` | Incident log merging on-chain incidents with demo session denied verdicts |
-| `TransactionSimulatorPanel` | Drag-and-drop simulator with scenario card deck, wallet drop zone, gas profiler, and custom transaction form |
-| `ArchitecturePanel` | Chainlink services grid, smart contract cards, and verdict pipeline diagram |
+| `DemoControlPanel` | Main demo panel — 3 scenario categories (Safe, Common Attacks, Advanced Attacks), "Run All Attacks" button, 8-step CRE pipeline animation, dual-AI verdict display, behavioral risk breakdown |
+| `VerdictFeedPanel` | Live verdict history with consensus details, anomaly scores, and layer catch info |
+| `GuardianStatsBar` | 6 session metrics: verdicts (approved/denied), threats blocked, catch rate, agent status, avg risk score, defense coverage (layers triggered) |
+| `AgentRegistryPanel` | Agent profile cards (TradingBot + MintBot) with behavioral score trend sparklines, session stats overlay, freeze status, and policy details |
+| `ThreatTimeline` | Chronological threat events with phase dividers (Training → Policy Violations → Edge Cases) |
+| `IncidentDetailLog` | Filterable incident log merging on-chain incidents with session verdicts, layer catch details |
+| `BehavioralTrainingPanel` | Enterprise simulator — preset selector, agent fleet grid, policy editor, action queue, score meter, lockout system |
+| `PolicyEditor` | Editable policy overrides: value limits, mint caps, target whitelist, function blocklist, rate limiting, daily volume, Proof of Reserves (enabled/ratio/staleness) |
+| `ScoreMeter` | Cumulative behavioral risk score gauge (0-100) with CSS gradient (green → yellow → red) |
+| `ActionQueue` | Per-agent scenario list organized by category (safe/common/advanced attacks) |
 
 ### API Routes
 
@@ -525,40 +537,68 @@ Interactive dashboard for monitoring, demoing, and simulating SentinelCRE.
 |-------|--------|-------------|
 | `/api/agents` | GET | Reads all agents from on-chain AgentRegistry + SentinelGuardian via Tenderly RPC |
 | `/api/incidents` | GET | Reads incident history for a specific agent from on-chain data |
-| `/api/evaluate` | POST | Forwards proposal to mock API server for AI evaluation |
+| `/api/evaluate` | POST | Forwards proposal to mock API server for AI evaluation, runs deterministic behavioral scoring, writes verdicts on-chain via Tenderly |
 | `/api/simulate` | POST | Simulates a transaction via Tenderly Simulation API — returns gas, events, state changes |
+| `/api/challenge` | POST | Submits challenge appeal for CRE re-evaluation |
 | `/api/health` | GET | Checks mock API server connectivity |
+| `/api/tenderly` | GET | Reads recent Tenderly transactions for live feed panel |
 
 ### Tenderly Integration
 
-The simulator uses the Tenderly Simulation API to execute transactions against the deployed contracts without spending gas:
+Contracts are deployed on Tenderly's Virtual Sepolia TestNet with live on-chain verdict recording. Every demo verdict fires real `processVerdict()` and `unfreezeAgent()` transactions:
 - Encodes proposals as `processVerdict()` calldata
 - Simulates on the virtual Sepolia testnet
 - Returns decoded events, state changes, balance changes, and full call traces
-- Gas profiling with per-function breakdown
+- Dashboard includes a live Tenderly feed panel polling transaction counts every 12 seconds
+- Judges can verify all on-chain activity via the [Tenderly Explorer](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions)
 
 ---
 
 ## Demo Scenarios
 
-### Narrative Demo (Demo Tab — 6 scenarios)
+### Live Demo Tab — 3 Phases, 14 Scenarios
 
-| # | Title | Attack Type | Severity | Outcome |
-|---|-------|-------------|----------|---------|
-| 0 | Normal Trade | None (baseline) | — | APPROVED |
-| 1 | Compromised Wallet Drain | Value Policy Violation | Medium | DENIED |
-| 2 | Infinite Mint Attack | Infinite Mint Exploit | Critical | DENIED |
-| 3 | AI Agent Hijacked by Prompt Injection | Prompt Injection | Medium | DENIED |
-| 4 | Flash Loan Oracle Manipulation | Flash Loan + Oracle | Critical | DENIED |
-| 5 | Insider Threat — Stealth Proxy Upgrade | Proxy Upgrade | Low | DENIED |
+**Phase 1 — Training Baseline** (all APPROVED — system learns what "normal" looks like):
 
-### Simulator Tab (12 drag-and-drop scenarios)
+| # | Scenario | Agent | Purpose |
+|---|----------|-------|---------|
+| 0 | Normal Trade (0.5 ETH swap) | TradingBot | Establishes value baseline |
+| -1 | Normal Mint (500K tokens) | MintBot | Establishes mint baseline |
+| — | Token Approval | TradingBot | Establishes contract interaction baseline |
 
-**Safe Operations:** Normal Trade (0.5 ETH), Small Mint (500K tokens)
+**Phase 2 — Policy Violations** (all DENIED — obvious attacks any risk system should catch):
 
-**Common Attacks:** Compromised Wallet Drain, Prompt Injection, Stealth Proxy Upgrade, Rate Limit Burst, Sandwich Attack, Token Approval Exploit
+| # | Attack | Detection Method | Severity |
+|---|--------|-----------------|----------|
+| 1 | Compromised Wallet Drain (100 ETH) | Value policy violation | Medium |
+| 2 | Infinite Mint (1B tokens) | Mint cap + AI pattern detection | Critical |
+| 3 | Prompt Injection ("IGNORE PREVIOUS") | Dual-AI independently detects injection | Medium |
+| 4 | Flash Loan Oracle Manipulation | Target whitelist + value limit + AI | Critical |
+| 5 | Stealth Proxy Upgrade | Function blocklist (defense-in-depth) | Low |
 
-**Advanced Attacks:** Infinite Mint, Flash Loan Oracle Manipulation, Reentrancy Drain, Governance Takeover
+**Phase 3 — Edge Cases: Would Slip Traditional Security** (all DENIED — only behavioral scoring catches these):
+
+| # | Attack | Why Traditional Security Misses It | Behavioral Dimension |
+|---|--------|-----------------------------------|---------------------|
+| 6 | Sequential Probing (2→4→8 ETH) | Each value is within policy limits | Sequential Probing +35 |
+| 7 | Off-Hours Emergency Drain | 0.8 ETH on approved DEX | Time-of-Day +10 |
+| 8 | Velocity Burst (16 rapid txns) | Each 0.1 ETH passes all checks | Velocity +15 |
+| 9 | Multi-Contract Scatter | Small value, legitimate function | Contract Diversity +20 |
+| 10 | Sybil Coordination (900K mint) | Under 1M policy cap | Value Deviation +25 |
+| 11 | Slow Drift Injection (0.5→2.5 ETH) | Each step within 1σ of rolling avg | Cumulative Drift +20 |
+
+### Enterprise Simulator (Simulator Tab)
+
+3 company presets with role-specific agents and attack scenarios:
+
+| Preset | Agents | Safe Scenarios | Attack Scenarios |
+|--------|--------|---------------|-----------------|
+| **Coinbase Institutional** | 6 (Treasury, Trading, Lending, Staking, Bridge, Compliance) | 4 | 6 |
+| **Aave Protocol** | 4 (Liquidation Bot, Governance, Rate Oracle, Reserve Manager) | 3 | 6 |
+| **Lido Finance** | 4 (Staking Router, Oracle, Withdrawal Manager, Treasury) | 3 | 6 |
+| **Total** | **14 agents** | **10** | **18** |
+
+Enterprise attacks are role-specific: treasury redirect, cold wallet drain, ownership takeover, flash loan manipulation, MEV sandwich, oracle price feed attack, rogue validator deposit, PoR reserve drain, proxy upgrade attempt, and more.
 
 ---
 
@@ -659,13 +699,16 @@ forge test -v
 ```
 
 ### Run Dashboard
+
+> **No testnet funds needed.** Pre-configured with Tenderly Virtual TestNet.
+
 ```bash
 # Terminal 1: Start mock AI evaluation server
 bun run mock-api
 
 # Terminal 2: Start the interactive dashboard
 bun run dashboard
-# Open http://localhost:3000 — Guardian Dashboard
+# Open http://localhost:3000 — Risk Monitoring Dashboard
 # Open http://localhost:3000/presentation — Slide Deck
 ```
 
@@ -679,6 +722,9 @@ bun run demo:normal
 
 # Terminal 3: Run rogue agent (10 attacks blocked)
 bun run demo:rogue
+
+# Reset behavioral profiles between runs
+bun run behavioral:reset
 ```
 
 ### Deploy
@@ -723,7 +769,8 @@ SentinelCRE/
 │   │   └── Deploy.s.sol              # Deployment script
 │   └── foundry.toml                  # Solidity 0.8.24, optimizer 200 runs
 ├── sentinel-workflow/
-│   └── main.ts                       # CRE workflow (HTTP + Cron triggers)
+│   ├── main.ts                       # CRE workflow (HTTP + Cron triggers)
+│   └── behavioral.ts                 # 7-dimension behavioral anomaly engine
 ├── api-server/
 │   └── server.ts                     # Mock AI evaluation server (port 3002)
 ├── agent-simulator/
@@ -732,44 +779,61 @@ SentinelCRE/
 ├── dashboard/                        # Next.js 15 interactive dashboard
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── page.tsx              # Main dashboard (4 tabs)
+│   │   │   ├── page.tsx              # Server wrapper → HomeClient
 │   │   │   ├── presentation/         # Slide deck route
-│   │   │   ├── api/                  # API routes (agents, simulate, evaluate)
+│   │   │   ├── api/                  # API routes
+│   │   │   │   ├── agents/route.ts   # On-chain agent reads
+│   │   │   │   ├── evaluate/route.ts # AI evaluation + behavioral scoring
+│   │   │   │   ├── simulate/route.ts # Tenderly simulation
+│   │   │   │   ├── challenge/route.ts # Challenge appeals
+│   │   │   │   ├── incidents/route.ts # On-chain incident reads
+│   │   │   │   ├── tenderly/route.ts # Tenderly transaction feed
+│   │   │   │   ├── behavioral/reset/ # Behavioral profile reset
+│   │   │   │   └── health/route.ts   # Mock API health check
 │   │   │   ├── layout.tsx            # Shell with navbar
-│   │   │   └── globals.css           # Animations (verdict-flash, drop-zone-glow)
+│   │   │   └── globals.css           # Animations
 │   │   ├── components/
-│   │   │   ├── ScenarioDemoPanel.tsx  # Narrative demo with kill chains
-│   │   │   ├── ChainlinkActivityPanel.tsx # Pipeline visualization
+│   │   │   ├── HomeClient.tsx        # Main dashboard (4 tabs)
+│   │   │   ├── DemoControlPanel.tsx   # 3-phase demo (14 scenarios)
 │   │   │   ├── VerdictFeedPanel.tsx   # Live verdict history
-│   │   │   ├── StatsOverview.tsx      # 4-card stats dashboard
 │   │   │   ├── AgentRegistryPanel.tsx # Agent cards with policies
-│   │   │   ├── IncidentLogPanel.tsx   # Incident log with session merge
-│   │   │   ├── TransactionSimulatorPanel.tsx # DnD simulator coordinator
-│   │   │   ├── ArchitecturePanel.tsx  # Services + contracts + pipeline
-│   │   │   ├── GasProfilePanel.tsx    # Gas breakdown visualization
 │   │   │   ├── TabNavigation.tsx      # Tab bar
-│   │   │   ├── simulator/            # DnD sub-components
-│   │   │   │   ├── DraggableScenarioCard.tsx
-│   │   │   │   ├── ScenarioCardDeck.tsx
-│   │   │   │   ├── WalletDropZone.tsx
-│   │   │   │   ├── SimulationResultsOverlay.tsx
-│   │   │   │   └── CustomTransactionForm.tsx
+│   │   │   ├── TenderlyFeedPanel.tsx  # Live Tenderly transaction feed
+│   │   │   ├── guardian/             # Guardian tab components
+│   │   │   │   ├── GuardianTab.tsx   # Guardian tab coordinator
+│   │   │   │   ├── GuardianStatsBar.tsx # 6-stat session bar
+│   │   │   │   ├── AgentProfileCards.tsx # Agent profiles with sparklines
+│   │   │   │   ├── ThreatTimeline.tsx # Chronological threat events
+│   │   │   │   ├── DefenseAnalyticsCharts.tsx # Analytics charts
+│   │   │   │   └── IncidentDetailLog.tsx # Filterable incident log
+│   │   │   ├── simulator/            # Enterprise simulator components
+│   │   │   │   ├── BehavioralTrainingPanel.tsx # Enterprise console
+│   │   │   │   ├── PolicyEditor.tsx  # Editable policy overrides
+│   │   │   │   ├── ScoreMeter.tsx    # Behavioral risk gauge
+│   │   │   │   └── ActionQueue.tsx   # Per-agent scenario list
 │   │   │   └── slides/               # 10 presentation slides
 │   │   ├── hooks/
 │   │   │   ├── useSentinelData.ts    # On-chain data polling
 │   │   │   └── useVerdictHistory.ts  # Session verdict state
 │   │   └── lib/
 │   │       ├── contracts.ts          # ABIs + addresses
-│   │       ├── demo-scenarios.ts     # 12 scenario definitions
+│   │       ├── demo-scenarios.ts     # 14 demo + 28 enterprise scenarios
 │   │       └── tenderly.ts           # Tenderly API helper
 │   └── package.json
 ├── config/
 │   ├── sentinel.config.json          # Production CRE config
 │   ├── sentinel.local.config.json    # Local dev config
 │   └── fixtures/                     # Test fixtures
-├── docs/                             # Architecture docs
+├── docs/                             # Architecture + reference docs
+│   ├── ARCHITECTURE.md               # 3-layer defense diagrams
+│   ├── CRE_INTEGRATION.md            # CRE code-level walkthrough
+│   ├── CONFIDENTIAL-COMPUTE.md       # CC integration details
+│   ├── SECURITY_MODEL.md             # Threat model + defense layers
+│   ├── INTEGRATION-GUIDE.md          # Company onboarding guide
+│   └── CHALLENGES.md                 # Development challenges
 ├── package.json                      # Root scripts
 ├── README.md
+├── TECHNICAL.md
 └── tsconfig.json
 ```
 
