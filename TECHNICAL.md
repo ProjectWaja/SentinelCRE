@@ -39,10 +39,10 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/) (Feb 2026).
 
 | Contract | Address |
 |----------|---------|
-| **SentinelGuardian** | [`0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8`](https://dashboard.tenderly.co/) |
-| **AgentRegistry** | [`0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6`](https://dashboard.tenderly.co/) |
+| **SentinelGuardian** | [`0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8) |
+| **AgentRegistry** | [`0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6) |
 
-**Deployer:** `0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446`
+**Deployer:** [`0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446)
 **Network:** Sepolia (Chain ID 11155111) via Tenderly Virtual TestNet
 
 ---
