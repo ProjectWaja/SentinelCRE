@@ -12,8 +12,8 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 | **Live Dashboard** | `bun run mock-api && bun run dashboard` → http://localhost:3000 |
 | **Presentation Mode** | http://localhost:3000/presentation (10 interactive slides) |
 | **Tenderly Explorer** | [Virtual TestNet Transactions](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions) |
-| **Contracts** | `0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8` (Guardian) · `0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6` (Registry) |
-| **Deployer** | `0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446` |
+| **Contracts** | [`0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8) (Guardian) · [`0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6) (Registry) |
+| **Deployer** | [`0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446) |
 
 ![SentinelCRE Dashboard](docs/assets/dashboard-screenshot.png)
 
@@ -429,9 +429,9 @@ Contracts are deployed on Tenderly's Virtual Sepolia TestNet with pre-funded acc
 
 | Contract | Address |
 |----------|---------|
-| SentinelGuardian | `0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8` |
-| AgentRegistry | `0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6` |
-| Deployer | `0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446` |
+| SentinelGuardian | [`0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8) |
+| AgentRegistry | [`0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6) |
+| Deployer | [`0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446) |
 
 **Why Virtual TestNet was essential:**
 - **No faucet hunting** — pre-funded accounts with unlimited ETH, zero setup friction
