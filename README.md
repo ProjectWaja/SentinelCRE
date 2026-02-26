@@ -15,8 +15,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 | **Contracts** | `0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8` (Guardian) · `0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6` (Registry) |
 | **Deployer** | `0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446` |
 
-<!-- Screenshot: Replace with actual dashboard screenshot before submission -->
-<!-- ![SentinelCRE Dashboard](docs/assets/dashboard-screenshot.png) -->
+![SentinelCRE Dashboard](docs/assets/dashboard-screenshot.png)
 
 ---
 
