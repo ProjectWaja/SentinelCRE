@@ -4,7 +4,8 @@
 
 Three-layer risk evaluation pipeline that detects and blocks malicious AI agent actions *before* they execute on-chain — combining on-chain compliance checks, behavioral risk scoring, and multi-AI consensus through Chainlink CRE.
 
-**Tracks:** Risk & Compliance · CRE & AI · Privacy | **Sponsor:** Tenderly
+**Primary Track:** Risk & Compliance — on-chain policy enforcement, behavioral anomaly detection, severity-based incident response, Proof of Reserves
+**Also Applying:** CRE & AI (5 CRE capabilities + dual-AI consensus) · Privacy (ConfidentialHTTPClient + TEE) · Tenderly (Virtual TestNet deployment + Simulation API)
 
 | | |
 |---|---|
