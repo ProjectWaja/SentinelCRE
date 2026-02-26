@@ -507,11 +507,28 @@ function evaluateChallenge(prompt: string): EvalResponse {
     }
   }
 
+  // Build descriptive approval reason based on what passed
+  const reasons: string[] = []
+  if (valueMatch) {
+    const valueEth = Number(BigInt(valueMatch[1])) / 1e18
+    reasons.push(`value (${valueEth.toFixed(2)} ETH) within policy limits`)
+  }
+  const targetMatch2 = prompt.match(/Target Contract:\s*(0x[a-fA-F0-9]+)/i)
+  if (targetMatch2) {
+    const target = targetMatch2[1].toLowerCase()
+    const isApproved = ROGUE_THRESHOLDS.approvedContracts.some(
+      (addr) => addr.toLowerCase() === target,
+    )
+    if (isApproved) reasons.push('target contract is whitelisted')
+  }
+  if (!reasons.length) reasons.push('no policy violations detected')
+  reasons.push('behavioral anomaly alone insufficient for permanent denial')
+
   // Borderline cases get approved on appeal
   return {
     verdict: 'APPROVED',
     confidence: 0, /* REDACTED */
-    reason: 'Re-evaluation approved — action within acceptable risk tolerance on appeal',
+    reason: `Appeal approved — ${reasons.join(', ')}. Agent unfrozen pending continued monitoring.`,
   }
 }
 

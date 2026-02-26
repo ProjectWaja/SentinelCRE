@@ -518,6 +518,5 @@ bun run behavioral:reset
 
 ---
 
-**Team:** Willis — @ProjectWaja | Blockchain Musketeers
-
+**Team:** Willis Tang — @ProjectWaja | Project Waja
 **License:** MIT

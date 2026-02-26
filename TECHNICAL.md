@@ -903,7 +903,7 @@ SentinelCRE/
 
 ## Team
 
-**Willis** — @ProjectWaja | Blockchain Musketeers
+**Willis Tang** — @ProjectWaja | Project Waja
 
 ## License
 
