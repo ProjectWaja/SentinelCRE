@@ -42,7 +42,7 @@ export default function DemoScenario1Slide() {
       </div>
 
       <p className="text-center text-gray-400">
-        Two-layer defense catches{' '}
+        Three-layer defense catches{' '}
         <span className="text-white font-semibold">every attack vector</span>
       </p>
     </SlideLayout>

@@ -5,37 +5,37 @@ import SlideLayout from './SlideLayout'
 const differentiators = [
   {
     title: 'Real Problem, Real Stakes',
-    desc: 'AI agents are executing on-chain today. Infinite mint exploits have drained $180M+ from real protocols.',
+    desc: '$3.4 billion stolen in 2025 alone. AI agents are executing on-chain with zero risk infrastructure.',
     color: 'text-red-400',
     border: 'border-red-500',
   },
   {
     title: 'Three-Layer Defense',
-    desc: 'On-chain policy + behavioral scoring + multi-AI consensus. No single point of failure — all three must agree.',
+    desc: 'On-chain compliance + behavioral risk scoring + multi-AI consensus. No single point of failure — all three must agree.',
     color: 'text-blue-400',
     border: 'border-blue-500',
   },
   {
     title: 'Deep CRE Integration',
-    desc: '5+ CRE capabilities: HTTPClient, EVMClient, Cron, Confidential HTTP, ConsensusAggregation.',
+    desc: '5 CRE capabilities + Data Feeds: HTTPClient, ConfidentialHTTPClient, EVMClient, CronCapability, HTTPCapability.',
     color: 'text-cyan-400',
     border: 'border-cyan-500',
   },
   {
-    title: 'Proactive, Not Reactive',
-    desc: 'Unlike kill switches that fire after damage, SentinelCRE blocks actions before execution.',
+    title: 'Proactive Risk Prevention',
+    desc: 'Unlike kill switches that fire after damage, SentinelCRE blocks actions before they touch the chain.',
     color: 'text-green-400',
     border: 'border-green-500',
   },
   {
     title: '85 Tests, 5 Suites',
-    desc: 'Production-grade coverage: infinite mint, rate limiting, circuit breaker, full lifecycle.',
+    desc: 'Production-grade: policy enforcement, challenge appeals, Proof of Reserves, circuit breakers, full lifecycle.',
     color: 'text-yellow-400',
     border: 'border-yellow-500',
   },
   {
-    title: 'Confidential Compute Ready',
-    desc: 'Policy thresholds hidden from AI agents, preventing them from gaming their own limits.',
+    title: 'Confidential Compute Live',
+    desc: 'ConfidentialHTTPClient hides behavioral weights, AI prompts, and API keys inside TEE. Agents see only APPROVED/DENIED.',
     color: 'text-purple-400',
     border: 'border-purple-500',
   },
@@ -45,7 +45,7 @@ export default function WhySentinelSlide() {
   return (
     <SlideLayout dark={false}>
       <h2 className="text-4xl font-bold text-white mb-8">
-        Why SentinelCRE Wins
+        Why SentinelCRE
       </h2>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">

@@ -17,20 +17,26 @@ export default function TitleSlide() {
         </div>
         <h1 className="text-6xl font-bold text-white mb-4">SentinelCRE</h1>
         <p className="text-2xl text-gray-300 mb-8">
-          Decentralized AI Guardian Protocol for Web3
+          Autonomous Risk Monitoring Infrastructure for AI Agents On-Chain
         </p>
         <div className="flex items-center justify-center gap-6 text-base">
           <span className="text-purple-400 bg-purple-400/10 px-4 py-2 rounded-full">
             Chainlink Convergence Hackathon
           </span>
-          <span className="text-gray-400">Feb 2026</span>
+          <span className="text-gray-400">2026</span>
         </div>
         <div className="flex items-center justify-center gap-4 mt-4 text-xs text-gray-500">
+          <span className="bg-green-400/10 text-green-400 px-3 py-1 rounded-full font-semibold">
+            Risk &amp; Compliance
+          </span>
           <span className="bg-blue-400/10 text-blue-400 px-3 py-1 rounded-full">
-            AI + Web3
+            CRE &amp; AI
           </span>
           <span className="bg-orange-400/10 text-orange-400 px-3 py-1 rounded-full">
-            Privacy / Confidential Compute
+            Privacy
+          </span>
+          <span className="bg-purple-400/10 text-purple-400 px-3 py-1 rounded-full">
+            Tenderly
           </span>
         </div>
       </div>
