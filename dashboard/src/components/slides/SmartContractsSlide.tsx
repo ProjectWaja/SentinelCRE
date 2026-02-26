@@ -36,8 +36,9 @@ export default function SmartContractsSlide() {
             <li>checkTarget()</li>
             <li>checkFunction()</li>
             <li>checkRateLimit()</li>
+            <li>checkDailyVolume()</li>
             <li>checkMintAmount()</li>
-            <li>checkAll() composite</li>
+            <li>checkReserves() — PoR</li>
           </ul>
         </div>
 
