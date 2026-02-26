@@ -72,6 +72,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 | [`docs/CRE_INTEGRATION.md`](docs/CRE_INTEGRATION.md) | Full CRE services integration reference (HTTPClient, EVMClient, CronCapability, ConsensusAggregationByFields) |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 3-layer defense architecture with CRE pipeline diagrams |
 | [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md) | Fail-safe design principles, severity classification, CRE-powered challenge resolution |
+| [`docs/INTEGRATION-GUIDE.md`](docs/INTEGRATION-GUIDE.md) | Step-by-step onboarding: contract deployment, agent registration, policy configuration, behavioral learning, monitoring |
 
 ---
 
