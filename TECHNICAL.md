@@ -601,6 +601,19 @@ Tenderly's transaction debugging was critical during development:
 
 ## Demo Scenarios
 
+### Real-World Context — 2025 Incidents Recreated
+
+The demo scenarios are modeled after real exploits. The 2025 incidents are particularly relevant — they prove the threat is accelerating:
+
+| Incident | Loss | SentinelCRE Detection |
+|----------|------|----------------------|
+| Bybit Hack (Feb 2025) | $1.5B | Value limit + behavioral anomaly (unprecedented withdrawal) + AI consensus |
+| Moonwell Exploit (Feb 2025) | $1.78M | Target whitelist + value limit + dual-AI oracle manipulation recognition |
+| AIXBT Hack (Mar 2025) | $106K | Time-of-day anomaly + behavioral scoring catches off-hours drain |
+| Anthropic Research (2025) | $1.22/exploit | Sequential probing +35 catches binary-search pattern, Confidential Compute hides thresholds |
+
+The dashboard's Architecture tab recreates all four 2025 incidents with detailed prevention breakdowns showing exactly which layer stops each attack.
+
 ### Live Demo Tab — 3 Phases, 14 Scenarios
 
 **Phase 1 — Training Baseline** (all APPROVED — system learns what "normal" looks like):
