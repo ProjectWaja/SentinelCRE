@@ -141,7 +141,7 @@ The `confidence` field uses `median` aggregation (not `identical`) to absorb min
 ### Property 5: Frozen Origin Baseline Integrity
 **Invariant:** Once an agent's behavioral baseline is frozen (after N approved actions), it cannot be modified by subsequent agent behavior.
 
-**Enforcement:** The behavioral engine stores `originMean` and `originStdDev` separately from the rolling statistics. After the learning phase (default: 5 actions), origin values are frozen and all future actions are compared against the frozen origin, not the rolling average. This prevents "boiling frog" attacks where an agent gradually shifts its own baseline.
+**Enforcement:** The behavioral engine stores `originMean` and `originStdDev` separately from the rolling statistics. After the learning phase, origin values are frozen and all future actions are compared against the frozen origin, not the rolling average. This prevents "boiling frog" attacks where an agent gradually shifts its own baseline. The freeze window is configurable per agent via `originWindowSize` (default: 5 for demo). Production deployments should use 20–50+ approved actions to establish a statistically robust baseline — more samples yield tighter standard deviations and fewer false positives on legitimate behavioral variance.
 
 ---
 
@@ -892,7 +892,7 @@ SentinelCRE/
 | **No ReentrancyGuard** | SentinelGuardian uses AccessControl + Pausable but not ReentrancyGuard | All state-changing functions are role-gated (WORKFLOW_ROLE/ADMIN). External calls only happen in PolicyLib.checkReserves() which is a read-only Data Feed call |
 | **MEV vulnerability** | processVerdict() transactions can be front-run by MEV searchers | The verdict itself is binary (approve/deny) — front-running a denial provides no economic advantage. Approval front-running is mitigated by the agent executing the approved action, not the verdict submitter |
 | **AI model latency** | Dual-AI evaluation adds ~2-5s latency per verdict | Acceptable for most agent operations. High-frequency agents (arbitrage bots) may need dedicated fast-path policies |
-| **Behavioral cold start** | New agents have no behavioral baseline for first 5 actions | During learning phase, only Layer 1 (policy) and Layer 3 (AI consensus) are active. Policy limits bound damage during cold start |
+| **Behavioral cold start** | New agents have no behavioral baseline during the learning phase (`originWindowSize` actions, default 5 for demo, recommended 20–50+ for production) | During the learning phase, only Layer 1 (policy) and Layer 3 (AI consensus) are active. Policy limits bound maximum damage during cold start |
 | **Incident buffer overflow** | Rolling buffer limited to 100 incidents per agent | Sufficient for operational monitoring. Historical analysis should use event logs (unlimited, indexed) |
 
 ---
