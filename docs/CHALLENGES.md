@@ -101,7 +101,7 @@ The entire project was developed on Windows 10, which introduced platform-specif
 
 ---
 
-## 8. Scope Management — Solo Developer, 2-Week Hackathon
+## 8. Scope Management — Solo Developer, Month-Long Hackathon
 
 Building a full-stack project (Solidity contracts + CRE workflow + behavioral engine + Next.js dashboard + 4 tabs + 10-slide presentation + mock API + agent simulators + documentation) as a solo developer.
 
