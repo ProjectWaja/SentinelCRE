@@ -196,7 +196,7 @@ A 7-dimension anomaly detection engine that learns what "normal" looks like for 
 | 7 | Cumulative Drift | [REDACTED] | Rolling average has drifted > 3σ from frozen origin baseline |
 | | **Total Possible** | **155** | **Risk threshold: [REDACTED]** |
 
-**Origin Baseline Freezing:** After an agent's first 5 approved actions, its behavioral baseline (mean value, standard deviation) is frozen permanently. All future actions are compared against this origin — preventing slow drift attacks where an agent gradually poisons its own baseline over hundreds of transactions.
+**Origin Baseline Freezing:** After an agent's first N approved actions, its behavioral baseline (mean value, standard deviation) is frozen permanently. All future actions are compared against this origin — preventing slow drift attacks where an agent gradually poisons its own baseline over hundreds of transactions. The freeze window is configurable via `originWindowSize` per agent profile — the demo uses 5 actions for a compact walkthrough, but production deployments should use 20–50+ actions for statistical robustness.
 
 > *"The agent was escalating 5-15% per transaction. Each individual step was within normal bounds. The cumulative drift caught what no single check could see."*
 
