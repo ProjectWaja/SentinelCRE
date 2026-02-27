@@ -174,6 +174,8 @@ flowchart TB
 
 **No single point of failure.** Even if both AI models are compromised, Layer 1 catches policy violations. Even if an action passes policy, Layer 2 catches behavioral anomalies. All three layers must agree before any action executes.
 
+For detailed architecture diagrams, CRE pipeline breakdown, and defense layer analysis, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
 ---
 
 ## Three-Layer Defense
@@ -224,6 +226,8 @@ Two independent AI models evaluate every action with the behavioral risk analysi
 - CRE's `ConsensusAggregationByFields` ensures all DON nodes agree on the verdict field-by-field
 - **`ConfidentialHTTPClient`** (`@chainlink/cre-sdk` v1.0.9) hides API keys, evaluation prompts, and risk thresholds inside a TEE — agents receive only APPROVED/DENIED with zero information about boundaries, criteria, or AI consultation
 
+For fail-safe design principles and severity classification details, see [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md).
+
 ---
 
 ## Chainlink Services — Deep Integration
@@ -247,6 +251,8 @@ CRE's `ConsensusAggregationByFields` is the critical enabler. It ensures the dua
 3. API keys are injected via Vault DON secret templates (`{{ANTHROPIC_API_KEY}}`), never exposed to node operators
 4. No single DON node can override the consensus (BFT aggregation)
 5. All verdicts are written immutably on-chain (audit trail)
+
+For the full CRE services integration reference (HTTPClient, EVMClient, CronCapability, ConsensusAggregationByFields), see [`docs/CRE_INTEGRATION.md`](docs/CRE_INTEGRATION.md).
 
 ---
 
@@ -417,6 +423,8 @@ cd contracts && forge test -v
 # [PASS] 85 tests across 5 suites
 ```
 
+For step-by-step onboarding (deployment, agent registration, policy configuration, monitoring), see [`docs/INTEGRATION-GUIDE.md`](docs/INTEGRATION-GUIDE.md). For development challenges and how we solved them, see [`docs/CHALLENGES.md`](docs/CHALLENGES.md).
+
 ---
 
 ## Interactive Risk Monitoring Dashboard
@@ -534,19 +542,19 @@ bun run behavioral:reset
 
 ## What Makes SentinelCRE Different
 
-1. **Proactive risk prevention, not reactive incident response** — Every action is evaluated through three independent layers before it touches the chain. By the time you see an alert, the threat is already blocked.
+1. **Proactive risk prevention, not reactive incident response** — Every action is evaluated through three independent layers before it touches the chain. By the time you see an alert, the threat is already blocked. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-2. **Three-layer defense with no single point of failure** — On-chain compliance checks catch policy violations. Behavioral scoring catches anomalous patterns. Multi-AI consensus catches context-dependent threats. No single layer is sufficient; together they're comprehensive.
+2. **Three-layer defense with no single point of failure** — On-chain compliance checks catch policy violations. Behavioral scoring catches anomalous patterns. Multi-AI consensus catches context-dependent threats. No single layer is sufficient; together they're comprehensive. See [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md).
 
-3. **Deep CRE integration** — 5 CRE capabilities (HTTPClient, ConfidentialHTTPClient, EVMClient, CronCapability, HTTPCapability) + Data Feeds + Automation. Not a wrapper around a single Chainlink service. ConsensusAggregationByFields enforces AI verdict consensus at the DON level.
+3. **Deep CRE integration** — 5 CRE capabilities (HTTPClient, ConfidentialHTTPClient, EVMClient, CronCapability, HTTPCapability) + Data Feeds + Automation. Not a wrapper around a single Chainlink service. ConsensusAggregationByFields enforces AI verdict consensus at the DON level. See [`docs/CRE_INTEGRATION.md`](docs/CRE_INTEGRATION.md).
 
 4. **Confidential behavioral and AI evaluation** — Layer 1 policy params are on-chain (transparent compliance), but Layer 2 behavioral scoring weights and Layer 3 AI evaluation prompts execute inside a TEE via `ConfidentialHTTPClient`. API keys are injected from Vault DON secrets using `{{TEMPLATE}}` syntax. An agent can read its value limit from the contract, but it cannot see the 7 behavioral dimensions, the anomaly threshold, its own frozen baseline, or the AI evaluation criteria — so knowing Layer 1 limits doesn't help bypass Layers 2 and 3. See [`docs/CONFIDENTIAL-COMPUTE.md`](docs/CONFIDENTIAL-COMPUTE.md).
 
-5. **Behavioral intelligence** — Seven anomaly dimensions that learn per-agent baselines. Catches sophisticated attacks that pass every individual rule: sequential probing, slow drift injection, velocity bursts, off-hours activity.
+5. **Behavioral intelligence** — Seven anomaly dimensions that learn per-agent baselines. Catches sophisticated attacks that pass every individual rule: sequential probing, slow drift injection, velocity bursts, off-hours activity. See [`sentinel-workflow/behavioral.ts`](sentinel-workflow/behavioral.ts).
 
-6. **Compliance due process** — Severity-based appeal windows mirror real-world financial systems. Critical threats are permanently blocked; low-severity denials get a structured review process.
+6. **Compliance due process** — Severity-based appeal windows mirror real-world financial systems. Critical threats are permanently blocked; low-severity denials get a structured review process. See [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md).
 
-7. **Production-grade testing** — 85 tests covering edge cases like cumulative mint drain, rate limit window resets, PoR collateral ratios, and challenge resolution flows.
+7. **Production-grade testing** — 85 tests covering edge cases like cumulative mint drain, rate limit window resets, PoR collateral ratios, and challenge resolution flows. See [`TECHNICAL.md`](TECHNICAL.md#test-coverage).
 
 ---
 
