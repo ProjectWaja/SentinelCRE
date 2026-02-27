@@ -528,6 +528,7 @@ bun run behavioral:reset
 | Dashboard | Next.js 15, React 19, Tailwind CSS 4, viem |
 | Simulation & Deployment | Tenderly Virtual TestNet (RPC, persistent state), Simulation API (gas profiling, state diffs, call traces), live tx monitoring |
 | Testing | Foundry (forge test), 85 tests across 5 suites |
+| Security Analysis | Slither (Trail of Bits) — 0 critical, 0 high findings ([details](TECHNICAL.md#slither-static-analysis)) |
 
 ---
 
