@@ -24,6 +24,7 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/) (Feb 2026).
 - [Mock API Server](#mock-api-server)
 - [Agent Simulators](#agent-simulators)
 - [Dashboard](#dashboard)
+- [Attack Coverage — Real-World Incidents](#attack-coverage--real-world-incidents)
 - [Demo Scenarios](#demo-scenarios)
 - [Chainlink Services Used](#chainlink-services-used)
 - [Security Model](#security-model)
@@ -599,11 +600,9 @@ Tenderly's transaction debugging was critical during development:
 
 ---
 
-## Demo Scenarios
+## Attack Coverage — Real-World Incidents
 
-### Real-World Context — 2025 Incidents Recreated
-
-The demo scenarios are modeled after real exploits. The 2025 incidents are particularly relevant — they prove the threat is accelerating:
+The threat is accelerating. These 2025 incidents demonstrate why proactive risk infrastructure is critical:
 
 | Incident | Loss | SentinelCRE Detection |
 |----------|------|----------------------|
@@ -612,7 +611,11 @@ The demo scenarios are modeled after real exploits. The 2025 incidents are parti
 | AIXBT Hack (Mar 2025) | $106K | Time-of-day anomaly + behavioral scoring catches off-hours drain |
 | Anthropic Research (2025) | $1.22/exploit | Sequential probing +35 catches binary-search pattern, Confidential Compute hides thresholds |
 
-The dashboard's Architecture tab recreates all four 2025 incidents with detailed prevention breakdowns showing exactly which layer stops each attack.
+The dashboard's Architecture tab recreates all four 2025 incidents with detailed prevention breakdowns showing exactly which layer stops each attack. Combined with the 7 historical exploits ($2.2B+ — Ronin, Poly Network, Wormhole, Euler, Nomad, Beanstalk, Mango Markets), SentinelCRE demonstrates coverage across **$3.4B+ in real-world losses**.
+
+---
+
+## Demo Scenarios
 
 ### Live Demo Tab — 3 Phases, 14 Scenarios
 
