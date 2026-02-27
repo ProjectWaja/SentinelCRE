@@ -24,7 +24,7 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/) (Feb 2026).
 - [Mock API Server](#mock-api-server)
 - [Agent Simulators](#agent-simulators)
 - [Dashboard](#dashboard)
-- [Attack Coverage — Real-World Incidents](#attack-coverage--real-world-incidents)
+- [Attack Coverage — Real-World Incidents](#attack-coverage-real-world-incidents)
 - [Demo Scenarios](#demo-scenarios)
 - [Chainlink Services Used](#chainlink-services-used)
 - [Security Model](#security-model)
