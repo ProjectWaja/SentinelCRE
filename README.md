@@ -101,13 +101,26 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 
 AI agents are executing real on-chain actions today — DeFi swaps, token mints, contract upgrades. When these agents are compromised, there is no decentralized risk monitoring layer to stop them.
 
-This isn't theoretical:
+This isn't theoretical — **$3.4B+ stolen** across these exploits alone:
 
 | Exploit | Loss | What SentinelCRE Would Have Caught |
 |---------|------|------------------------------------|
-| Paid Network | $180M | Infinite mint — mint cap + Proof of Reserves check |
-| Mango Markets | $100M+ | Flash loan + oracle manipulation — value limit + AI pattern detection |
-| Cover Protocol | Drained | Unauthorized minting — rate limit + cumulative volume tracking |
+| Ronin Bridge (2022) | $625M | Unauthorized transfers — value limit + contract whitelist + AI pattern detection |
+| Poly Network (2021) | $611M | Cross-chain exploit — function blocklist + behavioral anomaly (contract diversity) |
+| Wormhole (2022) | $320M | Unauthorized minting — mint cap + Proof of Reserves check |
+| Euler Finance (2023) | $197M | Flash loan attack — value limit + velocity detection + AI consensus |
+| Nomad Bridge (2022) | $190M | Replay exploit — rate limiting + cumulative volume tracking |
+| Beanstalk (2022) | $182M | Governance manipulation — function blocklist + behavioral scoring |
+| Mango Markets (2022) | $114M | Oracle manipulation — value limit + sequential probing detection |
+
+**2025 — The problem is accelerating:**
+
+| Incident | Loss | What SentinelCRE Would Have Caught |
+|----------|------|------------------------------------|
+| Bybit Hack (Feb 2025) | $1.5B | Largest single crypto theft — value limit + behavioral anomaly (unprecedented withdrawal pattern) + AI consensus |
+| Moonwell Exploit (Feb 2025) | $1.78M | AI-generated oracle bug — target whitelist + value limit + dual-AI recognizes oracle manipulation pattern |
+| AIXBT Hack (Mar 2025) | $106K | Dashboard compromise at 2 AM — time-of-day anomaly +10, behavioral scoring catches off-hours drain pattern |
+| Anthropic Research (2025) | $1.22/exploit | AI agents autonomously exploit 50%+ of historically attacked contracts — sequential probing +35 catches binary-search pattern, Confidential Compute hides thresholds |
 
 **Current solutions are reactive incident response.** Kill switches fire *after* the damage is done. Monitoring dashboards show you the attack *in progress*. SentinelCRE is **proactive risk prevention** — every action is evaluated through three independent defense layers before it touches the chain.
 
