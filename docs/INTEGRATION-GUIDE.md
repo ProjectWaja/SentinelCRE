@@ -346,9 +346,10 @@ cre workflow deploy sentinel-workflow/main.ts \
 
 ```bash
 # Provision API keys via Chainlink Vault DON
-# These are injected as {{ANTHROPIC_API_KEY}} template variables
-# inside the TEE — node operators never see them
-cre secrets set ANTHROPIC_API_KEY <your_key>
+# These are injected as {{TEMPLATE}} variables inside the TEE
+# Node operators never see the decrypted keys
+cre secrets set ANTHROPIC_API_KEY <your_anthropic_key>
+cre secrets set OPENAI_API_KEY <your_openai_key>
 ```
 
 ### Step 5: Integrate Your Agent
@@ -609,11 +610,11 @@ This section is an honest assessment of where SentinelCRE stands today and what 
 
 | Component | Current State | What's Needed for Production |
 |-----------|--------------|------------------------------|
-| **AI evaluation endpoints** | Mock API server with regex-based rules (no real LLM) | Connect to real Anthropic + OpenAI endpoints; both `aiEndpoint1` and `aiEndpoint2` currently point to the same Anthropic URL |
+| **AI evaluation endpoints** | Mock API server with regex-based rules (no real LLM) | Connect to real Anthropic + OpenAI endpoints with live API keys |
 | **Behavioral state persistence** | Stateless — the CRE workflow has no memory between invocations; behavioral context is caller-supplied in each request | Build a persistent behavioral profile store (database or on-chain) that the calling infrastructure maintains per agent |
 | **HTTP trigger authentication** | `authorizedKeys: []` — the CRE trigger currently accepts requests from anyone | Configure `authorizedKeys` in `project.yaml` to restrict which callers can submit proposals |
 | **Agent identity binding** | `agentId` is a caller-supplied `bytes32` with no on-chain proof of identity | Implement on-chain binding between an agent's wallet address and its `bytes32` ID, or use signed proposals |
-| **Heterogeneous AI models** | Both endpoints call Claude (same model, same Anthropic URL) | Use genuinely independent models (e.g., Claude + GPT-4) for meaningful consensus diversity |
+| **Heterogeneous AI models** | Workflow configured for Claude + GPT-4 but currently uses mock API server for demos | Provision real API keys via Vault DON and connect to live Anthropic + OpenAI endpoints |
 | **CRE network deployment** | Tested via CRE CLI simulation; not deployed to live CRE DON | Run `cre workflow deploy` on a live CRE-supported testnet |
 | **Cron health check** | Reads agent count and guardian reachability; does not iterate individual agents | Expand to check per-agent rate limit windows, daily volume approaching caps, and stale challenges |
 

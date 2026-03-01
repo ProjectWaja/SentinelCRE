@@ -257,14 +257,14 @@ function evaluateWithStandardHttp(
     })
     .result()
 
-  // Call Model 2
+  // Call Model 2 (OpenAI GPT-4)
   const response2 = sendRequester
     .sendRequest({
       url: config.aiEndpoint2,
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'gpt-4-turbo',
         max_tokens: 300,
         temperature: 0,
         messages: [{ role: 'user', content: prompt }],
@@ -302,7 +302,8 @@ function evaluateWithConfidentialHttp(
 ): AIVerdict {
   const prompt = buildEvaluationPrompt(proposal, policyContext, behavioralResult)
 
-  const requestBody = JSON.stringify({
+  // Model 1: Anthropic Claude
+  const claudeBody = JSON.stringify({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 300,
     temperature: 0,
@@ -311,12 +312,12 @@ function evaluateWithConfidentialHttp(
 
   // ConfidentialHTTPRequest: secrets listed in vaultDonSecrets, referenced via
   // {{ANTHROPIC_API_KEY}} template in headers. Resolved inside TEE from Vault DON.
-  const confRequest = {
+  const confRequest1 = {
     vaultDonSecrets: [{ key: 'ANTHROPIC_API_KEY', namespace: 'sentinel' }],
     request: {
       url: config.aiEndpoint1,
       method: 'POST',
-      bodyString: requestBody,
+      bodyString: claudeBody,
       multiHeaders: {
         'Content-Type': { values: ['application/json'] },
         Accept: { values: ['application/json'] },
@@ -326,13 +327,30 @@ function evaluateWithConfidentialHttp(
     },
   }
 
-  const response1 = sendRequester.sendRequest(confRequest).result()
-  const response2 = sendRequester
-    .sendRequest({
-      ...confRequest,
-      request: { ...confRequest.request, url: config.aiEndpoint2 },
-    })
-    .result()
+  // Model 2: OpenAI GPT-4
+  const gptBody = JSON.stringify({
+    model: 'gpt-4-turbo',
+    max_tokens: 300,
+    temperature: 0,
+    messages: [{ role: 'user', content: prompt }],
+  })
+
+  const confRequest2 = {
+    vaultDonSecrets: [{ key: 'OPENAI_API_KEY', namespace: 'sentinel' }],
+    request: {
+      url: config.aiEndpoint2,
+      method: 'POST',
+      bodyString: gptBody,
+      multiHeaders: {
+        'Content-Type': { values: ['application/json'] },
+        Accept: { values: ['application/json'] },
+        Authorization: { values: ['Bearer {{OPENAI_API_KEY}}'] },
+      },
+    },
+  }
+
+  const response1 = sendRequester.sendRequest(confRequest1).result()
+  const response2 = sendRequester.sendRequest(confRequest2).result()
 
   return parseConfidentialAIResponses(response1, response2)
 }
@@ -365,7 +383,9 @@ function parseConfidentialAIResponses(response1: any, response2: any): AIVerdict
   if (response2 && response2.statusCode >= 200 && response2.statusCode < 300) {
     try {
       const body2 = JSON.parse(decoder.decode(response2.body))
-      const parsed2 = JSON.parse(body2.content?.[0]?.text ?? '{}')
+      // OpenAI format: choices[0].message.content
+      const rawText2 = body2.choices?.[0]?.message?.content ?? '{}'
+      const parsed2 = JSON.parse(rawText2)
       v2 = {
         verdict: String(parsed2.verdict ?? 'DENIED'),
         confidence: Number(parsed2.confidence ?? 0),
@@ -412,7 +432,9 @@ function parseAIResponses(response1: any, response2: any): AIVerdict {
   if (ok(response2)) {
     try {
       const body2 = JSON.parse(text(response2))
-      const parsed2 = JSON.parse(body2.content?.[0]?.text ?? '{}')
+      // OpenAI format: choices[0].message.content
+      const rawText2 = body2.choices?.[0]?.message?.content ?? '{}'
+      const parsed2 = JSON.parse(rawText2)
       v2 = {
         verdict: String(parsed2.verdict ?? 'DENIED'),
         confidence: Number(parsed2.confidence ?? 0),
