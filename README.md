@@ -5,7 +5,7 @@
 Three-layer risk evaluation pipeline that detects and blocks malicious AI agent actions *before* they execute on-chain — combining on-chain compliance checks, behavioral risk scoring, and multi-AI consensus through Chainlink CRE.
 
 **Primary Track:** Risk & Compliance — on-chain policy enforcement, behavioral anomaly detection, severity-based incident response, Proof of Reserves
-**Also Applying:** CRE & AI (5 CRE capabilities + dual-AI consensus) · Privacy (ConfidentialHTTPClient + TEE) · Tenderly (Virtual TestNet deployment + Simulation API)
+**Also Applying:** CRE & AI (8 CRE primitives, 3 trigger types + dual-AI consensus) · Privacy (ConfidentialHTTPClient + TEE) · Tenderly (Virtual TestNet deployment + Simulation API)
 
 | | |
 |---|---|
@@ -25,7 +25,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 - [The Problem](#the-problem) — why AI agents need decentralized risk monitoring
 - [Architecture](#architecture) — three-layer defense pipeline diagram
 - [Three-Layer Defense](#three-layer-defense) — compliance pre-check, behavioral scoring, multi-AI consensus
-- [Chainlink Services — Deep Integration](#chainlink-services-deep-integration) — 5 CRE capabilities + Data Feeds + Automation
+- [Chainlink Services — Deep Integration](#chainlink-services-deep-integration) — 8 CRE primitives, 3 trigger types + Data Feeds + Automation
 - [Privacy & Confidential Compute](#privacy--confidential-compute) — TEE-backed evaluation via ConfidentialHTTPClient
 - [Attack Coverage](#attack-coverage) — 14 demo scenarios across 3 phases
 - [Smart Contracts](#smart-contracts) — SentinelGuardian, PolicyLib, AgentRegistry + 85 tests
@@ -45,7 +45,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 
 | File | Chainlink Services Used |
 |------|------------------------|
-| [`sentinel-workflow/main.ts`](sentinel-workflow/main.ts) | `HTTPClient`, `ConfidentialHTTPClient`, `EVMClient`, `HTTPCapability`, `CronCapability`, `ConsensusAggregationByFields`, `identical`, `median`, `encodeCallMsg`, `getNetwork`, `LAST_FINALIZED_BLOCK_NUMBER`, `Runner`, `handler` — full CRE workflow with HTTP + Cron triggers, on-chain read/write, dual-AI consensus, and confidential compute |
+| [`sentinel-workflow/main.ts`](sentinel-workflow/main.ts) | `HTTPClient`, `ConfidentialHTTPClient`, `EVMClient` (`callContract`, `writeReport`, `filterLogs`, `headerByNumber`, `logTrigger`), `HTTPCapability`, `CronCapability`, `ConsensusAggregationByFields`, `identical`, `median`, `json`, `bigintToProtoBigInt`, `protoBigIntToBigint`, `encodeCallMsg`, `getNetwork`, `LAST_FINALIZED_BLOCK_NUMBER`, `Runner`, `handler` — full CRE workflow with 3 trigger types (HTTP + Cron + Log), on-chain read/write/query, dual-AI consensus, and confidential compute |
 | [`sentinel-workflow/behavioral.ts`](sentinel-workflow/behavioral.ts) | Pure behavioral engine executed inside CRE workflow context — 7 anomaly dimensions scored during CRE pipeline (no async, no Date.now(), CRE WASM compatible) |
 | [`sentinel-workflow/workflow.yaml`](sentinel-workflow/workflow.yaml) | CRE workflow configuration — local and staging settings, workflow path, config path, secrets path |
 
@@ -232,14 +232,15 @@ For fail-safe design principles and severity classification details, see [`docs/
 
 ## Chainlink Services — Deep Integration
 
-We use **5 CRE capabilities** (including Confidential HTTP) plus Data Feeds and Automation-ready hooks:
+We use **8 CRE primitives** across 3 trigger types plus Data Feeds and Automation-ready hooks:
 
 | Service | How We Use It | Risk & Compliance Value |
 |---------|--------------|------------------------|
 | **CRE HTTPClient** | Calls 2 AI models with `ConsensusAggregationByFields` | DON-level BFT consensus on AI risk verdicts — no single node can approve a malicious action |
 | **CRE ConfidentialHTTPClient** | TEE-backed AI calls — API keys injected via Vault DON `{{ANTHROPIC_API_KEY}}` template, prompts and responses stay inside enclave | Agents cannot see evaluation prompts, behavioral scoring weights, or AI reasoning. Feature-flagged via `enableConfidentialCompute` config |
-| **CRE EVMClient** | Reads agent policies, writes verdicts on-chain | Automated compliance enforcement with immutable audit trail |
-| **CRE CronCapability** | Periodic health checks and anomaly detection | Proactive risk monitoring beyond request-response |
+| **CRE EVMClient** | `callContract()` reads policies, `writeReport()` writes verdicts, `filterLogs()` queries incident history, `headerByNumber()` confirms chain liveness | Automated compliance enforcement with immutable audit trail |
+| **CRE EVMClient LogTrigger** | Event-driven handler reacts to `CircuitBreakerTriggered` and `ActionDenied` events in near-real-time | Immediate threat response — no polling delay, 3rd trigger type |
+| **CRE CronCapability** | Periodic health checks with chain liveness + incident scanning | Proactive risk monitoring beyond request-response |
 | **Data Feeds** | `AggregatorV3Interface` for Proof of Reserves | Real-time reserve verification before mints — cumulative tracking prevents gradual reserve depletion |
 | **Automation** | `finalizeExpiredChallenge()` uses checkUpkeep/performUpkeep | Expired compliance appeal windows auto-finalize without manual intervention |
 
@@ -252,7 +253,7 @@ CRE's `ConsensusAggregationByFields` is the critical enabler. It ensures the dua
 4. No single DON node can override the consensus (BFT aggregation)
 5. All verdicts are written immutably on-chain (audit trail)
 
-For the full CRE services integration reference (HTTPClient, EVMClient, CronCapability, ConsensusAggregationByFields), see [`docs/CRE_INTEGRATION.md`](docs/CRE_INTEGRATION.md).
+For the full CRE services integration reference (HTTPClient, ConfidentialHTTPClient, EVMClient with 5 methods, CronCapability, LogTrigger, ConsensusAggregationByFields), see [`docs/CRE_INTEGRATION.md`](docs/CRE_INTEGRATION.md).
 
 ---
 
@@ -531,7 +532,7 @@ bun run behavioral:reset
 | Layer | Technology |
 |-------|------------|
 | Smart Contracts | Solidity 0.8.24, Foundry, OpenZeppelin v5.5.0 |
-| CRE Workflow | Chainlink CRE SDK v1.0.9 (ConfidentialHTTPClient + HTTPClient + EVMClient), TypeScript, Bun |
+| CRE Workflow | Chainlink CRE SDK v1.0.9 (ConfidentialHTTPClient + HTTPClient + EVMClient with `callContract`/`writeReport`/`filterLogs`/`headerByNumber`/`logTrigger`), TypeScript, Bun |
 | Behavioral Engine | Pure TypeScript, 7 statistical dimensions |
 | Dashboard | Next.js 15, React 19, Tailwind CSS 4, viem |
 | Simulation & Deployment | Tenderly Virtual TestNet (RPC, persistent state), Simulation API (gas profiling, state diffs, call traces), live tx monitoring |
@@ -546,7 +547,7 @@ bun run behavioral:reset
 
 2. **Three-layer defense with no single point of failure** — On-chain compliance checks catch policy violations. Behavioral scoring catches anomalous patterns. Multi-AI consensus catches context-dependent threats. No single layer is sufficient; together they're comprehensive. See [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md).
 
-3. **Deep CRE integration** — 5 CRE capabilities (HTTPClient, ConfidentialHTTPClient, EVMClient, CronCapability, HTTPCapability) + Data Feeds + Automation. Not a wrapper around a single Chainlink service. ConsensusAggregationByFields enforces AI verdict consensus at the DON level. See [`docs/CRE_INTEGRATION.md`](docs/CRE_INTEGRATION.md).
+3. **Deep CRE integration** — 8 CRE primitives across 3 trigger types (HTTP, Cron, Log) + Data Feeds + Automation. Not a wrapper around a single Chainlink service. EVMClient used for reads (`callContract`), writes (`writeReport`), event queries (`filterLogs`), chain liveness (`headerByNumber`), and event-driven triggers (`logTrigger`). ConsensusAggregationByFields enforces AI verdict consensus at the DON level. See [`docs/CRE_INTEGRATION.md`](docs/CRE_INTEGRATION.md).
 
 4. **Confidential behavioral and AI evaluation** — Layer 1 policy params are on-chain (transparent compliance), but Layer 2 behavioral scoring weights and Layer 3 AI evaluation prompts execute inside a TEE via `ConfidentialHTTPClient`. API keys are injected from Vault DON secrets using `{{TEMPLATE}}` syntax. An agent can read its value limit from the contract, but it cannot see the 7 behavioral dimensions, the anomaly threshold, its own frozen baseline, or the AI evaluation criteria — so knowing Layer 1 limits doesn't help bypass Layers 2 and 3. See [`docs/CONFIDENTIAL-COMPUTE.md`](docs/CONFIDENTIAL-COMPUTE.md).
 

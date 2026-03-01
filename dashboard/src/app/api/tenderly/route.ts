@@ -17,6 +17,21 @@ const FN_SIGS: Record<string, string> = {
   '0xf37f114f': 'updatePolicy',
 }
 
+// Guardian event topic signatures for eth_getLogs
+const EVENT_TOPICS: Record<string, string> = {
+  '0xdc56bf1a0ac0d4d39cbc7481d9482066026b31f6d2758db520e6adaf9f21efeb': 'ActionApproved',
+  '0x08c4d42f62d7bd9e328635cfae0fc2d21b2174ad125a47cf801ee9cf4218cda3': 'ActionDenied',
+  '0xfb9546080760f1a70c0be43f384eed586a98ce40363c7d022cc787c673ab05a8': 'CircuitBreakerTriggered',
+  '0x504a565d281fa608bb08262d900bbfdea50f90ea4f3174535a82a2da2ffdf403': 'AgentFrozen',
+}
+
+interface EventInfo {
+  name: string
+  agentId: string
+  blockNumber: number
+  txHash: string
+}
+
 async function rpcCall(method: string, params: unknown[]) {
   const res = await fetch(RPC_URL!, {
     method: 'POST',
@@ -91,12 +106,44 @@ export async function GET() {
       block: tx.blockNumber,
     }))
 
+    // Query Guardian on-chain events via eth_getLogs
+    const events: EventInfo[] = []
+    try {
+      const fromBlock = '0x' + Math.max(0, latest - scanDepth).toString(16)
+      const toBlock = '0x' + latest.toString(16)
+      const logs = await rpcCall('eth_getLogs', [{
+        address: GUARDIAN ? '0x' + GUARDIAN.replace('0x', '') : undefined,
+        fromBlock,
+        toBlock,
+        topics: [Object.keys(EVENT_TOPICS)],
+      }])
+
+      if (Array.isArray(logs)) {
+        for (const log of logs) {
+          const topic0 = (log.topics?.[0] ?? '').toLowerCase()
+          const eventName = EVENT_TOPICS[topic0]
+          if (!eventName) continue
+          events.push({
+            name: eventName,
+            agentId: log.topics?.[1]
+              ? log.topics[1].slice(0, 18) + '...'
+              : '0x00',
+            blockNumber: parseInt(log.blockNumber, 16),
+            txHash: log.transactionHash ?? '',
+          })
+        }
+      }
+    } catch {
+      // eth_getLogs may not be supported on all RPCs — graceful fallback
+    }
+
     return NextResponse.json({
       guardianTxCount,
       registryTxCount,
       recentTxs,
       latestBlock: latest,
       scannedBlocks: scanDepth,
+      events: events.slice(0, 10),
     })
   } catch (err) {
     return NextResponse.json(
