@@ -35,10 +35,14 @@ struct CheckParams {
 /// @title PolicyLib — Pure policy validation logic for SentinelGuardian
 library PolicyLib {
     /// @notice Check if transaction value is within the agent's limit
+    /// @dev 0 = no per-tx value limit configured (consistent with other check functions)
     function checkValue(
         AgentPolicy storage policy,
         uint256 value
     ) internal view returns (bool, string memory) {
+        if (policy.maxTransactionValue == 0) {
+            return (true, ""); // No per-tx value limit configured
+        }
         if (value > policy.maxTransactionValue) {
             return (false, "Value exceeds max transaction limit");
         }

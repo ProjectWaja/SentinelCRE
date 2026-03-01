@@ -48,7 +48,7 @@ contract IntegrationTest is Test {
         bytes4[] memory blocked = new bytes4[](0);
 
         return AgentPolicy({
-            maxTransactionValue: 0, // No ETH transfers
+            maxTransactionValue: 0, // No per-tx value limit (minting agent)
             maxDailyVolume: 0,
             maxMintAmount: 1_000_000e18, // 1M token mint cap
             rateLimit: 5,

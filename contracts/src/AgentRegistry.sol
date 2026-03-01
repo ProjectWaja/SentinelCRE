@@ -21,10 +21,12 @@ contract AgentRegistry is Ownable {
 
     constructor() Ownable(msg.sender) {}
 
-    /// @notice Register a new AI agent
+    /// @notice Register a new AI agent — restricted to contract owner
     function registerAgent(bytes32 agentId, string calldata name, string calldata description)
         external
+        onlyOwner
     {
+        require(agentId != bytes32(0), "Invalid agent ID");
         require(!_agents[agentId].exists, "Agent already registered");
 
         _agents[agentId] = AgentMetadata({

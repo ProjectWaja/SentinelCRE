@@ -254,6 +254,24 @@ contract ChallengeTest is Test {
         guardian.processVerdict(data2);
     }
 
+    function testResolveChallengeRevokedAgentReverts() public {
+        // Create denial → appeal → admin revokes → resolve should fail
+        bytes memory data = _verdict(agentId, false, "Minor issue", approvedDex, normalSig, 0.1 ether, 0);
+        vm.prank(workflow);
+        guardian.processVerdict(data);
+
+        vm.prank(challenger);
+        guardian.challengeVerdict(agentId);
+
+        // Admin revokes the agent while challenge is in progress
+        guardian.revokeAgent(agentId);
+
+        // Workflow tries to resolve — should revert because agent is revoked
+        vm.prank(workflow);
+        vm.expectRevert("Cannot unfreeze revoked agent");
+        guardian.resolveChallenge(agentId, true, "Re-evaluation passed");
+    }
+
     function testGetChallengeViewFunction() public {
         bytes memory data = _verdict(agentId, false, "Test reason", approvedDex, normalSig, 0.1 ether, 0);
         vm.prank(workflow);
