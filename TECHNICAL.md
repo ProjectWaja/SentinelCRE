@@ -395,8 +395,12 @@ The CRE workflow is the off-chain orchestration layer that connects AI evaluatio
 | Capability | Purpose |
 |------------|---------|
 | **HTTPClient** | Calls 2 AI models (Claude + GPT-4) for independent evaluation |
-| **EVMClient** | Reads agent policies from SentinelGuardian, writes verdicts on-chain |
-| **CronCapability** | Periodic health checks, auto-freeze anomalous agents |
+| **EVMClient.callContract** | Reads agent policies from SentinelGuardian |
+| **EVMClient.writeReport** | Writes verdicts on-chain to SentinelGuardian |
+| **EVMClient.logTrigger** | Event-driven trigger — fires on CircuitBreakerTriggered and ActionDenied events |
+| **EVMClient.filterLogs** | Queries recent denial events for incident monitoring and threat context |
+| **EVMClient.headerByNumber** | Fetches block header for chain liveness confirmation |
+| **CronCapability** | Periodic health checks with chain liveness + incident scanning |
 | **ConsensusAggregationByFields** | Ensures DON nodes agree on AI verdict (BFT consensus) |
 | **Confidential HTTP** | Hides API keys, behavioral scoring weights, and AI evaluation prompts from DON nodes and agents |
 
@@ -405,7 +409,8 @@ The CRE workflow is the off-chain orchestration layer that connects AI evaluatio
 | Trigger | Handler | Description |
 |---------|---------|-------------|
 | HTTP | `onActionProposal` | Receives an `ActionProposal` from an AI agent, evaluates it, writes verdict |
-| Cron | `onHealthCheck` | Periodic health check (extensible for anomaly detection) |
+| Cron | `onHealthCheck` | Periodic health check with chain liveness and incident scanning |
+| Log | `onChainEvent` | Reacts to Guardian on-chain events (CircuitBreakerTriggered, ActionDenied) in near-real-time |
 
 ### HTTP Handler Flow (`onActionProposal`)
 
@@ -512,8 +517,8 @@ Interactive dashboard for monitoring, demoing, and simulating SentinelCRE.
 
 | Tab | Subtitle | Description |
 |-----|----------|-------------|
-| **Architecture** | 3-layer defense | Problem statement with real DeFi exploits ($3.4B stolen in 2025, $625M Ronin, $320M Wormhole), three-layer defense diagram, 6-step verdict pipeline, 7 Chainlink integration cards with LIVE/READY status, expandable smart contracts with Solidity snippets, 7 behavioral dimension breakdown with weight bars, tech stack grid |
-| **Live Demo** | 15 attack scenarios | 3-phase narrative demo (Train → Test → Prove) with 14 scenario buttons (3 safe + 11 attacks), 8-step CRE pipeline animation, dual-AI verdict display (Claude + GPT-4), 7-dimension behavioral risk breakdown, "Run All Attacks" master button |
+| **Architecture** | 3-layer defense | Problem statement with real DeFi exploits ($3.4B stolen in 2025, $625M Ronin, $320M Wormhole), three-layer defense diagram, 8-step verdict pipeline, 7 Chainlink integration cards with LIVE/READY status, expandable smart contracts with Solidity snippets, 7 behavioral dimension breakdown with weight bars, tech stack grid |
+| **Live Demo** | 14 scenarios | 3-phase narrative demo (Train → Test → Prove) with 14 scenario buttons (3 safe + 11 attacks), 8-step CRE pipeline animation, dual-AI verdict display (Claude + GPT-4), 7-dimension behavioral risk breakdown, "Run All Attacks" master button |
 | **Guardian** | Agent monitoring | Wallet info bar (deployer + contract addresses), session performance metrics (detection rate, false positive rate, avg latency, $ prevented), 6-stat session bar, agent profile cards with behavioral score sparklines, threat timeline with phase dividers, defense analytics charts (donut, severity bars, risk histogram, defense layer stacked bar), filterable incident detail log |
 | **Simulator** | Security console | Enterprise Security Console with 3 company presets (Coinbase: 6 agents, Aave: 4 agents, Lido: 4 agents) + custom mode. Agent fleet grid, editable policy parameters (value limits, mint caps, rate limiting, daily volume, PoR), cumulative behavioral score meter (CSS gradient gauge), action queue per agent, lockout banner at score 70+, summary stats (attacks blocked, safe ops approved, value protected) |
 
@@ -667,10 +672,10 @@ Enterprise attacks are role-specific: treasury redirect, cold wallet drain, owne
 
 | Service | Usage | Status |
 |---------|-------|--------|
-| **CRE Workflow** | Orchestration backbone — HTTP trigger receives proposals, Cron trigger for health checks | Real |
+| **CRE Workflow** | Orchestration backbone — 3 trigger types (HTTP, Cron, Log) | Real |
 | **CRE HTTPClient** | Calls 2 AI models with `ConsensusAggregationByFields` for identical verdict consensus | Real |
-| **CRE EVMClient** | Reads agent policies, writes verdicts to SentinelGuardian contract on-chain | Real |
-| **CRE CronCapability** | Periodic health checks — auto-freeze anomalous agents | Real |
+| **CRE EVMClient** | `callContract` (read policies), `writeReport` (write verdicts), `filterLogs` (query events), `headerByNumber` (chain liveness), `logTrigger` (event-driven) | Real |
+| **CRE CronCapability** | Periodic health checks with chain liveness + incident scanning | Real |
 | **Data Feeds** | `AggregatorV3Interface` for Proof of Reserves — verifies reserve backing before mints | Real |
 | **Automation** | `finalizeExpiredChallenge()` follows checkUpkeep/performUpkeep pattern — ready to register | Interface ready |
 | **Confidential HTTP** | Hides API keys, behavioral scoring weights, and AI evaluation prompts from DON nodes | Real (SDK alpha) |
@@ -849,7 +854,7 @@ SentinelCRE/
 │   │   └── Deploy.s.sol              # Deployment script
 │   └── foundry.toml                  # Solidity 0.8.24, optimizer 200 runs
 ├── sentinel-workflow/
-│   ├── main.ts                       # CRE workflow (HTTP + Cron triggers)
+│   ├── main.ts                       # CRE workflow (HTTP + Cron + Log triggers)
 │   └── behavioral.ts                 # 7-dimension behavioral anomaly engine
 ├── api-server/
 │   └── server.ts                     # Mock AI evaluation server (port 3002)

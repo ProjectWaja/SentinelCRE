@@ -63,14 +63,16 @@ graph LR
     A --> E{Function Pattern}
     A --> F{Time-of-Day}
     A --> G{Sequential Probing}
-    
+    A --> K{Cumulative Drift}
+
     B --> H[Anomaly Score]
     C --> H
     D --> H
     E --> H
     F --> H
     G --> H
-    
+    K --> H
+
     H -->|Score >= 50| I[FLAGGED]
     H -->|Score < 50| J[PASS]
 ```
@@ -83,6 +85,7 @@ graph LR
 | Function Pattern | Unusual function signature for this agent | +30 |
 | Time-of-Day | Activity outside agent's normal hours | +10 |
 | Sequential Probing | 3+ monotonically increasing values (binary search detection) | +35 |
+| Cumulative Drift | Rolling average drifted > 3σ from frozen origin baseline | +20 |
 
 **Key insight**: A threshold-only system can be binary-searched. Behavioral analysis detects the search pattern itself within 3-4 probes. The probing detection dimension (+35) is the highest-weighted signal because it directly counters the primary attack vector against invisible thresholds.
 
@@ -335,7 +338,7 @@ sequenceDiagram
 | Orchestration | Chainlink CRE (TypeScript SDK) | Decentralized execution with BFT consensus |
 | Privacy | Confidential HTTP + Vault DON | TEE-based confidential computation |
 | Smart Contract | Solidity 0.8.24 (Foundry) | Policy enforcement + circuit breaker |
-| AI Models | Claude + secondary model | Independent multi-model consensus |
+| AI Models | Claude + GPT-4 | Independent multi-model consensus |
 | Chain | Ethereum Sepolia | Testnet for hackathon demo |
 | Testing | CRE CLI simulation + Foundry | End-to-end workflow + contract testing |
 

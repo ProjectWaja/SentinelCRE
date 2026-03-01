@@ -195,7 +195,7 @@ Full Vault DON integration with DKG threshold encryption for all secrets, custom
 | Feature | CRE SDK v1.0.9 (Current) | SentinelCRE Status | General Access (Later 2026) |
 |---------|----------------------|-------------------|----------------------------|
 | Confidential HTTP | ✅ Live | ✅ Implemented | ✅ Yes |
-| Secret template injection | ✅ Live | ✅ Implemented (`{{ANTHROPIC_API_KEY}}`) | ✅ Yes |
+| Secret template injection | ✅ Live | ✅ Implemented (`{{ANTHROPIC_API_KEY}}`, `{{OPENAI_API_KEY}}`) | ✅ Yes |
 | Simulator support | ✅ Live (v1.0.9+) | ✅ Ready to test | ✅ Yes |
 | TEE execution markers | ✅ Live | ✅ attestationHash in verdict | ✅ Yes |
 | Attestation proofs | ✅ Expected | ⏳ Stub verification | ✅ Yes |

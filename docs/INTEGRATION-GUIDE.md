@@ -598,7 +598,7 @@ This section is an honest assessment of where SentinelCRE stands today and what 
 | SentinelGuardian.sol | Deployed, tested | 45 tests, deployed on Tenderly Sepolia fork |
 | AgentRegistry.sol | Deployed, tested | 8 tests, deployed on Tenderly Sepolia fork |
 | PolicyLib.sol (7 on-chain checks) | Complete | 85 tests across 5 suites, 0 Slither findings |
-| CRE workflow (WASM bundle) | Complete | Uses 9 CRE SDK primitives, compiles to WASM |
+| CRE workflow (WASM bundle) | Complete | Uses 8 CRE primitives across 3 trigger types, compiles to WASM |
 | Behavioral engine (7 dimensions) | Complete | Pure functions, deterministic, runs inside CRE |
 | EVMClient reads (policy, agent status) | Working | Reads from deployed contracts via CRE SDK |
 | EVMClient writes (processVerdict) | Working | Writes verdicts on-chain via CRE SDK |
