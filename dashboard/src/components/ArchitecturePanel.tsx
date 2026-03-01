@@ -428,7 +428,7 @@ const TECH_BADGES = ['Solidity 0.8.24', 'Foundry', 'CRE SDK (TypeScript)', 'Bun'
 
 const TECH_STATS = [
   { label: '85 tests', sublabel: 'Forge', color: 'text-green-400' },
-  { label: '18 scenarios', sublabel: 'Demo', color: 'text-cyan-400' },
+  { label: '14 scenarios', sublabel: 'Demo', color: 'text-cyan-400' },
   { label: '2 AI models', sublabel: 'Claude + GPT-4', color: 'text-purple-400' },
   { label: '7 dimensions', sublabel: 'Behavioral', color: 'text-orange-400' },
 ]
@@ -546,7 +546,7 @@ function Section({
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-base font-bold uppercase tracking-widest text-gray-500 mb-4">
+    <h2 className="text-lg font-bold uppercase tracking-widest text-gray-400 mb-4">
       {children}
     </h2>
   )
@@ -640,19 +640,19 @@ export default function ArchitecturePanel() {
               >
                 <button
                   onClick={() => toggleExploit(`incident-${e.name}`)}
-                  className="w-full flex items-center justify-between p-4 text-left cursor-pointer"
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`${e.textColor} text-2xl font-black font-mono shrink-0`}>
+                  <div className="flex items-center gap-5 min-w-0">
+                    <div className={`${e.textColor} text-3xl font-black font-mono shrink-0`}>
                       {e.amount}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-white font-bold text-lg">{e.name}</div>
-                      <div className="text-gray-400 text-base truncate">{e.method}</div>
+                      <div className="text-white font-bold text-xl">{e.name}</div>
+                      <div className="text-gray-400 text-lg truncate">{e.method}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-gray-500 text-base font-mono">{e.date}</span>
+                    <span className="text-gray-500 text-lg font-mono">{e.date}</span>
                     <ChevronIcon open={open} />
                   </div>
                 </button>
@@ -695,19 +695,19 @@ export default function ArchitecturePanel() {
               >
                 <button
                   onClick={() => toggleExploit(`problem-${e.name}`)}
-                  className="w-full flex items-center justify-between p-4 text-left cursor-pointer"
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`${e.textColor} text-2xl font-black font-mono shrink-0`}>
+                  <div className="flex items-center gap-5 min-w-0">
+                    <div className={`${e.textColor} text-3xl font-black font-mono shrink-0`}>
                       {e.amount}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-white font-bold text-lg">{e.name}</div>
-                      <div className="text-gray-400 text-base truncate">{e.method}</div>
+                      <div className="text-white font-bold text-xl">{e.name}</div>
+                      <div className="text-gray-400 text-lg truncate">{e.method}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-gray-500 text-base font-mono">{e.date}</span>
+                    <span className="text-gray-500 text-lg font-mono">{e.date}</span>
                     <ChevronIcon open={open} />
                   </div>
                 </button>
@@ -1238,7 +1238,7 @@ export default function ArchitecturePanel() {
         {/* 2025 AI Agent Incidents */}
         <div className="mb-3">
           <h4 className="text-xl font-bold text-red-400 mb-3 flex items-center gap-2">
-            <span className="bg-red-500/10 text-red-400 text-xs font-black px-2 py-0.5 rounded-full border border-red-500/30">2025</span>
+            <span className="bg-red-500/10 text-red-400 text-sm font-black px-2.5 py-0.5 rounded-full border border-red-500/30">2025</span>
             AI Agent Incidents Prevented
           </h4>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -1274,7 +1274,7 @@ export default function ArchitecturePanel() {
                           return (
                             <span
                               key={layer}
-                              className={`${style.bg} ${style.text} ${style.border} border text-xs font-bold px-2 py-0.5 rounded-full`}
+                              className={`${style.bg} ${style.text} ${style.border} border text-sm font-bold px-2.5 py-0.5 rounded-full`}
                             >
                               {style.label}
                             </span>
@@ -1323,7 +1323,7 @@ export default function ArchitecturePanel() {
         {/* Historical DeFi Exploits */}
         <div className="mb-3">
           <h4 className="text-xl font-bold text-gray-400 mb-3 flex items-center gap-2">
-            <span className="bg-gray-500/10 text-gray-400 text-xs font-black px-2 py-0.5 rounded-full border border-gray-500/30">2021&ndash;2024</span>
+            <span className="bg-gray-500/10 text-gray-400 text-sm font-black px-2.5 py-0.5 rounded-full border border-gray-500/30">2021&ndash;2024</span>
             Historical DeFi Exploits Prevented
           </h4>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -1359,7 +1359,7 @@ export default function ArchitecturePanel() {
                         return (
                           <span
                             key={layer}
-                            className={`${style.bg} ${style.text} ${style.border} border text-xs font-bold px-2 py-0.5 rounded-full`}
+                            className={`${style.bg} ${style.text} ${style.border} border text-sm font-bold px-2.5 py-0.5 rounded-full`}
                           >
                             {style.label}
                           </span>

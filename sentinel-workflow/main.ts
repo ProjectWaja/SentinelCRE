@@ -141,6 +141,23 @@ const GUARDIAN_ABI = [
   },
 ] as const
 
+const REGISTRY_ABI = [
+  {
+    name: 'getAgentCount',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'isRegistered',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'agentId', type: 'bytes32' }],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+] as const
+
 // =============================================================================
 // AI Evaluation
 // =============================================================================
@@ -617,12 +634,6 @@ const onHealthCheck = (runtime: Runtime<Config>, _payload: CronPayload): string 
   const now = runtime.now()
   runtime.log(`[SentinelCRE] Health check triggered at ${now.toISOString()}`)
 
-  // Read agent states and check for anomalies
-  // In production, this would iterate registered agents and check:
-  //   - Rate limit window violations
-  //   - Daily volume spikes
-  //   - Unusual patterns
-
   const chainSelector = getNetwork({
     chainFamily: 'evm',
     chainSelectorName: config.evmChainSelectorName,
@@ -630,11 +641,63 @@ const onHealthCheck = (runtime: Runtime<Config>, _payload: CronPayload): string 
   })
   const evmClient = new EVMClient(chainSelector)
 
-  runtime.log('[SentinelCRE] Health check complete — all systems operational')
+  // Read total registered agent count from AgentRegistry
+  const countCallData = encodeFunctionData({
+    abi: REGISTRY_ABI,
+    functionName: 'getAgentCount',
+    args: [],
+  })
+
+  const countResult = evmClient
+    .callContract(runtime, {
+      call: encodeCallMsg({
+        from: zeroAddress,
+        to: config.registryContractAddress as Address,
+        data: countCallData,
+      }),
+      blockNumber: LAST_FINALIZED_BLOCK_NUMBER,
+    })
+    .result()
+
+  const agentCount = ok(countResult)
+    ? Number(
+        decodeFunctionResult({
+          abi: REGISTRY_ABI,
+          functionName: 'getAgentCount',
+          data: text(countResult) as `0x${string}`,
+        }),
+      )
+    : 0
+
+  // Verify the SentinelGuardian contract is responsive
+  const guardianCallData = encodeFunctionData({
+    abi: GUARDIAN_ABI,
+    functionName: 'isAgentActive',
+    args: ['0x0000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`],
+  })
+
+  const guardianResult = evmClient
+    .callContract(runtime, {
+      call: encodeCallMsg({
+        from: zeroAddress,
+        to: config.guardianContractAddress as Address,
+        data: guardianCallData,
+      }),
+      blockNumber: LAST_FINALIZED_BLOCK_NUMBER,
+    })
+    .result()
+
+  const guardianReachable = ok(guardianResult)
+
+  runtime.log(
+    `[SentinelCRE] Health check complete — Registry: ${agentCount} agents, Guardian: ${guardianReachable ? 'online' : 'unreachable'}`,
+  )
 
   return JSON.stringify({
-    status: 'healthy',
+    status: guardianReachable ? 'healthy' : 'degraded',
     timestamp: now.toISOString(),
+    registeredAgents: agentCount,
+    guardianReachable,
   })
 }
 

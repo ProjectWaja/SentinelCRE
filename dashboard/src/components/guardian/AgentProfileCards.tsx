@@ -130,8 +130,8 @@ function AgentCard({
     >
       {/* 1. Header */}
       <div className="mb-4">
-        <h3 className="text-2xl font-bold text-white">{profile.name}</h3>
-        <p className={`text-base font-semibold ${profile.colorScheme.primary}`}>
+        <h3 className="text-3xl font-black text-white">{profile.name}</h3>
+        <p className={`text-lg font-semibold ${profile.colorScheme.primary}`}>
           {profile.role}
         </p>
       </div>

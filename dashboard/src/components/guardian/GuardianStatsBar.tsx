@@ -74,10 +74,10 @@ export default function GuardianStatsBar({ sessionVerdicts }: Props) {
           key={i}
           className="bg-gray-900 rounded-xl border border-gray-800 p-4"
         >
-          <p className="text-base font-bold text-gray-500 uppercase tracking-wider mb-2">
+          <p className="text-lg font-bold text-gray-400 uppercase tracking-wider mb-2">
             {s.label}
           </p>
-          <p className={`text-2xl font-black ${s.color} leading-none mb-1`}>
+          <p className={`text-3xl font-black ${s.color} leading-none mb-1`}>
             {s.value}
           </p>
           <p className="text-base text-gray-400">{s.sub}</p>

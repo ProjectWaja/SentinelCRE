@@ -1,7 +1,5 @@
 # SentinelCRE — Challenges & Growing Pains
 
-> Personal reference for the Airtable "What challenges did you run into?" field and post-hackathon reflection.
-
 ---
 
 ## 1. CRE SDK — Bleeding Edge, Minimal Documentation
@@ -111,10 +109,3 @@ Building a full-stack project (Solidity contracts + CRE workflow + behavioral en
 - **Feature flags over conditional compilation** — `enableConfidentialCompute` config flag lets us switch between standard and confidential HTTP without code changes.
 - **Documentation as a feature** — Invested heavily in README, TECHNICAL.md, ARCHITECTURE.md, CRE_INTEGRATION.md, CONFIDENTIAL-COMPUTE.md, SECURITY_MODEL.md, and INTEGRATION-GUIDE.md. This differentiates the submission from projects that are technically strong but poorly explained.
 
----
-
-## Summary for Airtable
-
-> **Short version (for the form):**
->
-> The CRE SDK is bleeding-edge (v1.0.9, released during the hackathon) with minimal documentation — we had to read SDK source code to understand ConfidentialHTTPClient's request format, WASM constraints (.result() pattern, no async/await), and ConsensusAggregationByFields behavior. Next.js 15 + Turbopack had production build bugs that required refactoring every page into server/client component pairs. The behavioral scoring engine required careful math to avoid false positives while detecting sophisticated attacks like sequential probing and cumulative drift. We also discovered a fundamental tension between blockchain transparency (on-chain policy is publicly readable) and our confidential compute goals — which we resolved by designing three independent defense layers where knowing one layer's rules doesn't help bypass the others.
