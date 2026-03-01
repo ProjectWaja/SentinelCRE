@@ -182,23 +182,38 @@ if (config.enableConfidentialCompute) {
 
 ### Step 5: Confidential HTTP Secret Injection
 
-Inside `evaluateWithConfidentialHttp()`, API keys use Vault DON template syntax:
+Inside `evaluateWithConfidentialHttp()`, each AI model uses its own Vault DON secret:
 
 ```typescript
-const confRequest = {
+// Model 1: Claude — Anthropic API key
+const confRequest1 = {
   vaultDonSecrets: [{ key: 'ANTHROPIC_API_KEY', namespace: 'sentinel' }],
   request: {
     url: config.aiEndpoint1,
     method: 'POST',
-    bodyString: requestBody,
+    bodyString: claudeBody,
     multiHeaders: {
       'x-api-key': { values: ['{{ANTHROPIC_API_KEY}}'] },
+      'anthropic-version': { values: ['2023-06-01'] },
+    },
+  },
+}
+
+// Model 2: GPT-4 — OpenAI API key
+const confRequest2 = {
+  vaultDonSecrets: [{ key: 'OPENAI_API_KEY', namespace: 'sentinel' }],
+  request: {
+    url: config.aiEndpoint2,
+    method: 'POST',
+    bodyString: gptBody,
+    multiHeaders: {
+      Authorization: { values: ['Bearer {{OPENAI_API_KEY}}'] },
     },
   },
 }
 ```
 
-`{{ANTHROPIC_API_KEY}}` is resolved inside the TEE from Vault DON. Node operators never see the decrypted key, the evaluation prompt, or the AI model's response.
+`{{ANTHROPIC_API_KEY}}` and `{{OPENAI_API_KEY}}` are resolved inside the TEE from Vault DON. Node operators never see the decrypted keys, the evaluation prompts, or the AI models' responses. Using two independent model providers ensures genuine consensus diversity.
 
 ### Step 6: ABI-Encode Verdict Report
 

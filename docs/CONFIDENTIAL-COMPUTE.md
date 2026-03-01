@@ -96,12 +96,13 @@ import { ConfidentialHTTPClient } from "@chainlink/cre-sdk";
 // Only the parsed AIVerdict exits the TEE after consensus aggregation
 const confClient = new ConfidentialHTTPClient();
 
-const confRequest = {
+// Model 1: Claude via Anthropic API
+const confRequest1 = {
   vaultDonSecrets: [{ key: 'ANTHROPIC_API_KEY', namespace: 'sentinel' }],
   request: {
     url: config.aiEndpoint1,
     method: 'POST',
-    bodyString: requestBody,  // Contains evaluation prompt — hidden inside TEE
+    bodyString: claudeBody,  // Contains evaluation prompt — hidden inside TEE
     multiHeaders: {
       'Content-Type': { values: ['application/json'] },
       'x-api-key': { values: ['{{ANTHROPIC_API_KEY}}'] },  // Resolved from Vault DON
@@ -110,7 +111,22 @@ const confRequest = {
   },
 };
 
-const response1 = sendRequester.sendRequest(confRequest).result();
+// Model 2: GPT-4 via OpenAI API — independent model for consensus diversity
+const confRequest2 = {
+  vaultDonSecrets: [{ key: 'OPENAI_API_KEY', namespace: 'sentinel' }],
+  request: {
+    url: config.aiEndpoint2,
+    method: 'POST',
+    bodyString: gptBody,
+    multiHeaders: {
+      'Content-Type': { values: ['application/json'] },
+      Authorization: { values: ['Bearer {{OPENAI_API_KEY}}'] },
+    },
+  },
+};
+
+const response1 = sendRequester.sendRequest(confRequest1).result();
+const response2 = sendRequester.sendRequest(confRequest2).result();
 ```
 
 This is now implemented in `sentinel-workflow/main.ts` behind the `enableConfidentialCompute` feature flag.
