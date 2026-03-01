@@ -407,7 +407,7 @@ export default function ScenarioDemoPanel({
                             verdict.model1.verdict === 'APPROVED' ? 'bg-green-400/5' : 'bg-red-400/5'
                           }`}>
                             <div className="flex items-center gap-3 mb-1">
-                              <span className="text-base text-gray-400 font-semibold">Model 1 (Claude)</span>
+                              <span className="text-lg text-gray-400 font-semibold">Model 1 (Claude)</span>
                               <span className={`text-base font-black ${verdict.model1.verdict === 'APPROVED' ? 'text-green-400' : 'text-red-400'}`}>
                                 {verdict.model1.verdict}
                               </span>
@@ -419,7 +419,7 @@ export default function ScenarioDemoPanel({
                             verdict.model2.verdict === 'APPROVED' ? 'bg-green-400/5' : 'bg-red-400/5'
                           }`}>
                             <div className="flex items-center gap-3 mb-1">
-                              <span className="text-base text-gray-400 font-semibold">Model 2 (GPT-4)</span>
+                              <span className="text-lg text-gray-400 font-semibold">Model 2 (GPT-4)</span>
                               <span className={`text-base font-black ${verdict.model2.verdict === 'APPROVED' ? 'text-green-400' : 'text-red-400'}`}>
                                 {verdict.model2.verdict}
                               </span>
@@ -434,7 +434,7 @@ export default function ScenarioDemoPanel({
                           <div className="mt-3 pt-3 border-t border-gray-700/50">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-3">
-                                <span className="text-base font-black text-orange-400 uppercase tracking-widest">
+                                <span className="text-lg font-black text-orange-400 uppercase tracking-widest">
                                   Behavioral Risk
                                 </span>
                                 <span className={`text-base px-3 py-1 rounded-full font-bold ${
@@ -457,8 +457,8 @@ export default function ScenarioDemoPanel({
                               <div className="space-y-1.5">
                                 {verdict.anomalyDimensions.map((dim, idx) => (
                                   <div key={idx} className="flex items-center gap-3">
-                                    <div className="w-28 shrink-0">
-                                      <span className={`text-base font-semibold ${dim.fired ? 'text-orange-400' : 'text-gray-600'}`}>
+                                    <div className="w-32 shrink-0">
+                                      <span className={`text-lg font-semibold ${dim.fired ? 'text-orange-400' : 'text-gray-600'}`}>
                                         {dim.name}
                                       </span>
                                     </div>
@@ -644,7 +644,7 @@ export default function ScenarioDemoPanel({
                             verdict.model1.verdict === 'APPROVED' ? 'bg-green-400/5' : 'bg-red-400/5'
                           }`}>
                             <div className="flex items-center gap-3 mb-1">
-                              <span className="text-base text-gray-400 font-semibold">Model 1 (Claude)</span>
+                              <span className="text-lg text-gray-400 font-semibold">Model 1 (Claude)</span>
                               <span className={`text-base font-black ${verdict.model1.verdict === 'APPROVED' ? 'text-green-400' : 'text-red-400'}`}>
                                 {verdict.model1.verdict}
                               </span>
@@ -656,7 +656,7 @@ export default function ScenarioDemoPanel({
                             verdict.model2.verdict === 'APPROVED' ? 'bg-green-400/5' : 'bg-red-400/5'
                           }`}>
                             <div className="flex items-center gap-3 mb-1">
-                              <span className="text-base text-gray-400 font-semibold">Model 2 (GPT-4)</span>
+                              <span className="text-lg text-gray-400 font-semibold">Model 2 (GPT-4)</span>
                               <span className={`text-base font-black ${verdict.model2.verdict === 'APPROVED' ? 'text-green-400' : 'text-red-400'}`}>
                                 {verdict.model2.verdict}
                               </span>
@@ -670,7 +670,7 @@ export default function ScenarioDemoPanel({
                           <div className="mt-3 pt-3 border-t border-gray-700/50">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-3">
-                                <span className="text-base font-black text-orange-400 uppercase tracking-widest">
+                                <span className="text-lg font-black text-orange-400 uppercase tracking-widest">
                                   Behavioral Risk
                                 </span>
                                 <span className={`text-base px-3 py-1 rounded-full font-bold ${
@@ -693,8 +693,8 @@ export default function ScenarioDemoPanel({
                               <div className="space-y-1.5">
                                 {verdict.anomalyDimensions.map((dim, didx) => (
                                   <div key={didx} className="flex items-center gap-3">
-                                    <div className="w-28 shrink-0">
-                                      <span className={`text-base font-semibold ${dim.fired ? 'text-orange-400' : 'text-gray-600'}`}>
+                                    <div className="w-32 shrink-0">
+                                      <span className={`text-lg font-semibold ${dim.fired ? 'text-orange-400' : 'text-gray-600'}`}>
                                         {dim.name}
                                       </span>
                                     </div>

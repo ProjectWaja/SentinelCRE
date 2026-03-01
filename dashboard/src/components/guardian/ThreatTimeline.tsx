@@ -45,7 +45,7 @@ function PhaseDivider({ label }: PhaseDividerProps) {
     <div className="relative flex items-center py-4">
       <div className="absolute left-[5px] w-3 h-3 rounded-full bg-gray-600 border-2 border-gray-500 z-10" />
       <div className="ml-10 flex items-center gap-3 w-full">
-        <span className="text-base font-black uppercase tracking-[0.2em] text-gray-500 whitespace-nowrap">
+        <span className="text-lg font-black uppercase tracking-[0.2em] text-gray-500 whitespace-nowrap">
           {label}
         </span>
         <div className="flex-1 h-px bg-gray-700" />
@@ -164,7 +164,7 @@ export default function ThreatTimeline({
                     >
                       {/* Title row */}
                       <div className="flex items-start justify-between gap-3 mb-2">
-                        <p className="text-base font-bold text-white leading-tight">
+                        <p className="text-lg font-bold text-white leading-tight">
                           {title}
                         </p>
                         <span className="text-base text-gray-500 whitespace-nowrap font-mono">

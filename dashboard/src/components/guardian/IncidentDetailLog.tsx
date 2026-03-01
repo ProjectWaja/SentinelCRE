@@ -43,7 +43,7 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
   return (
     <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-black text-white uppercase tracking-widest">
+        <h2 className="text-2xl font-black text-white uppercase tracking-widest">
           Incident Log
         </h2>
         <span className="text-base font-bold text-red-400 bg-red-400/10 px-3 py-1 rounded-full border border-red-400/30">
@@ -108,7 +108,7 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
                     }`}>
                       {v.severity}
                     </span>
-                    <span className="text-base font-bold text-white truncate">
+                    <span className="text-lg font-bold text-white truncate">
                       {scenario?.title.split(': ')[1] ?? v.proposal?.description?.slice(0, 40) ?? 'Unknown'}
                     </span>
                     <span className="text-base text-gray-500">{agentName}</span>

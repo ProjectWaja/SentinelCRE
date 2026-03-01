@@ -209,7 +209,7 @@ export default function ChainlinkActivityPanel({
           : 'border-gray-800'
     }`}>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xl font-black text-white uppercase tracking-widest">
+        <h2 className="text-2xl font-black text-white uppercase tracking-widest">
           CRE Pipeline
         </h2>
         {isPending && (
@@ -299,7 +299,7 @@ export default function ChainlinkActivityPanel({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-base font-bold transition-colors duration-300 ${
+                      className={`text-lg font-bold transition-colors duration-300 ${
                         isBlocked
                           ? 'text-red-400'
                           : isActive
@@ -314,18 +314,18 @@ export default function ChainlinkActivityPanel({
                       {step.label}
                     </span>
                     {isBlocked && (
-                      <span className="text-xs font-black text-red-400 bg-red-500/20 px-2 py-0.5 rounded-full border border-red-500/40 animate-pulse uppercase tracking-widest">
+                      <span className="text-sm font-black text-red-400 bg-red-500/20 px-2.5 py-0.5 rounded-full border border-red-500/40 animate-pulse uppercase tracking-widest">
                         Blocked
                       </span>
                     )}
                     {isSkipped && (
-                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      <span className="text-sm font-bold text-gray-700 uppercase tracking-wider">
                         Skipped
                       </span>
                     )}
                   </div>
                   <span
-                    className={`font-mono text-base transition-colors duration-300 ${
+                    className={`font-mono text-lg transition-colors duration-300 ${
                       isBlocked
                         ? 'text-red-400/60'
                         : isActive

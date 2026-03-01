@@ -61,27 +61,27 @@ function LayerBadge({
 }) {
   if (!info.checked) {
     return (
-      <span className="text-sm px-2 py-0.5 rounded text-yellow-400/80 bg-yellow-500/5 border border-dashed border-yellow-500/20 line-through">
+      <span className="text-base px-2 py-0.5 rounded text-yellow-400/80 bg-yellow-500/5 border border-dashed border-yellow-500/20 line-through">
         {label}
       </span>
     )
   }
   if (info.caught) {
     return (
-      <span className="text-sm px-2 py-0.5 rounded text-red-400 bg-red-500/10 border border-red-500/20 font-bold">
+      <span className="text-base px-2 py-0.5 rounded text-red-400 bg-red-500/10 border border-red-500/20 font-bold">
         {label}
       </span>
     )
   }
   return (
-    <span className="text-sm px-2 py-0.5 rounded text-green-400/60 bg-green-500/5 border border-green-500/10">
+    <span className="text-base px-2 py-0.5 rounded text-green-400/60 bg-green-500/5 border border-green-500/10">
       {label}
     </span>
   )
 }
 
 function LayerPipeline({ info }: { info: LayerCatchInfo }) {
-  const arrow = <span className="text-gray-600 text-sm mx-0.5">&rsaquo;</span>
+  const arrow = <span className="text-gray-600 text-base mx-0.5">&rsaquo;</span>
 
   return (
     <div className="flex items-center gap-0.5 mt-1.5">
@@ -91,7 +91,7 @@ function LayerPipeline({ info }: { info: LayerCatchInfo }) {
       {arrow}
       <LayerBadge label="L3" info={info.layer3} />
       {info.caughtBy !== 'none' && (
-        <span className="text-sm text-gray-400 ml-1.5">
+        <span className="text-base text-gray-400 ml-1.5">
           {!info.layer1.checked && info.caughtBy === 'layer2'
             ? 'Policy bypassed — behavioral caught'
             : !info.layer1.checked && !info.layer2.caught && info.caughtBy === 'layer3'

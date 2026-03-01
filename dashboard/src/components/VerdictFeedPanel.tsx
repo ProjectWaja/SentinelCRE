@@ -48,7 +48,7 @@ export default function VerdictFeedPanel({
   return (
     <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-xl font-black text-white uppercase tracking-widest">Verdict Feed</h2>
+        <h2 className="text-2xl font-black text-white uppercase tracking-widest">Verdict Feed</h2>
         <div className="flex items-center gap-3">
           <span className="text-base text-gray-500 font-semibold">
             {verdicts.length} verdicts
@@ -143,7 +143,7 @@ export default function VerdictFeedPanel({
                     </div>
                     <div className="ml-4 text-right shrink-0">
                       <span
-                        className={`text-xl font-black ${
+                        className={`text-2xl font-black ${
                           isDenied ? 'text-red-400' : 'text-green-400'
                         }`}
                       >

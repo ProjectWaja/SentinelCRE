@@ -86,10 +86,10 @@ export default function HomeClient() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="flex items-center gap-4 mb-1">
-              <h1 className="text-4xl font-black text-white">
+              <h1 className="text-5xl font-black text-white">
                 SentinelCRE
               </h1>
-              <span className="text-base font-bold text-blue-400 bg-blue-400/10 px-4 py-1.5 rounded-full border border-blue-400/30">
+              <span className="text-lg font-bold text-blue-400 bg-blue-400/10 px-4 py-1.5 rounded-full border border-blue-400/30">
                 Built on Chainlink CRE
               </span>
             </div>
