@@ -249,7 +249,7 @@ We use **8 CRE primitives** across 3 trigger types plus Data Feeds and Automatio
 CRE's `ConsensusAggregationByFields` is the critical enabler. It ensures the dual-AI consensus isn't just application logic — it's enforced at the DON level. Combined with `ConfidentialHTTPClient` hiding the evaluation prompts inside a TEE, this creates a risk evaluation pipeline where:
 1. Agents can't see behavioral scoring weights or AI evaluation criteria (`ConfidentialHTTPClient` keeps Layer 2/3 logic inside the enclave)
 2. Agents can't game the AI evaluators (prompts never leave the TEE)
-3. API keys are injected via Vault DON secret templates (`{{ANTHROPIC_API_KEY}}`), never exposed to node operators
+3. API keys are injected via Vault DON secret templates (`{{ANTHROPIC_API_KEY}}`, `{{OPENAI_API_KEY}}`), never exposed to node operators
 4. No single DON node can override the consensus (BFT aggregation)
 5. All verdicts are written immutably on-chain (audit trail)
 
@@ -281,8 +281,8 @@ SentinelCRE's Layer 3 (Multi-AI Consensus) executes inside a **TEE (Trusted Exec
 │                                                                                    │
 │  1. Behavioral scoring weights + anomaly threshold (hidden from agent)              │
 │  2. AI evaluation prompt with risk context (hidden from agent + node operators)     │
-│  3. API keys resolved from Vault DON: {{ANTHROPIC_API_KEY}} (hidden from nodes)    │
-│  4. Claude + secondary model evaluate independently (reasoning hidden)             │
+│  3. API keys resolved from Vault DON: {{ANTHROPIC_API_KEY}}, {{OPENAI_API_KEY}}    │
+│  4. Claude + GPT-4 evaluate independently (reasoning hidden)                      │
 │  5. ConsensusAggregationByFields enforces DON-level BFT agreement                 │
 │                                                                                    │
 └────────────────────────────────────────────────────────────────────────────────────┘
@@ -298,20 +298,36 @@ SentinelCRE's Layer 3 (Multi-AI Consensus) executes inside a **TEE (Trusted Exec
 // Feature-flagged: enableConfidentialCompute in config
 const confClient = new ConfidentialHTTPClient();
 
-const confRequest = {
+// Model 1: Claude via Anthropic API
+const confRequest1 = {
   vaultDonSecrets: [{ key: 'ANTHROPIC_API_KEY', namespace: 'sentinel' }],
   request: {
     url: config.aiEndpoint1,
     method: 'POST',
-    bodyString: requestBody,  // Contains evaluation prompt — hidden inside TEE
+    bodyString: claudeBody,  // Contains evaluation prompt — hidden inside TEE
     multiHeaders: {
-      'x-api-key': { values: ['{{ANTHROPIC_API_KEY}}'] },  // Resolved from Vault DON
+      'x-api-key': { values: ['{{ANTHROPIC_API_KEY}}'] },
+      'anthropic-version': { values: ['2023-06-01'] },
+    },
+  },
+};
+
+// Model 2: GPT-4 via OpenAI API — independent model for consensus diversity
+const confRequest2 = {
+  vaultDonSecrets: [{ key: 'OPENAI_API_KEY', namespace: 'sentinel' }],
+  request: {
+    url: config.aiEndpoint2,
+    method: 'POST',
+    bodyString: gptBody,
+    multiHeaders: {
+      Authorization: { values: ['Bearer {{OPENAI_API_KEY}}'] },
     },
   },
 };
 
 // Both AI model calls execute inside the enclave
-const response1 = sendRequester.sendRequest(confRequest).result();
+const response1 = sendRequester.sendRequest(confRequest1).result();
+const response2 = sendRequester.sendRequest(confRequest2).result();
 ```
 
 ### What's Protected
@@ -322,7 +338,7 @@ const response1 = sendRequester.sendRequest(confRequest).result();
 | Layer 2 behavioral thresholds (weights, anomaly score) | Embedded in prompts visible to node operators | Hidden inside TEE — only verdict exits |
 | Behavioral risk scores | Included in AI context, visible during execution | Computed and consumed entirely within enclave |
 | AI evaluation prompts | Visible to DON node operators | Never leave the TEE |
-| API keys (Anthropic, etc.) | Passed as secrets, visible during execution | Injected via Vault DON `{{TEMPLATE}}` syntax inside enclave |
+| API keys (Anthropic + OpenAI) | Passed as secrets, visible during execution | Injected via Vault DON `{{TEMPLATE}}` syntax inside enclave |
 | AI model reasoning | Confidence scores and explanations visible | Only APPROVED/DENIED exits — no reasoning leaked |
 | Agent behavioral baselines | Accessible through prompt inspection | Opaque — agent cannot learn its own profile |
 
