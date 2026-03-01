@@ -165,10 +165,12 @@ contract SentinelGuardian is AccessControl, Pausable, ISentinelGuardian {
     // =========================================================================
 
     /// @notice Register a new AI agent with a policy
+    /// @dev Only callable by DEFAULT_ADMIN_ROLE. Validates agentId and policy parameters.
     function registerAgent(bytes32 agentId, AgentPolicy calldata policy)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
+        require(agentId != bytes32(0), "Invalid agent ID");
         require(!agentExists[agentId], "Agent already registered");
         require(policy.isActive, "Policy must be active");
 
@@ -266,6 +268,7 @@ contract SentinelGuardian is AccessControl, Pausable, ISentinelGuardian {
         require(cw.status == ChallengeStatus.Appealed, "Not in appealed state");
 
         if (approved) {
+            require(agentStates[agentId] != AgentState.Revoked, "Cannot unfreeze revoked agent");
             cw.status = ChallengeStatus.Overturned;
             agentStates[agentId] = AgentState.Active;
             emit ChallengeResolved(agentId, ChallengeStatus.Overturned, block.timestamp);

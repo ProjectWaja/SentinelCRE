@@ -557,4 +557,33 @@ contract SentinelGuardianTest is Test {
         vm.expectRevert("Index out of bounds");
         guardian.getIncident(agentId, 0);
     }
+
+    // =========================================================================
+    // Security — Input Validation
+    // =========================================================================
+
+    function testRegisterZeroAgentIdReverts() public {
+        vm.expectRevert("Invalid agent ID");
+        guardian.registerAgent(bytes32(0), _buildPolicy());
+    }
+
+    function testCheckValueZeroMeansNoLimit() public {
+        // Register agent with maxTransactionValue = 0 (no per-tx limit)
+        // Also set maxDailyVolume = 0 (no daily limit) to isolate the value check
+        bytes32 noLimitAgent = bytes32(uint256(0xAA));
+        AgentPolicy memory policy = _buildPolicy();
+        policy.maxTransactionValue = 0;
+        policy.maxDailyVolume = 0;
+        guardian.registerAgent(noLimitAgent, policy);
+
+        // Large value should pass since 0 = no per-tx limit
+        bytes memory verdict =
+            _buildVerdict(noLimitAgent, true, "", approvedDex, normalSig, 999 ether, 0);
+        vm.prank(workflow);
+        guardian.processVerdict(verdict);
+
+        // Should be approved (all policy checks pass)
+        (uint256 approved,,,) = guardian.getActionStats(noLimitAgent);
+        assertEq(approved, 1);
+    }
 }

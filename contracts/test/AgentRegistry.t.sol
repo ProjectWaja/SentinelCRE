@@ -76,4 +76,16 @@ contract AgentRegistryTest is Test {
         registry.registerAgent(agentId, "Bot1", "First");
         assertTrue(registry.isRegistered(agentId));
     }
+
+    function testRegisterAgentUnauthorizedReverts() public {
+        address stranger = address(0xDEAD);
+        vm.prank(stranger);
+        vm.expectRevert();
+        registry.registerAgent(agentId, "HackerBot", "Unauthorized");
+    }
+
+    function testRegisterAgentZeroIdReverts() public {
+        vm.expectRevert("Invalid agent ID");
+        registry.registerAgent(bytes32(0), "Bot", "Zero ID");
+    }
 }
