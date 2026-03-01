@@ -10,11 +10,19 @@ interface RecentTx {
   block: number
 }
 
+interface EventInfo {
+  name: string
+  agentId: string
+  blockNumber: number
+  txHash: string
+}
+
 interface TenderlyData {
   guardianTxCount: number
   registryTxCount: number
   recentTxs: RecentTx[]
   latestBlock: number
+  events?: EventInfo[]
 }
 
 const CONTRACTS = [
@@ -40,6 +48,13 @@ const FN_COLORS: Record<string, string> = {
   registerAgent: 'text-green-400',
   grantRole: 'text-blue-400',
   updatePolicy: 'text-orange-400',
+}
+
+const EVENT_COLORS: Record<string, { text: string; bg: string; border: string }> = {
+  ActionApproved: { text: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' },
+  ActionDenied: { text: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' },
+  CircuitBreakerTriggered: { text: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' },
+  AgentFrozen: { text: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
 }
 
 export default function TenderlyFeedPanel() {
@@ -160,6 +175,32 @@ export default function TenderlyFeedPanel() {
                 <code className="text-gray-600 font-mono">{tx.hash}</code>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* On-chain events feed (from Log Trigger) */}
+      {data && data.events && data.events.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-gray-800">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-base font-bold text-gray-400 uppercase tracking-wider">Guardian Events</span>
+            <span className="text-base text-cyan-400/60 font-mono">LogTrigger</span>
+          </div>
+          <div className="space-y-1">
+            {data.events.map((evt, i) => {
+              const colors = EVENT_COLORS[evt.name] ?? { text: 'text-gray-400', bg: 'bg-gray-500/10', border: 'border-gray-500/20' }
+              return (
+                <div key={`${evt.txHash}-${i}`} className="flex items-center justify-between text-base py-1.5 px-2 rounded bg-gray-800/30">
+                  <div className="flex items-center gap-2">
+                    <span className={`font-bold ${colors.text}`}>
+                      {evt.name}
+                    </span>
+                    <span className="text-gray-500 font-mono">{evt.agentId}</span>
+                  </div>
+                  <span className="text-gray-600 font-mono">#{evt.blockNumber}</span>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

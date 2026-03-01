@@ -364,8 +364,29 @@ export default function ChainlinkActivityPanel({
         })}
       </div>
 
-      {/* Confidential compute badge */}
+      {/* Active Triggers — shows all 3 CRE trigger types */}
       <div className="mt-3 pt-3 border-t border-gray-800">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-base font-bold text-gray-500 uppercase tracking-wider">Active Triggers</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="flex items-center gap-1.5 text-base px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+            HTTPCapability
+          </span>
+          <span className="flex items-center gap-1.5 text-base px-2.5 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+            CronCapability
+          </span>
+          <span className="flex items-center gap-1.5 text-base px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            LogTrigger
+          </span>
+        </div>
+      </div>
+
+      {/* Confidential compute badge */}
+      <div className="mt-2 pt-2 border-t border-gray-800">
         <div className="flex items-center gap-3 text-base text-orange-400/70 font-medium">
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path

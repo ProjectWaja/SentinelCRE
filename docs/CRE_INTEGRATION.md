@@ -37,9 +37,28 @@ CRE's `ConfidentialHTTPClient` ensures API keys and guardrail thresholds are not
 
 ### 5. CronCapability for Health Monitoring
 Periodic health checks run via `CronCapability`:
-- Every 5 minutes, check all registered agents
-- Auto-freeze agents exhibiting anomalous patterns
+- Every 5 minutes, read agent count + guardian responsiveness
+- `headerByNumber()` confirms chain liveness (block number + timestamp)
+- `filterLogs()` queries recent `ActionDenied` events for incident monitoring
 - Proactive defense, not just reactive
+
+### 6. EVMClient LogTrigger for Event-Driven Response
+The 3rd trigger type — fires when `SentinelGuardian` emits critical on-chain events:
+- `CircuitBreakerTriggered` — agent frozen by automatic circuit breaker
+- `ActionDenied` — a verdict denied an agent's proposed action
+- Uses `headerByNumber()` for block context and `filterLogs()` for cross-agent threat summary
+- Near-real-time reaction — no polling delay
+
+### 7. EVMClient filterLogs for Historical Queries
+Queries on-chain event logs within a block range:
+- Used in both cron health check and log trigger handler
+- Counts recent denials for threat context
+- Enables cross-agent incident correlation
+
+### 8. EVMClient headerByNumber for Chain Liveness
+Fetches block header (number + timestamp) to confirm chain is producing blocks:
+- Used in health check for liveness confirmation
+- Used in log trigger handler for event timestamp context
 
 ## CRE Workflow Architecture
 
@@ -47,18 +66,26 @@ Periodic health checks run via `CronCapability`:
 sentinel-workflow/main.ts
 ├── initWorkflow(config)
 │   ├── handler(HTTPCapability.trigger(), onActionProposal)
-│   └── handler(CronCapability.trigger(), onHealthCheck)
+│   ├── handler(CronCapability.trigger(), onHealthCheck)
+│   └── handler(EVMClient.logTrigger(), onChainEvent)          ← 3rd trigger
 │
 ├── onActionProposal(runtime, payload)
 │   ├── Parse HTTP payload → ActionProposal
 │   ├── EVMClient.callContract() → Read agent policy
-│   ├── HTTPClient.sendRequest() → Multi-AI consensus
+│   ├── Behavioral risk scoring (7 dimensions)
+│   ├── HTTPClient.sendRequest() → Multi-AI consensus (Claude + GPT-4)
 │   ├── encodeAbiParameters() → Build verdict report
 │   └── EVMClient.writeReport() → Submit on-chain
 │
-└── onHealthCheck(runtime, payload)
-    ├── EVMClient.callContract() → Read agent states
-    └── Log health status
+├── onHealthCheck(runtime, payload)
+│   ├── EVMClient.callContract() → Read agent count + guardian ping
+│   ├── EVMClient.headerByNumber() → Chain liveness (block + timestamp)
+│   └── EVMClient.filterLogs() → Recent denial incident count
+│
+└── onChainEvent(runtime, payload)                              ← Log Trigger
+    ├── Decode event signature + agentId from log topics
+    ├── EVMClient.headerByNumber() → Block timestamp context
+    └── EVMClient.filterLogs() → Cross-agent threat summary
 ```
 
 ## SDK Patterns Used
@@ -267,4 +294,31 @@ const cronCapability = new CronCapability()
 handler(cronCapability.trigger({ schedule: config.schedule }), onHealthCheck)
 ```
 
-The health check runs on a configurable cron schedule (default: `*/5 * * * *`, every 5 minutes). In production, this would iterate registered agents via EVMClient reads and proactively freeze agents exhibiting anomalous patterns — providing defense beyond the request-response verdict pipeline.
+The health check runs on a configurable cron schedule (default: `*/5 * * * *`, every 5 minutes). It performs:
+1. `callContract()` — reads agent count from AgentRegistry and pings SentinelGuardian
+2. `headerByNumber()` — fetches the latest block header to confirm chain liveness
+3. `filterLogs()` — queries recent `ActionDenied` events (last 50 blocks) for incident monitoring
+
+Returns: `{ status, registeredAgents, guardianReachable, latestBlock, blockTimestamp, recentDenials }`.
+
+## Log Trigger — Event-Driven Response
+
+```typescript
+const evmClient = new EVMClient(chainSelector)
+const logTrigger = evmClient.logTrigger({
+  addresses: [config.guardianContractAddress],
+  topics: [
+    { values: [EVENT_CIRCUIT_BREAKER, EVENT_ACTION_DENIED] },
+    { values: [] }, { values: [] }, { values: [] },
+  ],
+})
+handler(logTrigger, onChainEvent)
+```
+
+The 3rd trigger type — fires in near-real-time when `SentinelGuardian` emits `CircuitBreakerTriggered` or `ActionDenied` events. The handler:
+1. Decodes the event signature and agentId from log topics
+2. Calls `headerByNumber()` to get block timestamp for context
+3. Calls `filterLogs()` to query recent denials across all agents (last 100 blocks)
+4. Returns a threat summary report
+
+This enables event-driven monitoring without polling — the DON reacts to on-chain events as they happen.

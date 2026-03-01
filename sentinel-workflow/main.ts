@@ -1,9 +1,10 @@
 /**
  * SentinelCRE — CRE Workflow Entry Point
  *
- * Two handlers:
- *   1. HTTP Trigger — receives AI agent action proposals, runs verdict pipeline
- *   2. Cron Trigger — periodic health check, auto-freezes anomalous agents
+ * Three handlers:
+ *   1. HTTP Trigger  — receives AI agent action proposals, runs verdict pipeline
+ *   2. Cron Trigger  — periodic health check with chain liveness + incident scan
+ *   3. Log Trigger   — reacts to on-chain Guardian events (CircuitBreaker, ActionDenied)
  *
  * CRE SDK rules enforced:
  *   - No async/await on SDK capabilities — use .result() pattern
@@ -30,6 +31,9 @@ import {
   LAST_FINALIZED_BLOCK_NUMBER,
   ok,
   text,
+  json,
+  bigintToProtoBigInt,
+  protoBigIntToBigint,
   type Runtime,
   type HTTPSendRequester,
   type ConfidentialHTTPSendRequester,
@@ -157,6 +161,19 @@ const REGISTRY_ABI = [
     outputs: [{ name: '', type: 'bool' }],
   },
 ] as const
+
+// =============================================================================
+// Guardian Event Signatures (keccak256 hashes for Log Trigger + filterLogs)
+// =============================================================================
+
+const EVENT_ACTION_DENIED =
+  '0x08c4d42f62d7bd9e328635cfae0fc2d21b2174ad125a47cf801ee9cf4218cda3'
+const EVENT_CIRCUIT_BREAKER =
+  '0xfb9546080760f1a70c0be43f384eed586a98ce40363c7d022cc787c673ab05a8'
+const EVENT_ACTION_APPROVED =
+  '0xdc56bf1a0ac0d4d39cbc7481d9482066026b31f6d2758db520e6adaf9f21efeb'
+const EVENT_AGENT_FROZEN =
+  '0x504a565d281fa608bb08262d900bbfdea50f90ea4f3174535a82a2da2ffdf403'
 
 // =============================================================================
 // AI Evaluation
@@ -417,7 +434,8 @@ function parseAIResponses(response1: any, response2: any): AIVerdict {
 
   if (ok(response1)) {
     try {
-      const body1 = JSON.parse(text(response1))
+      // Anthropic format: content[0].text — use SDK json() helper
+      const body1 = json(response1) as any
       const parsed1 = JSON.parse(body1.content?.[0]?.text ?? '{}')
       v1 = {
         verdict: String(parsed1.verdict ?? 'DENIED'),
@@ -431,8 +449,8 @@ function parseAIResponses(response1: any, response2: any): AIVerdict {
 
   if (ok(response2)) {
     try {
-      const body2 = JSON.parse(text(response2))
       // OpenAI format: choices[0].message.content
+      const body2 = json(response2) as any
       const rawText2 = body2.choices?.[0]?.message?.content ?? '{}'
       const parsed2 = JSON.parse(rawText2)
       v2 = {
@@ -711,8 +729,45 @@ const onHealthCheck = (runtime: Runtime<Config>, _payload: CronPayload): string 
 
   const guardianReachable = ok(guardianResult)
 
+  // Fetch latest block header for chain liveness confirmation
+  let latestBlock = 0n
+  let blockTimestamp = 0n
+  try {
+    const headerResult = evmClient.headerByNumber(runtime, {}).result()
+    if (headerResult.header) {
+      latestBlock = headerResult.header.blockNumber
+        ? protoBigIntToBigint(headerResult.header.blockNumber)
+        : 0n
+      blockTimestamp = headerResult.header.timestamp
+    }
+    runtime.log(`[SentinelCRE] Chain liveness: block #${latestBlock}, timestamp ${blockTimestamp}`)
+  } catch {
+    runtime.log('[SentinelCRE] Could not fetch latest block header')
+  }
+
+  // Query recent ActionDenied events for incident monitoring
+  let recentDenials = 0
+  try {
+    const fromBlock = latestBlock > 50n ? latestBlock - 50n : 0n
+    const logsResult = evmClient
+      .filterLogs(runtime, {
+        filterQuery: {
+          fromBlock: bigintToProtoBigInt(fromBlock),
+          toBlock: bigintToProtoBigInt(latestBlock),
+          addresses: [config.guardianContractAddress],
+          topics: [{ topic: [EVENT_ACTION_DENIED] }],
+        },
+      })
+      .result()
+
+    recentDenials = logsResult.logs?.length ?? 0
+    runtime.log(`[SentinelCRE] Recent denials (last 50 blocks): ${recentDenials}`)
+  } catch {
+    runtime.log('[SentinelCRE] Could not query recent denial logs')
+  }
+
   runtime.log(
-    `[SentinelCRE] Health check complete — Registry: ${agentCount} agents, Guardian: ${guardianReachable ? 'online' : 'unreachable'}`,
+    `[SentinelCRE] Health check complete — Registry: ${agentCount} agents, Guardian: ${guardianReachable ? 'online' : 'unreachable'}, Block: #${latestBlock}`,
   )
 
   return JSON.stringify({
@@ -720,6 +775,102 @@ const onHealthCheck = (runtime: Runtime<Config>, _payload: CronPayload): string 
     timestamp: now.toISOString(),
     registeredAgents: agentCount,
     guardianReachable,
+    latestBlock: latestBlock.toString(),
+    blockTimestamp: blockTimestamp.toString(),
+    recentDenials,
+  })
+}
+
+// =============================================================================
+// Log Trigger Handler — On-Chain Event Reaction
+// =============================================================================
+
+/**
+ * Reacts to SentinelGuardian on-chain events in near-real-time.
+ * Fires when CircuitBreakerTriggered or ActionDenied events are emitted.
+ *
+ * Uses three EVMClient methods:
+ *   - logTrigger()       — 3rd trigger type, event-driven (not polling)
+ *   - headerByNumber()   — fetches block timestamp for context
+ *   - filterLogs()       — queries recent denial history for threat summary
+ */
+const onChainEvent = (runtime: Runtime<Config>, payload: any): string => {
+  const config = runtime.config
+  const now = runtime.now()
+  runtime.log(`[SentinelCRE] On-chain event detected at ${now.toISOString()}`)
+
+  const chainSelector = getNetwork({
+    chainFamily: 'evm',
+    chainSelectorName: config.evmChainSelectorName,
+    isTestnet: true,
+  })
+  const evmClient = new EVMClient(chainSelector)
+
+  // Identify which event fired from the topic[0] signature
+  const eventSigHex = payload.topics?.[0]
+    ? '0x' + [...new Uint8Array(payload.topics[0])].map((b: number) => b.toString(16).padStart(2, '0')).join('')
+    : 'unknown'
+
+  const eventName = eventSigHex === EVENT_ACTION_DENIED
+    ? 'ActionDenied'
+    : eventSigHex === EVENT_CIRCUIT_BREAKER
+      ? 'CircuitBreakerTriggered'
+      : 'Unknown'
+
+  // Extract agentId from topics[1] (first indexed param)
+  const agentIdHex = payload.topics?.[1]
+    ? '0x' + [...new Uint8Array(payload.topics[1])].map((b: number) => b.toString(16).padStart(2, '0')).join('')
+    : '0x00'
+
+  runtime.log(`[SentinelCRE] Event: ${eventName} | Agent: ${agentIdHex.slice(0, 18)}...`)
+
+  // Fetch block header for timestamp context
+  let blockTimestamp = 0n
+  let blockNum = 0n
+  try {
+    const blockNumber = payload.blockNumber
+      ? { blockNumber: payload.blockNumber }
+      : {}
+    const headerResult = evmClient.headerByNumber(runtime, blockNumber).result()
+    if (headerResult.header) {
+      blockTimestamp = headerResult.header.timestamp
+      blockNum = headerResult.header.blockNumber
+        ? protoBigIntToBigint(headerResult.header.blockNumber)
+        : 0n
+    }
+    runtime.log(`[SentinelCRE] Block #${blockNum} timestamp: ${blockTimestamp}`)
+  } catch {
+    runtime.log('[SentinelCRE] Could not fetch block header')
+  }
+
+  // Query recent ActionDenied events for cross-agent threat context
+  let recentDenials = 0
+  try {
+    const fromBlock = blockNum > 100n ? blockNum - 100n : 0n
+    const logsResult = evmClient
+      .filterLogs(runtime, {
+        filterQuery: {
+          fromBlock: bigintToProtoBigInt(fromBlock),
+          toBlock: bigintToProtoBigInt(blockNum),
+          addresses: [config.guardianContractAddress],
+          topics: [{ topic: [EVENT_ACTION_DENIED] }],
+        },
+      })
+      .result()
+
+    recentDenials = logsResult.logs?.length ?? 0
+    runtime.log(`[SentinelCRE] Recent denials (last 100 blocks): ${recentDenials}`)
+  } catch {
+    runtime.log('[SentinelCRE] Could not query recent denial logs')
+  }
+
+  return JSON.stringify({
+    event: eventName,
+    agentId: agentIdHex,
+    blockNumber: blockNum.toString(),
+    blockTimestamp: blockTimestamp.toString(),
+    recentDenials,
+    timestamp: now.toISOString(),
   })
 }
 
@@ -731,9 +882,27 @@ function initWorkflow(config: Config): Array<HandlerEntry<Config, any, any, any>
   const httpCapability = new HTTPCapability()
   const cronCapability = new CronCapability()
 
+  // Log Trigger: react to Guardian on-chain events (CircuitBreaker + ActionDenied)
+  const chainSelector = getNetwork({
+    chainFamily: 'evm',
+    chainSelectorName: config.evmChainSelectorName,
+    isTestnet: true,
+  })
+  const evmClient = new EVMClient(chainSelector)
+  const logTrigger = evmClient.logTrigger({
+    addresses: [config.guardianContractAddress],
+    topics: [
+      { values: [EVENT_CIRCUIT_BREAKER, EVENT_ACTION_DENIED] },
+      { values: [] }, // any agentId
+      { values: [] }, // any indexed arg 2
+      { values: [] }, // any indexed arg 3
+    ],
+  })
+
   return [
     handler(httpCapability.trigger({ authorizedKeys: [] }), onActionProposal),
     handler(cronCapability.trigger({ schedule: config.schedule }), onHealthCheck),
+    handler(logTrigger, onChainEvent),
   ]
 }
 
