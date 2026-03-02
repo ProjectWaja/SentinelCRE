@@ -40,9 +40,10 @@ dashboard/out/
 dashboard/bun.lock
 dashboard/package-lock.json
 
-# Internal notes (demo scripts, plans)
+# Internal notes (demo scripts, plans, private playbooks)
 docs/DEMO-SCRIPT*.md
 docs/DEMO_SCRIPT*.md
+docs/PRIVATE-*.md
 PLAN.md
 
 # Binary files
