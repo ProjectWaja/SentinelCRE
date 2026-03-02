@@ -427,7 +427,7 @@ const ECOSYSTEM_STATS = [
 const TECH_BADGES = ['Solidity 0.8.24', 'Foundry', 'CRE SDK (TypeScript)', 'Bun', 'Next.js 15', 'Tenderly Virtual TestNet', 'viem', 'Tailwind 4']
 
 const TECH_STATS = [
-  { label: '85 tests', sublabel: 'Forge', color: 'text-green-400' },
+  { label: '90 tests', sublabel: 'Forge', color: 'text-green-400' },
   { label: '14 scenarios', sublabel: 'Demo', color: 'text-cyan-400' },
   { label: '2 AI models', sublabel: 'Claude + GPT-4', color: 'text-purple-400' },
   { label: '7 dimensions', sublabel: 'Behavioral', color: 'text-orange-400' },
@@ -1099,7 +1099,7 @@ export default function ArchitecturePanel() {
         </div>
 
         <div className="mt-5 text-center">
-          <span className="text-xl font-bold text-green-400">85 tests passing</span>
+          <span className="text-xl font-bold text-green-400">90 tests passing</span>
           <span className="text-xl text-gray-500"> across 5 test suites</span>
         </div>
       </Section>

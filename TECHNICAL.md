@@ -712,19 +712,19 @@ SentinelCRE uses a **fail-safe** design:
 
 ## Test Coverage
 
-**85 tests across 5 suites — all passing**
+**90 tests across 5 suites — all passing**
 
 | Test Suite | Tests | Coverage |
 |------------|-------|----------|
-| `SentinelGuardian.t.sol` | 45 | Registration, verdicts, policy enforcement, circuit breaker, freeze/unfreeze/revoke, rate limits, daily volume, cumulative mints |
-| `Challenge.t.sol` | 14 | Severity classification, challenge window creation, appeals, resolution (uphold/overturn), expiry, authorization checks |
+| `SentinelGuardian.t.sol` | 47 | Registration, verdicts, policy enforcement, circuit breaker, freeze/unfreeze/revoke, rate limits, daily volume, cumulative mints, input validation, zero-value semantics |
+| `Challenge.t.sol` | 15 | Severity classification, challenge window creation, appeals, resolution (uphold/overturn), expiry, authorization checks, revoked-agent guard |
 | `ProofOfReserves.t.sol` | 10 | Reserve verification, cumulative tracking, feed manipulation, collateral ratios, zero-mint bypass |
-| `AgentRegistry.t.sol` | 8 | Registration, enumeration, duplicate prevention, metadata retrieval |
+| `AgentRegistry.t.sol` | 10 | Registration, enumeration, duplicate prevention, metadata retrieval, access control, zero-ID rejection |
 | `Integration.t.sol` | 8 | Full lifecycle: register → approve → deny → freeze → challenge → resolve, infinite mint blocked end-to-end |
 
 ```bash
 cd contracts && forge test -v
-# [PASS] 85 tests across 5 suites
+# [PASS] 90 tests across 5 suites
 ```
 
 ### Slither Static Analysis
@@ -937,9 +937,9 @@ SentinelCRE/
 
 ---
 
-## Demo Video
+## Demo
 
-> Video link: *Coming soon*
+> **Live demo**: Run `bun run mock-api` then `bun run dashboard` — open `http://localhost:3000` and click the **Live Demo** tab to run all 14 attack scenarios interactively. See [`docs/DEMO-SCRIPT-v7.md`](docs/DEMO-SCRIPT-v7.md) for the full presentation script.
 
 ## Team
 

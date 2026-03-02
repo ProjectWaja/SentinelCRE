@@ -28,7 +28,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 - [Chainlink Services — Deep Integration](#chainlink-services-deep-integration) — 8 CRE primitives, 3 trigger types + Data Feeds + Automation
 - [Privacy & Confidential Compute](#privacy--confidential-compute) — TEE-backed evaluation via ConfidentialHTTPClient
 - [Attack Coverage](#attack-coverage) — 14 demo scenarios across 3 phases
-- [Smart Contracts](#smart-contracts) — SentinelGuardian, PolicyLib, AgentRegistry + 85 tests
+- [Smart Contracts](#smart-contracts) — SentinelGuardian, PolicyLib, AgentRegistry + 90 tests
 - [Interactive Risk Monitoring Dashboard](#interactive-risk-monitoring-dashboard) — 4-tab dashboard overview
 - [Tenderly Integration — Deep Usage](#tenderly-integration-deep-usage) — Virtual TestNet, Simulation API, monitoring, debugging
 - [Quick Start](#quick-start) — clone, install, run
@@ -437,7 +437,7 @@ This mirrors real-world financial compliance — suspicious transactions are hel
 
 ```bash
 cd contracts && forge test -v
-# [PASS] 85 tests across 5 suites
+# [PASS] 90 tests across 5 suites
 ```
 
 For step-by-step onboarding (deployment, agent registration, policy configuration, monitoring), see [`docs/INTEGRATION-GUIDE.md`](docs/INTEGRATION-GUIDE.md). For development challenges and how we solved them, see [`docs/CHALLENGES.md`](docs/CHALLENGES.md).
@@ -522,7 +522,7 @@ Tenderly's transaction debugging was critical during development:
 # Install dependencies
 cd SentinelCRE && bun install
 
-# Run smart contract tests (85 tests)
+# Run smart contract tests (90 tests)
 cd contracts && forge test -v
 
 # Start the risk monitoring dashboard (2 terminals)
@@ -552,7 +552,7 @@ bun run behavioral:reset
 | Behavioral Engine | Pure TypeScript, 7 statistical dimensions |
 | Dashboard | Next.js 15, React 19, Tailwind CSS 4, viem |
 | Simulation & Deployment | Tenderly Virtual TestNet (RPC, persistent state), Simulation API (gas profiling, state diffs, call traces), live tx monitoring |
-| Testing | Foundry (forge test), 85 tests across 5 suites |
+| Testing | Foundry (forge test), 90 tests across 5 suites |
 | Security Analysis | Slither (Trail of Bits) — 0 critical, 0 high findings ([details](TECHNICAL.md#slither-static-analysis)) |
 
 ---
@@ -571,7 +571,7 @@ bun run behavioral:reset
 
 6. **Compliance due process** — Severity-based appeal windows mirror real-world financial systems. Critical threats are permanently blocked; low-severity denials get a structured review process. See [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md).
 
-7. **Production-grade testing** — 85 tests covering edge cases like cumulative mint drain, rate limit window resets, PoR collateral ratios, and challenge resolution flows. See [`TECHNICAL.md`](TECHNICAL.md#test-coverage).
+7. **Production-grade testing** — 90 tests covering edge cases like cumulative mint drain, rate limit window resets, PoR collateral ratios, and challenge resolution flows. See [`TECHNICAL.md`](TECHNICAL.md#test-coverage).
 
 ---
 
