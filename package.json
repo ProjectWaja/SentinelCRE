@@ -1,6 +1,13 @@
 {
   "name": "sentinel-cre",
   "version": "0.1.0",
+  "description": "Autonomous Risk Monitoring Infrastructure for AI Agents On-Chain — 3-layer defense with Chainlink CRE + Confidential Compute",
+  "author": "Willis Tang (@ProjectWaja)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ProjectWaja/SentinelCRE"
+  },
   "type": "module",
   "scripts": {
     "build": "cre workflow build sentinel-workflow/main.ts",

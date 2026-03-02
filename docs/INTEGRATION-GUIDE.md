@@ -595,9 +595,9 @@ This section is an honest assessment of where SentinelCRE stands today and what 
 
 | Component | Status | Evidence |
 |-----------|--------|----------|
-| SentinelGuardian.sol | Deployed, tested | 45 tests, deployed on Tenderly Sepolia fork |
-| AgentRegistry.sol | Deployed, tested | 8 tests, deployed on Tenderly Sepolia fork |
-| PolicyLib.sol (7 on-chain checks) | Complete | 85 tests across 5 suites, 0 Slither findings |
+| SentinelGuardian.sol | Deployed, tested | 47 tests, deployed on Tenderly Sepolia fork |
+| AgentRegistry.sol | Deployed, tested | 10 tests, deployed on Tenderly Sepolia fork |
+| PolicyLib.sol (7 on-chain checks) | Complete | 90 tests across 5 suites, 0 Slither findings |
 | CRE workflow (WASM bundle) | Complete | Uses 8 CRE primitives across 3 trigger types, compiles to WASM |
 | Behavioral engine (7 dimensions) | Complete | Pure functions, deterministic, runs inside CRE |
 | EVMClient reads (policy, agent status) | Working | Reads from deployed contracts via CRE SDK |
@@ -638,7 +638,7 @@ This section is an honest assessment of where SentinelCRE stands today and what 
 
 ### Phase 1: Testnet Validation (Current)
 
-- [x] Smart contracts deployed and tested (85 tests, Slither clean)
+- [x] Smart contracts deployed and tested (90 tests, Slither clean)
 - [x] CRE workflow compiles and simulates via CRE CLI
 - [x] Behavioral engine with 7 anomaly dimensions
 - [x] Dashboard with real-time Tenderly integration
