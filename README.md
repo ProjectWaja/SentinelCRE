@@ -62,7 +62,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 | File | Chainlink Services Used |
 |------|------------------------|
 | [`config/sentinel.config.json`](config/sentinel.config.json) | Production CRE config — `enableConfidentialCompute: true`, AI endpoints, chain selector, contract addresses |
-| [`config/sentinel.local.config.json`](config/sentinel.local.config.json) | Local dev CRE config — mock API endpoints, `enableConfidentialCompute: false` fallback |
+| [`config/sentinel.local.config.json`](config/sentinel.local.config.json) | Local dev CRE config — deterministic evaluation endpoints, `enableConfidentialCompute: false` fallback |
 | [`project.yaml`](project.yaml) | CRE project settings — RPC endpoints for `ethereum-testnet-sepolia` |
 
 ### Tests
@@ -93,7 +93,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 3-layer defense architecture with CRE pipeline diagrams |
 | [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md) | Fail-safe design principles, severity classification, CRE-powered challenge resolution |
 | [`docs/INTEGRATION-GUIDE.md`](docs/INTEGRATION-GUIDE.md) | Step-by-step onboarding: contract deployment, agent registration, policy configuration, behavioral learning, monitoring |
-| [`docs/CHALLENGES.md`](docs/CHALLENGES.md) | Development challenges: CRE SDK bleeding-edge constraints, behavioral scoring math, CC transparency tension, Next.js build issues |
+| [`docs/CHALLENGES.md`](docs/CHALLENGES.md) | Engineering challenges: CRE SDK early adoption patterns, behavioral scoring math, CC transparency design, Next.js build issues |
 
 ---
 
@@ -526,7 +526,7 @@ cd SentinelCRE && bun install
 cd contracts && forge test -v
 
 # Start the risk monitoring dashboard (2 terminals)
-bun run mock-api          # Terminal 1: AI evaluation + behavioral engine (port 3002)
+bun run mock-api          # Terminal 1: AI evaluation service + behavioral engine (port 3002)
 bun run dashboard         # Terminal 2: Dashboard (http://localhost:3000)
 
 # CLI demo — legitimate agent behavior
