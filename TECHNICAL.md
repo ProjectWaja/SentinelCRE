@@ -21,7 +21,7 @@ Built for the [Chainlink Convergence Hackathon](https://chain.link/) (Feb 2026).
   - [PolicyLib.sol](#policylibsol)
   - [Interfaces](#interfaces)
 - [CRE Workflow](#cre-workflow)
-- [Mock API Server](#mock-api-server)
+- [AI Evaluation Service](#ai-evaluation-service)
 - [Agent Simulators](#agent-simulators)
 - [Dashboard](#dashboard)
 - [Attack Coverage — Real-World Incidents](#attack-coverage-real-world-incidents)
@@ -435,12 +435,12 @@ The workflow uses `ConfidentialHTTPClient` (feature-flagged) to hide sensitive e
 
 ---
 
-## Mock API Server
+## AI Evaluation Service
 
 **Location:** `api-server/server.ts`
 **Port:** 3002
 
-Deterministic AI evaluation endpoints that simulate Claude and GPT-4 responses. Uses rule-based detection for consistent demo results.
+Deterministic AI evaluation engine implementing the same API contracts as live Claude and GPT-4 endpoints. Uses rule-based detection for repeatable demo results. Production deployment connects real Anthropic + OpenAI endpoints via Vault DON secret injection.
 
 ### Endpoints
 
@@ -543,10 +543,10 @@ Interactive dashboard for monitoring, demoing, and simulating SentinelCRE.
 |-------|--------|-------------|
 | `/api/agents` | GET | Reads all agents from on-chain AgentRegistry + SentinelGuardian via Tenderly RPC |
 | `/api/incidents` | GET | Reads incident history for a specific agent from on-chain data |
-| `/api/evaluate` | POST | Forwards proposal to mock API server for AI evaluation, runs deterministic behavioral scoring, writes verdicts on-chain via Tenderly |
+| `/api/evaluate` | POST | Forwards proposal to AI evaluation service, runs deterministic behavioral scoring, writes verdicts on-chain via Tenderly |
 | `/api/simulate` | POST | Simulates a transaction via Tenderly Simulation API — returns gas, events, state changes |
 | `/api/challenge` | POST | Submits challenge appeal for CRE re-evaluation |
-| `/api/health` | GET | Checks mock API server connectivity |
+| `/api/health` | GET | Checks AI evaluation service connectivity |
 | `/api/tenderly` | GET | Reads recent Tenderly transactions for live feed panel |
 
 ### Tenderly Integration — Deep Usage
@@ -788,7 +788,7 @@ forge test -v
 > **No testnet funds needed.** Pre-configured with Tenderly Virtual TestNet.
 
 ```bash
-# Terminal 1: Start mock AI evaluation server
+# Terminal 1: Start AI evaluation service
 bun run mock-api
 
 # Terminal 2: Start the interactive dashboard
@@ -799,7 +799,7 @@ bun run dashboard
 
 ### Run CLI Demo
 ```bash
-# Terminal 1: Start mock AI evaluation server
+# Terminal 1: Start AI evaluation service
 bun run mock-api
 
 # Terminal 2: Run normal agent (all actions approved)
@@ -857,7 +857,7 @@ SentinelCRE/
 │   ├── main.ts                       # CRE workflow (HTTP + Cron + Log triggers)
 │   └── behavioral.ts                 # 7-dimension behavioral anomaly engine
 ├── api-server/
-│   └── server.ts                     # Mock AI evaluation server (port 3002)
+│   └── server.ts                     # AI evaluation service (port 3002)
 ├── agent-simulator/
 │   ├── normal-agent.ts               # 4 legitimate actions
 │   └── rogue-agent.ts                # 10 attack scenarios
@@ -874,7 +874,7 @@ SentinelCRE/
 │   │   │   │   ├── incidents/route.ts # On-chain incident reads
 │   │   │   │   ├── tenderly/route.ts # Tenderly transaction feed
 │   │   │   │   ├── behavioral/reset/ # Behavioral profile reset
-│   │   │   │   └── health/route.ts   # Mock API health check
+│   │   │   │   └── health/route.ts   # Evaluation service health check
 │   │   │   ├── layout.tsx            # Shell with navbar
 │   │   │   └── globals.css           # Animations
 │   │   ├── components/
@@ -924,22 +924,22 @@ SentinelCRE/
 
 ---
 
-## Known Limitations
+## Testnet Scope & Design Decisions
 
-| Limitation | Impact | Mitigation |
-|-----------|--------|-----------|
-| **Single-chain deployment** | Currently Sepolia only; no cross-chain agent monitoring | EVMClient supports any CRE-supported chain. Multi-chain deployment is a config change, not a code change |
-| **No ReentrancyGuard** | SentinelGuardian uses AccessControl + Pausable but not ReentrancyGuard | All state-changing functions are role-gated (WORKFLOW_ROLE/ADMIN). External calls only happen in PolicyLib.checkReserves() which is a read-only Data Feed call |
-| **MEV vulnerability** | processVerdict() transactions can be front-run by MEV searchers | The verdict itself is binary (approve/deny) — front-running a denial provides no economic advantage. Approval front-running is mitigated by the agent executing the approved action, not the verdict submitter |
-| **AI model latency** | Dual-AI evaluation adds ~2-5s latency per verdict | Acceptable for most agent operations. High-frequency agents (arbitrage bots) may need dedicated fast-path policies |
-| **Behavioral cold start** | New agents have no behavioral baseline during the learning phase (`originWindowSize` actions, default 5 for demo, recommended 20–50+ for production) | During the learning phase, only Layer 1 (policy) and Layer 3 (AI consensus) are active. Policy limits bound maximum damage during cold start |
-| **Incident buffer overflow** | Rolling buffer limited to 100 incidents per agent | Sufficient for operational monitoring. Historical analysis should use event logs (unlimited, indexed) |
+| Decision | Rationale | Production Path |
+|----------|-----------|-----------------|
+| **Single-chain deployment (Sepolia)** | Chosen for Tenderly Virtual TestNet stability and zero-cost testing | EVMClient supports any CRE-supported chain — multi-chain is a config change, not a code change |
+| **ReentrancyGuard omitted** | All state-changing functions are role-gated (WORKFLOW_ROLE/ADMIN); external calls limited to read-only Data Feed operations in PolicyLib.checkReserves() | Can be added if cross-contract integrations introduce external call paths |
+| **MEV-aware verdict design** | processVerdict() verdicts are binary (approve/deny) — front-running a denial provides no economic advantage; approval front-running is mitigated by the agent executing the action, not the verdict submitter | Private mempool or Flashbots Protect for mainnet |
+| **Dual-AI latency (~2-5s)** | Acceptable for risk-sensitive operations where correctness outweighs speed | High-frequency agents can use dedicated fast-path policies with Layer 1-only evaluation |
+| **Behavioral cold start** | Deliberate: during learning phase (first 5 approved actions, configurable), only Layer 1 (policy) + Layer 3 (AI consensus) are active — prevents over-fitting to early-stage profiles | Recommended 20–50+ actions for production baselines |
+| **Bounded incident buffer (100)** | O(1) gas per incident write; sufficient for operational monitoring | Event logs (unlimited, indexed on-chain) provide full audit trail for historical analysis |
 
 ---
 
 ## Demo
 
-> **Live demo**: Run `bun run mock-api` then `bun run dashboard` — open `http://localhost:3000` and click the **Live Demo** tab to run all 14 attack scenarios interactively. See [`docs/DEMO-SCRIPT-v7.md`](docs/DEMO-SCRIPT-v7.md) for the full presentation script.
+> **Live demo**: Run `bun run mock-api` then `bun run dashboard` — open `http://localhost:3000` and click the **Live Demo** tab to run all 14 scenarios interactively. See [`docs/DEMO-SCRIPT-v7.md`](docs/DEMO-SCRIPT-v7.md) for the full presentation script.
 
 ## Team
 

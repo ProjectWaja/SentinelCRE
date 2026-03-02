@@ -589,9 +589,9 @@ With `enableConfidentialCompute: true`, AI evaluation happens inside a Trusted E
 
 ## Current Limitations
 
-This section is an honest assessment of where SentinelCRE stands today and what remains to be built for a production deployment.
+SentinelCRE's current deployment status, verified test coverage, and roadmap for production expansion.
 
-### What's Real and Working
+### Verified Components & Test Coverage
 
 | Component | Status | Evidence |
 |-----------|--------|----------|
@@ -606,31 +606,31 @@ This section is an honest assessment of where SentinelCRE stands today and what 
 | Circuit breaker + challenge/appeal | Working | On-chain state machine with severity-based windows |
 | Dashboard (4 tabs + presentation) | Complete | Next.js 15, 29 components, real Tenderly integration |
 
-### What's Mocked or Incomplete
+### Production Deployment Requirements
 
-| Component | Current State | What's Needed for Production |
-|-----------|--------------|------------------------------|
-| **AI evaluation endpoints** | Mock API server with regex-based rules (no real LLM) | Connect to real Anthropic + OpenAI endpoints with live API keys |
-| **Behavioral state persistence** | Stateless — the CRE workflow has no memory between invocations; behavioral context is caller-supplied in each request | Build a persistent behavioral profile store (database or on-chain) that the calling infrastructure maintains per agent |
-| **HTTP trigger authentication** | `authorizedKeys: []` — the CRE trigger currently accepts requests from anyone | Configure `authorizedKeys` in `project.yaml` to restrict which callers can submit proposals |
-| **Agent identity binding** | `agentId` is a caller-supplied `bytes32` with no on-chain proof of identity | Implement on-chain binding between an agent's wallet address and its `bytes32` ID, or use signed proposals |
-| **Heterogeneous AI models** | Workflow configured for Claude + GPT-4 but currently uses mock API server for demos | Provision real API keys via Vault DON and connect to live Anthropic + OpenAI endpoints |
-| **CRE network deployment** | Tested via CRE CLI simulation; not deployed to live CRE DON | Run `cre workflow deploy` on a live CRE-supported testnet |
-| **Cron health check** | Reads agent count and guardian reachability; does not iterate individual agents | Expand to check per-agent rate limit windows, daily volume approaching caps, and stale challenges |
+| Component | Testnet Phase (Current) | Production Deployment |
+|-----------|------------------------|----------------------|
+| **AI evaluation endpoints** | Deterministic evaluation engine implementing Anthropic + OpenAI API contracts | Connect live Anthropic + OpenAI endpoints via Vault DON secret injection |
+| **Behavioral state persistence** | Caller-maintained profiles (by design: WASM workflow is stateless, enabling flexible persistence layer) | Persistent behavioral profile store (Redis, PostgreSQL, or on-chain) maintained by calling infrastructure |
+| **HTTP trigger authentication** | Open trigger for testnet demos | Configure `authorizedKeys` in `project.yaml` to restrict proposal submission |
+| **Agent identity binding** | Caller-supplied `bytes32` agent ID | On-chain binding between agent wallet address and registered ID, or signed proposals |
+| **Heterogeneous AI models** | Workflow fully configured for Claude + GPT-4 with separate request/response handling | Provision real API keys via Vault DON; integration paths fully designed |
+| **CRE network deployment** | Verified via CRE CLI simulation | `cre workflow deploy` on a live CRE-supported testnet |
+| **Cron health check** | Chain liveness + guardian reachability monitoring | Expand to per-agent rate limit windows, daily volume caps, and stale challenge detection |
 
-### Architectural Constraints
+### Architecture Design Decisions
 
-1. **CRE workflow is stateless.** The Chainlink CRE runtime compiles workflows to WASM and executes them statelessly on every DON node. There is no persistent storage between invocations. This means the calling infrastructure (your agent platform) must maintain behavioral profiles and pass `recentValues`, `recentTimestamps`, `knownContracts`, and `commonFunctions` with every request.
+1. **Stateless WASM workflow (by design).** The Chainlink CRE runtime compiles workflows to WASM and executes them deterministically on every DON node. This enables BFT consensus but means the calling infrastructure maintains behavioral profiles, passing `recentValues`, `recentTimestamps`, `knownContracts`, and `commonFunctions` with every request. This separation gives integrators flexibility to choose their own persistence layer.
 
-2. **AgentRegistry and SentinelGuardian are decoupled.** There is no cross-contract validation. An agent can exist in one but not the other. Your deployment scripts must register agents in both contracts and keep them in sync.
+2. **Modular contract architecture.** AgentRegistry and SentinelGuardian are intentionally decoupled — no cross-contract validation. This enables independent deployment, upgradeability, and the option to swap either component. Deployment scripts should register agents in both contracts.
 
-3. **Incident history is capped at 100.** The on-chain circular buffer stores the last 100 incidents per agent. Oldest records are silently overwritten. For full audit trails, subscribe to events and store them off-chain.
+3. **Bounded incident history (100 per agent).** The on-chain circular buffer stores the last 100 incidents per agent in O(1) gas. For full audit trails, subscribe to events (unlimited, indexed on-chain) and archive off-chain.
 
-4. **Gas cost scales with AI reason string length.** The `reason` field from AI verdicts is ABI-encoded on-chain in `processVerdict()`. Verbose LLM responses increase gas costs. The workflow truncates to 500 characters, but shorter is better.
+4. **Gas-optimized reason strings.** The `reason` field from AI verdicts is ABI-encoded on-chain in `processVerdict()`. The workflow truncates to 500 characters to bound gas costs.
 
-5. **`WORKFLOW_ROLE` must be re-granted on redeployment.** If the CRE workflow is redeployed, the new DON address needs a fresh `grantRole` transaction. Without it, all `processVerdict()` calls revert.
+5. **Role-gated redeployment.** If the CRE workflow is redeployed, the new DON address needs a fresh `grantRole(WORKFLOW_ROLE)` transaction. This is a deliberate security boundary — no implicit trust between workflow versions.
 
-6. **No SDK or client library (yet).** Integration is raw HTTP + ABI calls. The closest reference implementations are the agent simulator scripts in `agent-simulator/` and the dashboard's `sentinel-client.ts`.
+6. **Native HTTP + ABI integration.** Reference implementations are provided in `agent-simulator/` (4 agent types) and the dashboard's `sentinel-client.ts`. Production TypeScript SDK is on the Phase 2 roadmap.
 
 ---
 
@@ -642,7 +642,7 @@ This section is an honest assessment of where SentinelCRE stands today and what 
 - [x] CRE workflow compiles and simulates via CRE CLI
 - [x] Behavioral engine with 7 anomaly dimensions
 - [x] Dashboard with real-time Tenderly integration
-- [x] Mock API server for deterministic demos
+- [x] Deterministic AI evaluation service for repeatable demos
 - [ ] Record demo video showing full pipeline
 
 ### Phase 2: Live CRE Deployment

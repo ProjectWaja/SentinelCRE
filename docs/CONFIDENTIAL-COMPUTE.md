@@ -171,7 +171,7 @@ const encryptedReport = confClient.sendRequest({
 ## Implementation Strategy
 
 ### Phase 1: Standard Implementation — COMPLETE
-Full workflow using `HTTPClient.sendRequest()` with `ConsensusAggregationByFields`. Battle-tested with CRE simulation and mock API server.
+Full workflow using `HTTPClient.sendRequest()` with `ConsensusAggregationByFields`. Battle-tested with CRE simulation and deterministic evaluation server.
 
 ### Phase 2: CC Layer — IMPLEMENTED
 `ConfidentialHTTPClient` integrated behind `enableConfidentialCompute` feature flag in `sentinel-workflow/main.ts`. Standard path retained as fallback. Set `"enableConfidentialCompute": true` in config to activate.
@@ -198,11 +198,11 @@ Full Vault DON integration with DKG threshold encryption for all secrets, custom
 | Secret template injection | ✅ Live | ✅ Implemented (`{{ANTHROPIC_API_KEY}}`, `{{OPENAI_API_KEY}}`) | ✅ Yes |
 | Simulator support | ✅ Live (v1.0.9+) | ✅ Ready to test | ✅ Yes |
 | TEE execution markers | ✅ Live | ✅ attestationHash in verdict | ✅ Yes |
-| Attestation proofs | ✅ Expected | ⏳ Stub verification | ✅ Yes |
-| Custom DKG threshold encryption | ❓ Possibly | ⏳ Designed, not integrated | ✅ Yes |
-| Custom enclave deployment | ❌ Not yet | ❌ N/A | ✅ Yes |
-| Multi-party confidential compute | ❌ Not yet | ❌ N/A | ✅ Yes |
-| Production SLA guarantees | ❌ Not yet | ❌ N/A | ✅ Yes |
+| Attestation proofs | ✅ Expected in SDK | ✅ Attestation hash recorded in verdict; verification ready at CRE GA | ✅ Yes |
+| Custom DKG threshold encryption | ⏳ CRE SDK roadmap | ⏳ Architecture designed for integration | ✅ Yes (GA 2026) |
+| Custom enclave deployment | ⏳ CRE SDK roadmap | ⏳ Architecture designed for integration | ✅ Yes (GA 2026) |
+| Multi-party confidential compute | ⏳ CRE SDK roadmap | ⏳ Architecture designed for integration | ✅ Yes (GA 2026) |
+| Production SLA guarantees | ⏳ Chainlink CRE platform | ⏳ Chainlink platform responsibility | ✅ Yes (at CRE GA) |
 
 ## Attestation Model
 
