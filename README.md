@@ -471,7 +471,15 @@ Four tabs built with Next.js 15 + React 19 + Tailwind CSS 4 (Architecture opens 
 | **Architecture** | Detailed reference — problem statement with real DeFi exploits ($625M Ronin, $320M Wormhole, $114M Mango Markets), three-layer defense diagram, 8-step verdict pipeline, 7 Chainlink integration cards with LIVE/READY status, expandable smart contracts with Solidity code snippets, 7 behavioral dimension breakdown with weight bars, and tech stack grid |
 | **Demo** | Narrative walkthrough — 3 baselines train the system, then 11 escalating attacks are detected. Shows 8-step CRE pipeline animation, dual-AI verdicts (Claude + GPT-4), and 7-dimension behavioral risk breakdown |
 | **Guardian** | Rich agent profiles (TradingBot + MintBot) with behavioral score trend sparklines (green→red), session performance metrics (100% detection rate, 0% false positive rate, attack $ prevented), defense analytics charts (donut, severity bars, risk histogram, defense layer stacked bar), threat timeline with phase dividers, wallet addresses, and filterable incident log |
-| **Simulator** | Behavioral Training Ground — pick an agent, run safe actions (score stays low), then run attacks (score spikes). Cumulative behavioral score meter with CSS gradient gauge. At score 70+, AGENT LOCKOUT fires on-chain via processVerdict. Reset to retrain |
+| **Simulator** | Enterprise Security Console — select presets (Coinbase, Aave, Lido) or custom agents, configure what-if policy overrides, run scenarios with live CRE pipeline animation + Tenderly transaction feed on the right. At score 70+, AGENT LOCKOUT fires on-chain via processVerdict |
+
+**Guardian Tab** — Agent profiles with behavioral score trends, policy summaries, targeted attack scenarios, threat timeline, and defense analytics (verdict distribution donut, severity breakdown bars).
+
+![Guardian Tab](docs/assets/Guardian%20Tab%20Screenshot.PNG)
+
+**Enterprise Simulator** — Coinbase Institutional preset with 6-agent fleet, what-if policy editor, live CRE Pipeline status, and Tenderly transaction feed. Every evaluation fires a real `processVerdict` transaction on the Virtual TestNet.
+
+![Simulator Tab](docs/assets/Simulator%20Screenshot.PNG)
 
 ---
 
@@ -488,6 +496,8 @@ Contracts are deployed on Tenderly's Virtual Sepolia TestNet with pre-funded acc
 | SentinelGuardian | [`0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8) |
 | AgentRegistry | [`0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6) |
 | Deployer | [`0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446) |
+
+![Tenderly Virtual TestNet](docs/assets/Tenderly%20Screenshot.PNG)
 
 **Why Virtual TestNet was essential:**
 - **No faucet hunting** — pre-funded accounts with unlimited ETH, zero setup friction

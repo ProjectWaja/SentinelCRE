@@ -84,12 +84,16 @@ export default function PolicyEditor({
   disabled,
   agentName,
   baselinePolicy,
+  onRunWhatIf,
+  hasPendingActions,
 }: {
   overrides: PolicyOverrides
   onChange: (o: PolicyOverrides) => void
   disabled: boolean
   agentName?: string
   baselinePolicy?: PolicyOverrides
+  onRunWhatIf?: () => void
+  hasPendingActions?: boolean
 }) {
   const modified = isPolicyModified(overrides, baselinePolicy)
 
@@ -432,15 +436,32 @@ export default function PolicyEditor({
               </div>
             </div>
 
-            {modified && (
-              <button
-                onClick={() => onChange(baselinePolicy ?? DEFAULT_POLICY)}
-                disabled={disabled}
-                className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-400 hover:text-gray-200 text-base font-semibold rounded-xl border border-gray-700 transition-colors"
-              >
-                Reset to {baselinePolicy ? 'Agent Defaults' : 'Defaults'}
-              </button>
-            )}
+            {/* Action buttons */}
+            <div className="space-y-2">
+              {onRunWhatIf && hasPendingActions && (
+                <button
+                  onClick={onRunWhatIf}
+                  disabled={disabled}
+                  className="w-full py-3 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-lg font-bold rounded-xl border border-orange-500/50 transition-colors shadow-lg shadow-orange-500/20"
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 3l14 9-14 9V3z" />
+                    </svg>
+                    Run What-If{modified ? ' (Modified Policy)' : ''}
+                  </span>
+                </button>
+              )}
+              {modified && (
+                <button
+                  onClick={() => onChange(baselinePolicy ?? DEFAULT_POLICY)}
+                  disabled={disabled}
+                  className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-400 hover:text-gray-200 text-base font-semibold rounded-xl border border-gray-700 transition-colors"
+                >
+                  Reset to {baselinePolicy ? 'Agent Defaults' : 'Defaults'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
