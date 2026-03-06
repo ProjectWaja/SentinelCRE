@@ -9,7 +9,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 
 | | |
 |---|---|
-| **Live Dashboard** | `bun run mock-api && bun run dashboard` → http://localhost:3000 |
+| **Live Dashboard** | `bun run dev` → http://localhost:3000 |
 | **Presentation Mode** | http://localhost:3000/presentation (10 interactive slides) |
 | **Tenderly Explorer** | [Virtual TestNet Transactions](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions) |
 | **Contracts** | [`0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8) (Guardian) · [`0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6) (Registry) |
@@ -443,14 +443,14 @@ Denial → Severity classified (Low / Medium / Critical)
 
 This mirrors real-world financial compliance — suspicious transactions are held for review, not permanently blocked, unless the threat is critical.
 
-### Test Coverage — 85 Tests
+### Test Coverage — 90 Tests
 
 | Suite | Tests | Coverage |
 |-------|-------|----------|
-| SentinelGuardian | 45 | Registration, verdict processing, policy enforcement, circuit breaker, freeze/unfreeze/revoke, rate limits, daily volume, cumulative mints |
-| Challenge | 14 | Severity classification, appeal flow, resolution (overturn/uphold), expiry, authorization |
+| SentinelGuardian | 47 | Registration, verdict processing, policy enforcement, circuit breaker, freeze/unfreeze/revoke, rate limits, daily volume, cumulative mints |
+| Challenge | 15 | Severity classification, appeal flow, resolution (overturn/uphold), expiry, authorization |
 | Proof of Reserves | 10 | Reserve verification, cumulative drain prevention, feed price updates, collateral ratios |
-| AgentRegistry | 8 | Registration, enumeration, duplicate prevention, metadata |
+| AgentRegistry | 10 | Registration, enumeration, duplicate prevention, metadata |
 | Integration | 8 | Full lifecycle: register → approve → deny → freeze → challenge → resolve |
 
 ```bash
@@ -553,7 +553,10 @@ cd SentinelCRE && bun install
 # Run smart contract tests (90 tests)
 cd contracts && forge test -v
 
-# Start the risk monitoring dashboard (2 terminals)
+# Start everything with one command
+bun run dev               # Launches mock API (port 3002) + dashboard (http://localhost:3000)
+
+# Or start separately (2 terminals)
 bun run mock-api          # Terminal 1: AI evaluation service + behavioral engine (port 3002)
 bun run dashboard         # Terminal 2: Dashboard (http://localhost:3000)
 
