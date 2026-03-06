@@ -295,19 +295,19 @@ Traditional AI agent guardrails leak information. If an agent can observe its ow
 SentinelCRE's Layer 3 (Multi-AI Consensus) executes inside a **TEE (Trusted Execution Environment)** via CRE's `ConfidentialHTTPClient`. The entire evaluation — prompt construction, API calls, AI responses, verdict reasoning — stays inside the enclave. Only a single bit exits: **APPROVED or DENIED**.
 
 ```
-┌─────────────────────────────────── TEE Enclave ───────────────────────────────────┐
+┌─────────────────────────────────── TEE Enclave ────────────────────────────────────┐
 │                                                                                    │
-│  1. Behavioral scoring weights + anomaly threshold (hidden from agent)              │
-│  2. AI evaluation prompt with risk context (hidden from agent + node operators)     │
+│  1. Behavioral scoring weights + anomaly threshold (hidden from agent)             │
+│  2. AI evaluation prompt with risk context (hidden from agent + node operators)    │
 │  3. API keys resolved from Vault DON: {{ANTHROPIC_API_KEY}}, {{OPENAI_API_KEY}}    │
-│  4. Claude + GPT-4 evaluate independently (reasoning hidden)                      │
-│  5. ConsensusAggregationByFields enforces DON-level BFT agreement                 │
+│  4. Claude + GPT-4 evaluate independently (reasoning hidden)                       │
+│  5. ConsensusAggregationByFields enforces DON-level BFT agreement                  │
 │                                                                                    │
 └────────────────────────────────────────────────────────────────────────────────────┘
-                                       │
-                                  APPROVED / DENIED
-                                       │
-                              Agent sees ONLY this
+                                        │
+                                   APPROVED / DENIED
+                                        │
+                               Agent sees ONLY this
 ```
 
 **Implementation** (live in [`sentinel-workflow/main.ts`](sentinel-workflow/main.ts)):
