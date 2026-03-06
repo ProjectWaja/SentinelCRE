@@ -15,6 +15,7 @@
     "simulate:local": "cre workflow simulate sentinel-workflow/main.ts --config config/sentinel.local.config.json",
     "deploy:workflow": "cre workflow deploy sentinel-workflow/main.ts --config config/sentinel.config.json",
     "deploy:contracts": "bun run scripts/deploy-guardian.ts",
+    "dev": "bun run api-server/server.ts & cd dashboard && bun run dev",
     "mock-api": "bun run api-server/server.ts",
     "demo:normal": "bun run agent-simulator/normal-agent.ts",
     "demo:rogue": "bun run agent-simulator/rogue-agent.ts",
