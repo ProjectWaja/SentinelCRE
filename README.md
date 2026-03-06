@@ -17,6 +17,24 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 
 ![SentinelCRE Dashboard](docs/assets/dashboard-screenshot.png)
 
+### Dashboard Highlights
+
+**Three-Layer Defense Model** — Concentric ring visualization showing how L1 (On-Chain Policy), L2 (Behavioral Engine), and L3 (Dual-AI Consensus) work together. An attacker must bypass all three simultaneously to succeed.
+
+![Defense in Depth](docs/assets/dashboard-screenshot2.PNG)
+
+**8-Step Verdict Pipeline** — Every agent proposal flows through this pipeline. A denial at any step halts execution and freezes the agent. Each step maps to a real Chainlink CRE primitive (HTTP Trigger, EVMClient, Confidential HTTP, Consensus, etc.).
+
+![Verdict Pipeline](docs/assets/dashboard-screenshot3.PNG)
+
+**Live Attack Demo with Kill Chain** — Interactive scenario walkthroughs show real attack vectors (Moonwell oracle exploit, Anthropic's automated probing research) with step-by-step kill chains, dual-AI verdict breakdowns (Claude + GPT-4), CRE pipeline status, and live Tenderly transaction feed.
+
+![Live Demo — Attack Scenario](docs/assets/dashboard-screenshot4.PNG)
+
+**Sybil Coordination Detection** — Two compromised bots coordinate a split-drain across agent IDs. Each action is individually within policy limits, but behavioral scoring catches the coordinated near-limit minting pattern (Function Pattern [REDACTED]), and both AI models independently confirm the collusion.
+
+![Live Demo — Sybil Coordination](docs/assets/dashboard-screenshot5.PNG)
+
 ---
 
 ## Table of Contents
