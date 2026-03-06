@@ -18,7 +18,9 @@ export default function HomeClient() {
   const [tabKey, setTabKey] = useState(0)
   const { data } = useSentinelData()
   const { verdicts, addVerdict, clearVerdicts } = useVerdictHistory()
+  const { verdicts: simVerdicts, addVerdict: addSimVerdict, clearVerdicts: clearSimVerdicts } = useVerdictHistory()
   const [currentRun, setCurrentRun] = useState<PipelineRun | null>(null)
+  const [simCurrentRun, setSimCurrentRun] = useState<PipelineRun | null>(null)
 
   const runIdRef = useRef<string>('')
 
@@ -45,6 +47,54 @@ export default function HomeClient() {
     setCurrentRun((prev) => {
       if (!prev || prev.consensus) return prev
       return { ...prev, liveStep: stepIndex, totalSteps }
+    })
+  }, [])
+
+  // Simulator pipeline callbacks (separate state from demo)
+  const simRunIdRef = useRef<string>('')
+
+  const handleSimPipelineStart = useCallback((description: string) => {
+    const id = crypto.randomUUID()
+    simRunIdRef.current = id
+    setSimCurrentRun({
+      id,
+      description,
+      consensus: null,
+      startedAt: Date.now(),
+    })
+  }, [])
+
+  const handleSimPipelineStep = useCallback((stepIndex: number, totalSteps: number) => {
+    setSimCurrentRun((prev) => {
+      if (!prev || prev.consensus) return prev
+      return { ...prev, liveStep: stepIndex, totalSteps }
+    })
+  }, [])
+
+  const handleSimPipelineComplete = useCallback((result: VerdictResult) => {
+    let catchStep: number | undefined
+    let catchReason: string | undefined
+
+    if (result.consensus === 'DENIED') {
+      if (result.anomalyFlagged) {
+        catchStep = 2
+        catchReason = `ANOMALY DETECTED — Risk Score ${result.anomalyScore ?? 0}/100 exceeds threshold`
+      } else if (result.severity === 'CRITICAL') {
+        catchStep = 7
+        catchReason = `POLICY VIOLATION — Exceeds on-chain compliance limits`
+      } else {
+        catchStep = 5
+        catchReason = `DENIED — ${result.model1.reason}`
+      }
+    }
+
+    setSimCurrentRun({
+      id: crypto.randomUUID(),
+      description: result.proposal?.description ?? '',
+      consensus: result.consensus === 'APPROVED' ? 'APPROVED' : 'DENIED',
+      startedAt: Date.now(),
+      catchStep,
+      catchReason,
     })
   }, [])
 
@@ -168,7 +218,23 @@ export default function HomeClient() {
           key={`simulator-${tabKey}`}
           className={activeTab === 'simulator' ? 'tab-panel-enter' : 'hidden'}
         >
-          <BehavioralTrainingPanel />
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            <div className="xl:col-span-8 space-y-6">
+              <BehavioralTrainingPanel
+                onPipelineStart={handleSimPipelineStart}
+                onPipelineStep={handleSimPipelineStep}
+                onPipelineComplete={handleSimPipelineComplete}
+                onVerdictReceived={addSimVerdict}
+              />
+            </div>
+            <div className="xl:col-span-4">
+              <div className="xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pr-1 space-y-6 scrollbar-thin">
+                <ChainlinkActivityPanel currentRun={simCurrentRun} />
+                <TenderlyFeedPanel />
+                <VerdictFeedPanel verdicts={simVerdicts} onClear={clearSimVerdicts} />
+              </div>
+            </div>
+          </div>
         </div>
 
         <div

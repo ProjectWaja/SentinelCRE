@@ -430,7 +430,9 @@ export default function ScenarioDemoPanel({
                         </div>
 
                         {/* Behavioral Risk Analysis (Layer 2) */}
-                        {verdict.anomalyScore != null && (
+                        {verdict.anomalyScore != null && (() => {
+                          const skippedByPolicy = verdict.consensus === 'DENIED' && verdict.anomalyScore === 0 && !verdict.anomalyFlagged
+                          return (
                           <div className="mt-3 pt-3 border-t border-gray-700/50">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-3">
@@ -438,22 +440,36 @@ export default function ScenarioDemoPanel({
                                   Behavioral Risk
                                 </span>
                                 <span className={`text-base px-3 py-1 rounded-full font-bold ${
-                                  verdict.anomalyFlagged
-                                    ? 'bg-red-400/10 text-red-400 border border-red-400/30'
-                                    : (verdict.anomalyScore ?? 0) >= 25
-                                      ? 'bg-orange-400/10 text-orange-400 border border-orange-400/30'
-                                      : 'bg-green-400/10 text-green-400 border border-green-400/30'
+                                  skippedByPolicy
+                                    ? 'bg-gray-500/10 text-gray-400 border border-gray-500/30'
+                                    : verdict.anomalyFlagged
+                                      ? 'bg-red-400/10 text-red-400 border border-red-400/30'
+                                      : (verdict.anomalyScore ?? 0) >= 25
+                                        ? 'bg-orange-400/10 text-orange-400 border border-orange-400/30'
+                                        : 'bg-green-400/10 text-green-400 border border-green-400/30'
                                 }`}>
-                                  {verdict.anomalyFlagged ? 'FLAGGED' : (verdict.anomalyScore ?? 0) >= 25 ? 'ELEVATED' : 'NORMAL'}
+                                  {skippedByPolicy
+                                    ? 'SKIPPED'
+                                    : verdict.anomalyFlagged
+                                      ? 'FLAGGED'
+                                      : (verdict.anomalyScore ?? 0) >= 25
+                                        ? 'ELEVATED'
+                                        : 'NORMAL'}
                                 </span>
                               </div>
-                              <span className={`text-2xl font-black ${
-                                verdict.anomalyScore >= 50 ? 'text-red-400' : verdict.anomalyScore >= 25 ? 'text-orange-400' : 'text-green-400'
-                              }`}>
-                                {verdict.anomalyScore}/100
-                              </span>
+                              {skippedByPolicy ? (
+                                <span className="text-base text-gray-500 italic">
+                                  Caught by policy — Layer 2 not needed
+                                </span>
+                              ) : (
+                                <span className={`text-2xl font-black ${
+                                  verdict.anomalyScore >= 50 ? 'text-red-400' : verdict.anomalyScore >= 25 ? 'text-orange-400' : 'text-green-400'
+                                }`}>
+                                  {verdict.anomalyScore}/100
+                                </span>
+                              )}
                             </div>
-                            {verdict.anomalyDimensions && verdict.anomalyDimensions.length > 0 && (
+                            {!skippedByPolicy && verdict.anomalyDimensions && verdict.anomalyDimensions.length > 0 && (
                               <div className="space-y-1.5">
                                 {verdict.anomalyDimensions.map((dim, idx) => (
                                   <div key={idx} className="flex items-center gap-3">
@@ -478,7 +494,8 @@ export default function ScenarioDemoPanel({
                               </div>
                             )}
                           </div>
-                        )}
+                          )
+                        })()}
                       </div>
                     )}
                   </div>

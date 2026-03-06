@@ -19,6 +19,13 @@ import {
 } from '@/lib/demo-scenarios'
 import PolicyEditor, { isPolicyModified } from './PolicyEditor'
 
+interface BehavioralTrainingPanelProps {
+  onPipelineStart?: (description: string) => void
+  onPipelineStep?: (stepIndex: number, totalSteps: number) => void
+  onPipelineComplete?: (result: VerdictResult) => void
+  onVerdictReceived?: (result: VerdictResult) => void
+}
+
 // ── Types ─────────────────────────────────────────────────────────
 
 type PresetId = 'coinbase' | 'aave' | 'lido' | 'custom'
@@ -103,7 +110,12 @@ function getScenarioProposal(action: ActionItem, preset: EnterprisePreset | null
 
 // ── Main Component ────────────────────────────────────────────────
 
-export default function BehavioralTrainingPanel() {
+export default function BehavioralTrainingPanel({
+  onPipelineStart,
+  onPipelineStep,
+  onPipelineComplete,
+  onVerdictReceived,
+}: BehavioralTrainingPanelProps = {}) {
   const [selectedPreset, setSelectedPreset] = useState<PresetId>('coinbase')
   const [selectedAgentIndex, setSelectedAgentIndex] = useState(0)
   const [customAgent, setCustomAgent] = useState<'TradingBot' | 'MintBot'>('TradingBot')
@@ -187,7 +199,20 @@ export default function BehavioralTrainingPanel() {
         prev.map((a, i) => (i === index ? { ...a, status: 'running' as const } : a)),
       )
 
+      // Notify pipeline start
+      onPipelineStart?.(action.title)
+
       const scoreBefore = cumulativeScore
+
+      // Simulate pipeline step progression during evaluation
+      const totalPipelineSteps = 8
+      let stepTick = 0
+      const stepInterval = setInterval(() => {
+        if (stepTick < totalPipelineSteps - 1) {
+          onPipelineStep?.(stepTick, totalPipelineSteps)
+          stepTick++
+        }
+      }, 300)
 
       try {
         const baselinePolicy = isEnterprise && selectedAgent ? selectedAgent.policy : DEFAULT_POLICY
@@ -202,7 +227,13 @@ export default function BehavioralTrainingPanel() {
           }),
         })
 
+        clearInterval(stepInterval)
+
         const result: VerdictResult = await res.json()
+
+        // Notify pipeline complete + verdict feed
+        onPipelineComplete?.(result)
+        onVerdictReceived?.(result)
         const anomalyDelta = result.anomalyScore ?? 0
         const newScore = Math.min(scoreBefore + anomalyDelta, 100)
         setCumulativeScore(newScore)
@@ -244,6 +275,7 @@ export default function BehavioralTrainingPanel() {
           }
         }
       } catch {
+        clearInterval(stepInterval)
         setActions((prev) =>
           prev.map((a, i) =>
             i === index
@@ -253,7 +285,7 @@ export default function BehavioralTrainingPanel() {
         )
       }
     },
-    [actions, cumulativeScore, policyOverrides, preset, selectedAgent, isEnterprise, customAgent, agentDisplayName],
+    [actions, cumulativeScore, policyOverrides, preset, selectedAgent, isEnterprise, customAgent, agentDisplayName, onPipelineStart, onPipelineStep, onPipelineComplete, onVerdictReceived],
   )
 
   // Reset
@@ -280,6 +312,7 @@ export default function BehavioralTrainingPanel() {
   }, [isEnterprise, selectedAgent, customAgent])
 
   const currentIndex = actions.findIndex((a) => a.status === 'running')
+  const nextPending = actions.findIndex((a) => a.status === 'pending')
   const completedCount = actions.filter((a) => a.status === 'done').length
   const allDone = actions.every((a) => a.status === 'done') && actions.length > 0
   const isRunning = actions.some((a) => a.status === 'running')
@@ -464,6 +497,8 @@ export default function BehavioralTrainingPanel() {
         disabled={isRunning}
         agentName={agentDisplayName}
         baselinePolicy={isEnterprise && selectedAgent ? selectedAgent.policy : DEFAULT_POLICY}
+        onRunWhatIf={nextPending >= 0 && !isRunning ? () => handleRunAction(nextPending) : undefined}
+        hasPendingActions={nextPending >= 0}
       />
 
       {/* Lockout Banner */}
