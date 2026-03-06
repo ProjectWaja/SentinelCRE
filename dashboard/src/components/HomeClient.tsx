@@ -13,6 +13,58 @@ import GuardianTab from '@/components/guardian/GuardianTab'
 import BehavioralTrainingPanel from '@/components/simulator/BehavioralTrainingPanel'
 import type { VerdictResult } from '@/lib/demo-scenarios'
 
+/**
+ * Map the API's layerCatchInfo to the correct CRE pipeline step index + reason.
+ *
+ * Pipeline steps:
+ *   0 = Receive Proposal    4 = AI Model 2 (GPT-4)
+ *   1 = Read Policy          5 = DON Consensus
+ *   2 = Behavioral Scoring   6 = Write Verdict
+ *   3 = AI Model 1 (Claude)  7 = On-Chain Policy
+ */
+function resolveCatchStep(result: VerdictResult): {
+  catchStep: number | undefined
+  catchReason: string | undefined
+} {
+  if (result.consensus !== 'DENIED') return { catchStep: undefined, catchReason: undefined }
+
+  const info = result.layerCatchInfo
+
+  // Use layerCatchInfo when available (preferred — exact layer + reason from API)
+  if (info) {
+    if (info.caughtBy === 'layer1') {
+      return {
+        catchStep: 1, // Read Policy — violation detected when checking on-chain policy
+        catchReason: `POLICY VIOLATION — ${info.layer1.reason ?? 'On-chain policy check failed'}`,
+      }
+    }
+    if (info.caughtBy === 'layer2') {
+      return {
+        catchStep: 2, // Behavioral Risk Scoring
+        catchReason: `ANOMALY DETECTED — ${info.layer2.reason ?? `Risk Score ${result.anomalyScore ?? 0}/100 exceeds threshold`}`,
+      }
+    }
+    if (info.caughtBy === 'layer3') {
+      return {
+        catchStep: 5, // DON Consensus
+        catchReason: `AI CONSENSUS DENIED — ${info.layer3.reason ?? result.model1.reason}`,
+      }
+    }
+  }
+
+  // Fallback heuristics (if layerCatchInfo not present)
+  if (result.anomalyFlagged) {
+    return {
+      catchStep: 2,
+      catchReason: `ANOMALY DETECTED — Risk Score ${result.anomalyScore ?? 0}/100 exceeds threshold`,
+    }
+  }
+  return {
+    catchStep: 5,
+    catchReason: `DENIED — ${result.model1.reason}`,
+  }
+}
+
 export default function HomeClient() {
   const [activeTab, setActiveTab] = useState('architecture')
   const [tabKey, setTabKey] = useState(0)
@@ -72,21 +124,7 @@ export default function HomeClient() {
   }, [])
 
   const handleSimPipelineComplete = useCallback((result: VerdictResult) => {
-    let catchStep: number | undefined
-    let catchReason: string | undefined
-
-    if (result.consensus === 'DENIED') {
-      if (result.anomalyFlagged) {
-        catchStep = 2
-        catchReason = `ANOMALY DETECTED — Risk Score ${result.anomalyScore ?? 0}/100 exceeds threshold`
-      } else if (result.severity === 'CRITICAL') {
-        catchStep = 7
-        catchReason = `POLICY VIOLATION — Exceeds on-chain compliance limits`
-      } else {
-        catchStep = 5
-        catchReason = `DENIED — ${result.model1.reason}`
-      }
-    }
+    const { catchStep, catchReason } = resolveCatchStep(result)
 
     setSimCurrentRun({
       id: crypto.randomUUID(),
@@ -99,25 +137,7 @@ export default function HomeClient() {
   }, [])
 
   const handlePipelineComplete = useCallback((result: VerdictResult) => {
-    // Determine which pipeline step caught the attack
-    // Step 2 = Behavioral Risk Scoring (Layer 2)
-    // Step 5 = DON Consensus / AI Models (Layer 3)
-    // Step 7 = On-Chain Policy (Layer 1)
-    let catchStep: number | undefined
-    let catchReason: string | undefined
-
-    if (result.consensus === 'DENIED') {
-      if (result.anomalyFlagged) {
-        catchStep = 2
-        catchReason = `ANOMALY DETECTED — Risk Score ${result.anomalyScore ?? 0}/100 exceeds threshold`
-      } else if (result.severity === 'CRITICAL') {
-        catchStep = 7
-        catchReason = `POLICY VIOLATION — Exceeds on-chain compliance limits`
-      } else {
-        catchStep = 5
-        catchReason = `DENIED — ${result.model1.reason}`
-      }
-    }
+    const { catchStep, catchReason } = resolveCatchStep(result)
 
     setCurrentRun({
       id: crypto.randomUUID(),
