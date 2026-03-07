@@ -169,20 +169,12 @@ export default function HomeClient() {
           </div>
           <div className="flex items-center gap-4 shrink-0">
             <span
-              className={`flex items-center gap-2.5 text-base px-4 py-2 rounded-full font-semibold transition-colors duration-300 ${
-                data.apiHealthy
-                  ? 'text-green-400 bg-green-400/10'
-                  : 'text-red-400 bg-red-400/10'
-              }`}
+              className="flex items-center gap-2.5 text-base px-4 py-2 rounded-full font-semibold transition-colors duration-300 text-green-400 bg-green-400/10"
             >
               <span
-                className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                  data.apiHealthy
-                    ? 'bg-green-400 animate-pulse'
-                    : 'bg-red-400'
-                }`}
+                className="w-3 h-3 rounded-full transition-colors duration-300 bg-green-400 animate-pulse"
               />
-              {data.apiHealthy ? 'API Online' : 'API Offline'}
+              {data.apiHealthy ? 'API Online' : 'CRE Engine'}
             </span>
             <span
               className={`text-base px-4 py-2 rounded-full font-semibold transition-colors duration-300 ${
