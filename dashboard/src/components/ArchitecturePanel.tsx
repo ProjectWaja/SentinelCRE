@@ -236,14 +236,14 @@ const DEFENSE_LAYERS = [
     ringColor: 'border-red-500',
     bg: 'bg-red-500/10',
     textColor: 'text-red-400',
-    tagline: 'Immutable rules that can\'t be bypassed — or even seen',
+    tagline: 'Immutable on-chain rules that no AI can override',
     details: [
       'Value limits per transaction and per window',
       'Target address whitelist enforcement',
       'Function selector blocklist',
       'Rate limiting (max actions per time window)',
       'Mint cap enforcement (absolute token ceiling)',
-      'Confidential Compute hides all policy parameters from agents — attack bots get blocked by rules they don\'t even know exist, eliminating any ability to probe or wiggle through thresholds',
+      'Proof of Reserves via Chainlink Data Feeds — verifies reserve backing before mints with cumulative tracking',
     ],
   },
   {
@@ -460,7 +460,7 @@ const KEY_DIFFERENTIATORS = [
   },
   {
     title: 'Confidential Compute',
-    desc: 'Policy thresholds hidden from agents via CC — attackers can\'t probe or reverse-engineer limits',
+    desc: 'Behavioral thresholds and AI prompts hidden inside TEE — agents can\'t probe or reverse-engineer L2/L3 criteria',
     icon: '&#128274;',
     color: 'text-orange-400',
     bg: 'bg-orange-500/10',
