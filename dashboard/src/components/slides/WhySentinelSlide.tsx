@@ -5,7 +5,7 @@ import SlideLayout from './SlideLayout'
 const differentiators = [
   {
     title: 'Real Problem, Real Stakes',
-    desc: '$3.4 billion stolen in 2025 alone. AI agents are executing on-chain with zero risk infrastructure.',
+    desc: '$3.4B+ stolen across AI agent and DeFi exploits. AI agents are executing on-chain with zero risk infrastructure.',
     color: 'text-red-400',
     border: 'border-red-500',
   },
@@ -17,7 +17,7 @@ const differentiators = [
   },
   {
     title: 'Deep CRE Integration',
-    desc: '5 CRE capabilities + Data Feeds: HTTPClient, ConfidentialHTTPClient, EVMClient, CronCapability, HTTPCapability.',
+    desc: '8 CRE primitives + 3 trigger types: ConfidentialHTTPClient, ConsensusAggregation, EVMClient (5 methods), Cron, HTTP, Log.',
     color: 'text-cyan-400',
     border: 'border-cyan-500',
   },
@@ -28,13 +28,13 @@ const differentiators = [
     border: 'border-green-500',
   },
   {
-    title: '85 Tests, 5 Suites',
+    title: '90 Tests, 5 Suites',
     desc: 'Production-grade: policy enforcement, challenge appeals, Proof of Reserves, circuit breakers, full lifecycle.',
     color: 'text-yellow-400',
     border: 'border-yellow-500',
   },
   {
-    title: 'Confidential Compute Live',
+    title: 'Confidential Compute',
     desc: 'ConfidentialHTTPClient hides behavioral weights, AI prompts, and API keys inside TEE. Agents see only APPROVED/DENIED.',
     color: 'text-purple-400',
     border: 'border-purple-500',
@@ -44,18 +44,18 @@ const differentiators = [
 export default function WhySentinelSlide() {
   return (
     <SlideLayout dark={false}>
-      <h2 className="text-4xl font-bold text-white mb-8">
+      <h2 className="text-5xl font-bold text-white mb-10">
         Why SentinelCRE
       </h2>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
         {differentiators.map((d) => (
           <div
             key={d.title}
-            className={`bg-gray-800/50 rounded-xl p-5 border-l-4 ${d.border}`}
+            className={`bg-gray-800/50 rounded-xl p-7 border-l-4 ${d.border}`}
           >
-            <h3 className={`font-semibold mb-2 ${d.color}`}>{d.title}</h3>
-            <p className="text-base text-gray-400">{d.desc}</p>
+            <h3 className={`font-semibold mb-3 text-xl ${d.color}`}>{d.title}</h3>
+            <p className="text-lg text-gray-400">{d.desc}</p>
           </div>
         ))}
       </div>

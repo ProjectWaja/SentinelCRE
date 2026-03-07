@@ -13,7 +13,7 @@ export default function SlideLayout({
         dark ? 'bg-gray-950' : 'bg-gray-900'
       }`}
     >
-      <div className="max-w-5xl w-full">{children}</div>
+      <div className="max-w-7xl w-full">{children}</div>
       <div className="absolute top-6 left-8 flex items-center gap-2 opacity-40">
         <div className="w-6 h-6 rounded bg-gradient-to-br from-red-600 to-orange-500 flex items-center justify-center">
           <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
