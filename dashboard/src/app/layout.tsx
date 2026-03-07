@@ -47,9 +47,9 @@ export default function RootLayout({
               >
                 Presentation
               </a>
-              <span className="text-base text-purple-400 bg-purple-400/10 px-4 py-1.5 rounded-full font-bold border border-purple-400/20">
+              <a href="https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02" target="_blank" rel="noopener noreferrer" className="text-base text-purple-400 bg-purple-400/10 px-4 py-1.5 rounded-full font-bold border border-purple-400/20 hover:bg-purple-400/20 transition-colors cursor-pointer">
                 Tenderly TestNet
-              </span>
+              </a>
             </div>
           </div>
         </nav>
