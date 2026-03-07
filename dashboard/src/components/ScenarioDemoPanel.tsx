@@ -46,8 +46,11 @@ export default function ScenarioDemoPanel({
     for (let i = 0; i < scenario.steps.length; i++) {
       setActiveStep(i)
       onPipelineStep?.(i, scenario.steps.length)
-      await new Promise((r) => setTimeout(r, 500))
+      await new Promise((r) => setTimeout(r, 800))
     }
+
+    // Hold on the final step briefly before calling the API — simulates deliberation
+    await new Promise((r) => setTimeout(r, 600))
 
     try {
       const result = await evaluateAction(scenario.proposal)
