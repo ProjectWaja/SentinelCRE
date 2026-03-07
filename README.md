@@ -7,33 +7,37 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 **Primary Track:** Risk & Compliance — on-chain policy enforcement, behavioral anomaly detection, severity-based incident response, Proof of Reserves
 **Also Applying:** CRE & AI (8 CRE primitives, 3 trigger types + dual-AI consensus) · Privacy (ConfidentialHTTPClient + TEE) · Tenderly (Virtual TestNet deployment + Simulation API)
 
+## Quick Judge Links
+
 | | |
 |---|---|
-| **Live Dashboard** | `bun run dev` → http://localhost:3000 |
-| **Presentation Mode** | http://localhost:3000/presentation (10 interactive slides) |
-| **Tenderly Explorer** | [Virtual TestNet Transactions](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions) |
-| **Contracts** | [`0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8) (Guardian) · [`0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6) (Registry) |
+| **Demo Video** | *Coming soon — 5-min walkthrough* |
+| **Live Dashboard** | [dashboard-dun-alpha-96.vercel.app](https://dashboard-dun-alpha-96.vercel.app) (hosted on Vercel — no setup required) |
+| **Presentation Mode** | [dashboard-dun-alpha-96.vercel.app/presentation](https://dashboard-dun-alpha-96.vercel.app/presentation) (10-slide overview) |
+| **Tenderly Explorer** | [Virtual TestNet Transactions](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions) — all verdicts, freezes, challenges verifiable on-chain |
+| **Key Contracts** | [`0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8) (Guardian) · [`0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6) (Registry) |
 | **Deployer** | [`0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446) |
+| **GitHub Repo** | This README + full source code |
 
-![SentinelCRE Dashboard](docs/assets/dashboard-screenshot.png)
+![SentinelCRE Dashboard — Architecture tab showing three-layer defense model, verdict pipeline, and Chainlink integration cards](docs/assets/dashboard-screenshot.png)
 
 ### Dashboard Highlights
 
 **Three-Layer Defense Model** — Concentric ring visualization showing how L1 (On-Chain Policy), L2 (Behavioral Engine), and L3 (Dual-AI Consensus) work together. An attacker must bypass all three simultaneously to succeed.
 
-![Defense in Depth](docs/assets/dashboard-screenshot2.PNG)
+![Three-Layer Defense Model with concentric rings showing compliance, behavioral, and AI consensus layers](docs/assets/dashboard-screenshot2.PNG)
 
 **8-Step Verdict Pipeline** — Every agent proposal flows through this pipeline. A denial at any step halts execution and freezes the agent. Each step maps to a real Chainlink CRE primitive (HTTP Trigger, EVMClient, Confidential HTTP, Consensus, etc.).
 
-![Verdict Pipeline](docs/assets/dashboard-screenshot3.PNG)
+![8-Step Verdict Pipeline showing CRE primitives mapped to each evaluation stage](docs/assets/dashboard-screenshot3.PNG)
 
 **Live Attack Demo with Kill Chain** — Interactive scenario walkthroughs show real attack vectors (Moonwell oracle exploit, Anthropic's automated probing research) with step-by-step kill chains, dual-AI verdict breakdowns (Claude + GPT-4), CRE pipeline status, and live Tenderly transaction feed.
 
-![Live Demo — Attack Scenario](docs/assets/dashboard-screenshot4.PNG)
+![Live Demo showing Moonwell oracle exploit with kill chain, dual-AI verdicts, and CRE pipeline status](docs/assets/dashboard-screenshot4.PNG)
 
 **Sybil Coordination Detection** — Two compromised bots coordinate a split-drain across agent IDs. Each action is individually within policy limits, but behavioral scoring catches the coordinated near-limit minting pattern (Function Pattern +50), and both AI models independently confirm the collusion.
 
-![Live Demo — Sybil Coordination](docs/assets/dashboard-screenshot5.PNG)
+![Sybil Coordination detection — two bots caught splitting a drain across agent IDs with behavioral scoring](docs/assets/dashboard-screenshot5.PNG)
 
 ---
 
@@ -475,11 +479,11 @@ Four tabs built with Next.js 15 + React 19 + Tailwind CSS 4 (Architecture opens 
 
 **Guardian Tab** — Agent profiles with behavioral score trends, policy summaries, targeted attack scenarios, threat timeline, and defense analytics (verdict distribution donut, severity breakdown bars).
 
-![Guardian Tab](docs/assets/Guardian%20Tab%20Screenshot.PNG)
+![Guardian Tab — Agent profiles with behavioral score trends, defense analytics, and threat timeline](docs/assets/Guardian%20Tab%20Screenshot.PNG)
 
 **Enterprise Simulator** — Coinbase Institutional preset with 6-agent fleet, what-if policy editor, live CRE Pipeline status, and Tenderly transaction feed. Every evaluation fires a real `processVerdict` transaction on the Virtual TestNet.
 
-![Simulator Tab](docs/assets/Simulator%20Screenshot.PNG)
+![Enterprise Simulator — Coinbase preset with policy editor, live CRE pipeline, and Tenderly transaction feed](docs/assets/Simulator%20Screenshot.PNG)
 
 ---
 
@@ -497,7 +501,7 @@ Contracts are deployed on Tenderly's Virtual Sepolia TestNet with pre-funded acc
 | AgentRegistry | [`0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6) |
 | Deployer | [`0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446) |
 
-![Tenderly Virtual TestNet](docs/assets/Tenderly%20Screenshot.PNG)
+![Tenderly Virtual TestNet Explorer showing processVerdict transactions with decoded calldata](docs/assets/Tenderly%20Screenshot.PNG)
 
 **Why Virtual TestNet was essential:**
 - **No faucet hunting** — pre-funded accounts with unlimited ETH, zero setup friction
@@ -603,6 +607,17 @@ bun run behavioral:reset
 6. **Compliance due process** — Severity-based appeal windows mirror real-world financial systems. Critical threats are permanently blocked; low-severity denials get a structured review process. See [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md).
 
 7. **Production-grade testing** — 90 tests covering edge cases like cumulative mint drain, rate limit window resets, PoR collateral ratios, and challenge resolution flows. See [`TECHNICAL.md`](TECHNICAL.md#test-coverage).
+
+---
+
+## How SentinelCRE Aligns with Judging Criteria
+
+| Criterion | How SentinelCRE Delivers |
+|-----------|--------------------------|
+| **Technical Execution** | Fully functional end-to-end on Tenderly Virtual TestNet — 90 tests, live `processVerdict` transactions for every verdict, Simulation API-powered what-if scenarios, no placeholders or stubs |
+| **Blockchain Technology Application** | On-chain enforcement via SentinelGuardian (verdict processing, agent freezes, Proof of Reserves via Data Feeds), Automation-ready challenge finalization, immutable audit trails for every evaluation |
+| **Effective Use of CRE** | 8 primitives (`ConfidentialHTTPClient` for TEE privacy, `ConsensusAggregationByFields` for dual-AI BFT, `EVMClient` for reads/writes/queries/triggers, `Cron`+`Log`+`HTTP` triggers) — CRE enables the core innovation: hidden behavioral thresholds + consensus that prevent agent gaming |
+| **Originality / Wow Factor** | Novel frozen-origin behavioral baseline catches slow drift and probing attacks that evade traditional security. Proactive prevention of $2.2B+ in real-world exploits (Bybit, AIXBT, Moonwell, Anthropic research). Severity-based appeals for real compliance due process |
 
 ---
 
