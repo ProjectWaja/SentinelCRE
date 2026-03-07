@@ -30,7 +30,8 @@ export default function ScenarioDemoPanel({
   const [runningAll, setRunningAll] = useState(false)
   const [completedIds, setCompletedIds] = useState<Set<number>>(new Set())
   const [nextScenarioName, setNextScenarioName] = useState<string | null>(null)
-  const continueRef = useRef<(() => void) | null>(null)
+  const cancelRef = useRef(false)
+  const AUTO_ADVANCE_DELAY = 3000 // ms to show verdict before auto-advancing
 
   const primaryScenarios = [...SAFE_SCENARIOS, ...INCIDENT_SCENARIOS]
   const additionalScenarios = DEMO_SCENARIOS
@@ -70,36 +71,34 @@ export default function ScenarioDemoPanel({
     setCompletedIds((prev) => new Set(prev).add(scenario.id))
   }, [onVerdictReceived, onPipelineStart, onPipelineComplete, onPipelineStep])
 
-  function handleContinue() {
-    continueRef.current?.()
-    continueRef.current = null
-  }
-
-  function waitForContinue(nextName: string): Promise<void> {
-    return new Promise((resolve) => {
-      setNextScenarioName(nextName)
-      setRunState('waiting')
-      continueRef.current = resolve
-    })
-  }
-
   async function runAllScenarios() {
     setRunningAll(true)
     setCompletedIds(new Set())
+    cancelRef.current = false
 
     const all = [...SAFE_SCENARIOS, ...INCIDENT_SCENARIOS]
 
     for (let idx = 0; idx < all.length; idx++) {
+      if (cancelRef.current) break
       await runScenario(all[idx])
 
-      // After each scenario (except the last), wait for user to click "Next"
-      if (idx < all.length - 1) {
-        await waitForContinue(all[idx + 1].title)
+      // Show verdict briefly, then auto-advance (except after the last)
+      if (idx < all.length - 1 && !cancelRef.current) {
+        setNextScenarioName(all[idx + 1].title)
+        setRunState('waiting')
+        await new Promise((r) => setTimeout(r, AUTO_ADVANCE_DELAY))
       }
     }
 
     setNextScenarioName(null)
     setRunningAll(false)
+  }
+
+  function stopDemo() {
+    cancelRef.current = true
+    setRunningAll(false)
+    setNextScenarioName(null)
+    setRunState('done')
   }
 
   const totalScenarios = primaryScenarios.length
@@ -117,21 +116,22 @@ export default function ScenarioDemoPanel({
               Every verdict flows through the Chainlink CRE pipeline in real-time.
             </p>
           </div>
-          {runningAll && runState === 'waiting' ? (
-            <button
-              onClick={handleContinue}
-              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold rounded-2xl transition-colors flex items-center gap-3 shrink-0 animate-pulse"
-            >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-              Next Scenario
-            </button>
-          ) : (
+          <div className="flex items-center gap-3 shrink-0">
+            {runningAll && (
+              <button
+                onClick={stopDemo}
+                className="px-6 py-4 bg-gray-700 hover:bg-gray-600 text-white text-xl font-bold rounded-2xl transition-colors flex items-center gap-3"
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
+                </svg>
+                Stop
+              </button>
+            )}
             <button
               onClick={runAllScenarios}
               disabled={runningAll}
-              className="px-8 py-4 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 text-white text-xl font-bold rounded-2xl transition-colors flex items-center gap-3 shrink-0"
+              className="px-8 py-4 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 text-white text-xl font-bold rounded-2xl transition-colors flex items-center gap-3"
             >
               {runningAll ? (
                 <>
@@ -147,7 +147,7 @@ export default function ScenarioDemoPanel({
                 </>
               )}
             </button>
-          )}
+          </div>
         </div>
 
         {/* Progress bar during full demo */}
@@ -362,22 +362,15 @@ export default function ScenarioDemoPanel({
                       })}
                     </div>
 
-                    {/* Next Scenario Prompt */}
+                    {/* Next Scenario Prompt — auto-advancing */}
                     {isActive && runState === 'waiting' && nextScenarioName && (
                       <div className="mt-3 flex items-center justify-between p-3 px-5 rounded-xl bg-blue-500/10 border-2 border-blue-500/30">
-                        <div>
+                        <div className="flex items-center gap-3">
+                          <span className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
                           <span className="text-lg text-blue-400 font-bold">Up Next:</span>
-                          <span className="text-lg text-gray-300 ml-3 font-semibold">{nextScenarioName}</span>
+                          <span className="text-lg text-gray-300 font-semibold">{nextScenarioName}</span>
                         </div>
-                        <button
-                          onClick={handleContinue}
-                          className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold rounded-xl transition-colors flex items-center gap-2"
-                        >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                          Continue
-                        </button>
+                        <span className="text-base text-blue-400/60 font-semibold">Auto-advancing...</span>
                       </div>
                     )}
 
