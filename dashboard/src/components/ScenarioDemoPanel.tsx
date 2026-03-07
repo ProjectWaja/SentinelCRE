@@ -85,11 +85,14 @@ export default function ScenarioDemoPanel({
       if (cancelRef.current) break
       await runScenario(all[idx])
 
-      // Show verdict briefly, then auto-advance (except after the last)
+      // Show verdict, then auto-advance (except after the last)
+      // Incident replays (IDs 101+) get extra time for narration
       if (idx < all.length - 1 && !cancelRef.current) {
+        const isIncident = all[idx].id >= 101
+        const delay = isIncident ? AUTO_ADVANCE_DELAY + 2000 : AUTO_ADVANCE_DELAY
         setNextScenarioName(all[idx + 1].title)
         setRunState('waiting')
-        await new Promise((r) => setTimeout(r, AUTO_ADVANCE_DELAY))
+        await new Promise((r) => setTimeout(r, delay))
       }
     }
 
