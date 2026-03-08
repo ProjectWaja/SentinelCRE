@@ -14,7 +14,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 | **Demo Video** | [5-min walkthrough on YouTube](https://youtu.be/YAdYsDABZ78) |
 | **Live Dashboard** | [dashboard-dun-alpha-96.vercel.app](https://dashboard-dun-alpha-96.vercel.app) (hosted on Vercel — no setup required) |
 | **Presentation Mode** | [dashboard-dun-alpha-96.vercel.app/presentation](https://dashboard-dun-alpha-96.vercel.app/presentation) (10-slide overview) |
-| **Tenderly Explorer** | [Virtual TestNet Transactions](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions) — all verdicts, freezes, challenges verifiable on-chain |
+| **Tenderly Explorer** | [Virtual TestNet Dashboard](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02) — all verdicts, freezes, challenges verifiable on-chain |
 | **Key Contracts** | [`0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8) (Guardian) · [`0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6) (Registry) |
 | **Deployer** | [`0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446) |
 | **GitHub Repo** | This README + full source code |
@@ -617,7 +617,7 @@ bun run behavioral:reset
 | **Technical Execution** | Fully functional end-to-end on Tenderly Virtual TestNet — 90 tests, live `processVerdict` transactions for every verdict, Simulation API-powered what-if scenarios, no placeholders or stubs |
 | **Blockchain Technology Application** | On-chain enforcement via SentinelGuardian (verdict processing, agent freezes, Proof of Reserves via Data Feeds), Automation-ready challenge finalization, immutable audit trails for every evaluation |
 | **Effective Use of CRE** | 8 primitives (`ConfidentialHTTPClient` for TEE privacy, `ConsensusAggregationByFields` for dual-AI BFT, `EVMClient` for reads/writes/queries/triggers, `Cron`+`Log`+`HTTP` triggers) — CRE enables the core innovation: hidden behavioral thresholds + consensus that prevent agent gaming |
-| **Originality / Wow Factor** | Novel frozen-origin behavioral baseline catches slow drift and probing attacks that evade traditional security. Proactive prevention of $2.2B+ in real-world exploits (Bybit, AIXBT, Moonwell, Anthropic research). Severity-based appeals for real compliance due process |
+| **Originality / Wow Factor** | Novel frozen-origin behavioral baseline catches slow drift and probing attacks that evade traditional security. Proactive prevention of $3.4B+ in real-world exploits (Bybit, AIXBT, Moonwell, Anthropic research). Severity-based appeals for real compliance due process |
 
 ---
 
