@@ -11,7 +11,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 
 | | |
 |---|---|
-| **Demo Video** | *Coming soon — 5-min walkthrough* |
+| **Demo Video** | [5-min walkthrough on YouTube](https://youtu.be/YAdYsDABZ78) |
 | **Live Dashboard** | [dashboard-dun-alpha-96.vercel.app](https://dashboard-dun-alpha-96.vercel.app) (hosted on Vercel — no setup required) |
 | **Presentation Mode** | [dashboard-dun-alpha-96.vercel.app/presentation](https://dashboard-dun-alpha-96.vercel.app/presentation) (10-slide overview) |
 | **Tenderly Explorer** | [Virtual TestNet Transactions](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/transactions) — all verdicts, freezes, challenges verifiable on-chain |
