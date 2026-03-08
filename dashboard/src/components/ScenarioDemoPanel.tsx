@@ -72,7 +72,7 @@ export default function ScenarioDemoPanel({
     setCompletedIds((prev) => new Set(prev).add(scenario.id))
   }, [onVerdictReceived, onPipelineStart, onPipelineComplete, onPipelineStep])
 
-  async function runPhaseScenarios(scenarios: DemoScenario[], phase: number) {
+  async function runPhaseScenarios(scenarios: DemoScenario[], phase: number, fastMode = false) {
     setRunningPhase(phase)
     cancelRef.current = false
 
@@ -82,7 +82,7 @@ export default function ScenarioDemoPanel({
 
       if (idx < scenarios.length - 1 && !cancelRef.current) {
         const isIncident = scenarios[idx].id >= 101
-        const delay = isIncident ? AUTO_ADVANCE_DELAY + 2000 : AUTO_ADVANCE_DELAY
+        const delay = fastMode ? 1500 : isIncident ? AUTO_ADVANCE_DELAY + 2000 : AUTO_ADVANCE_DELAY
         setNextScenarioName(scenarios[idx + 1].title)
         setRunState('waiting')
         await new Promise((r) => setTimeout(r, delay))
@@ -102,6 +102,7 @@ export default function ScenarioDemoPanel({
 
   const phase1Completed = [...completedIds].filter((id) => SAFE_SCENARIOS.some((s) => s.id === id)).length
   const phase2Completed = [...completedIds].filter((id) => INCIDENT_SCENARIOS.some((s) => s.id === id)).length
+  const phase3Completed = [...completedIds].filter((id) => DEMO_SCENARIOS.some((s) => s.id === id)).length
 
   return (
     <div className="space-y-6">
@@ -296,15 +297,74 @@ export default function ScenarioDemoPanel({
         })}
       </div>
 
-      {/* ─── Additional Scenarios ─── */}
-      <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8">
-        <h2 className="text-3xl font-black text-white mb-2">Additional Attack Scenarios</h2>
-        <p className="text-lg text-gray-400">
-          11 more attack vectors for deeper exploration — policy violations, behavioral edge cases, and evasion techniques. Run individually.
-        </p>
-      </div>
-
+      {/* ─── Phase 3: Additional Attack Scenarios ─── */}
       <div className="space-y-5">
+        <div className="bg-orange-900/20 rounded-2xl border border-orange-500/20 p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-orange-400/20 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-2 1-3 .5 1 1 3 2 3.5a3 3 0 01-.38 1.12z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-orange-400 uppercase tracking-widest">Phase 3: Additional Attack Vectors</h3>
+                <p className="text-lg text-orange-400/60 mt-0.5">
+                  11 more attack vectors — policy violations, behavioral edge cases, and evasion techniques
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              {runningPhase === 3 && (
+                <button
+                  onClick={stopDemo}
+                  className="px-5 py-3 bg-gray-700 hover:bg-gray-600 text-white text-lg font-bold rounded-2xl transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
+                  </svg>
+                  Stop
+                </button>
+              )}
+              <button
+                onClick={() => runPhaseScenarios(DEMO_SCENARIOS, 3, true)}
+                disabled={runningPhase !== null}
+                className="px-6 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 text-white text-lg font-bold rounded-2xl transition-colors flex items-center gap-2"
+              >
+                {runningPhase === 3 ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Running...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                    </svg>
+                    Run Phase 3
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Phase 3 progress */}
+          {phase3Completed > 0 && (
+            <div className="mt-4 pt-4 border-t border-orange-500/20">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm font-bold text-orange-400/60">Scenarios</span>
+                <span className="text-sm font-bold text-orange-400 tabular-nums">{phase3Completed} / {DEMO_SCENARIOS.length}</span>
+              </div>
+              <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500 ease-out bg-orange-500"
+                  style={{ width: `${(phase3Completed / DEMO_SCENARIOS.length) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
         {additionalScenarios.map((scenario, idx) => {
           const isActive = activeScenario?.id === scenario.id
           const isCompleted = completedIds.has(scenario.id)
