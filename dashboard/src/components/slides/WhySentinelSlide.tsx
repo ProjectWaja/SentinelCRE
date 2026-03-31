@@ -5,7 +5,7 @@ import SlideLayout from './SlideLayout'
 const differentiators = [
   {
     title: 'Real Problem, Real Stakes',
-    desc: '$3.4B+ stolen across AI agent and DeFi exploits. AI agents are executing on-chain with zero risk infrastructure.',
+    desc: '$1.5B+ stolen in 2025 across AI agent and DeFi exploits. AI agents are executing on-chain with zero risk infrastructure.',
     color: 'text-red-400',
     border: 'border-red-500',
   },

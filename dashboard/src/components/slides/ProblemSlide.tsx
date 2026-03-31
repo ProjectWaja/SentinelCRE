@@ -61,7 +61,7 @@ export default function ProblemSlide() {
       </div>
 
       <p className="text-center text-4xl font-bold text-red-400">
-        $3.4B+ stolen — every exploit SentinelCRE would have blocked
+        $1.5B+ stolen in 2025 — every exploit SentinelCRE would have blocked
       </p>
     </SlideLayout>
   )

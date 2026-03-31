@@ -619,7 +619,7 @@ export default function ArchitecturePanel() {
 
         {/* Headline damage figure */}
         <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-5 text-center mb-6">
-          <div className="text-red-400 text-4xl font-black mb-1">$3.4 Billion stolen in 2025</div>
+          <div className="text-red-400 text-4xl font-black mb-1">$1.5B+ stolen in 2025</div>
           <p className="text-gray-400 text-lg">
             The worst year on record for crypto security. North Korea&apos;s Lazarus Group stole $2B alone &mdash; and AI agents are both the targets and the weapons.
           </p>
