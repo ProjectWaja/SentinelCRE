@@ -303,15 +303,17 @@ function deterministicEvaluate(proposal: any, overrides?: PolicyOverrides): {
     const avg = recentValues.reduce((a, b) => a + b, 0) / recentValues.length
     const currentEth = Number(value) / 1e18
     if (currentEth > avg * 2 && avg > 0) {
-      dimensions.push({ name: 'Value Deviation', fired: true, score: 0, /* REDACTED */ reason: `Value significantly above moving average` })
-      anomalyScore += 0 /* REDACTED */
+      const vdScore = 12
+      dimensions.push({ name: 'Value Deviation', fired: true, score: vdScore, reason: `Value significantly above moving average` })
+      anomalyScore += vdScore
     }
   }
 
   // Prompt injection detection
   if (INJECTION_PATTERNS.some(p => desc.includes(p))) {
-    dimensions.push({ name: 'Prompt Injection', fired: true, score: 0, /* REDACTED */ reason: 'Injection pattern detected in action description' })
-    anomalyScore += 0 /* REDACTED */
+    const piScore = 40
+    dimensions.push({ name: 'Prompt Injection', fired: true, score: piScore, reason: 'Injection pattern detected in action description' })
+    anomalyScore += piScore
   }
 
   // Off-hours / emergency language heuristic
@@ -325,8 +327,9 @@ function deterministicEvaluate(proposal: any, overrides?: PolicyOverrides): {
 
   // "Transfer all" language = fund extraction attempt
   if (desc.includes('transfer all')) {
-    dimensions.push({ name: 'Value Deviation', fired: true, score: 0, /* REDACTED */ reason: 'Fund extraction language pattern detected' })
-    anomalyScore += 0 /* REDACTED */
+    const feScore = 25
+    dimensions.push({ name: 'Value Deviation', fired: true, score: feScore, reason: 'Fund extraction language pattern detected' })
+    anomalyScore += feScore
   }
 
   // Cumulative drift: current value far above origin
@@ -334,8 +337,9 @@ function deterministicEvaluate(proposal: any, overrides?: PolicyOverrides): {
     const origin = recentValues.slice(0, 3).reduce((a, b) => a + b, 0) / 3
     const currentEth = Number(value) / 1e18
     if (origin > 0 && currentEth > origin * 3) {
-      dimensions.push({ name: 'Cumulative Drift', fired: true, score: 0, /* REDACTED */ reason: `Current value significantly above frozen origin baseline` })
-      anomalyScore += 0 /* REDACTED */
+      const cdScore = 20
+      dimensions.push({ name: 'Cumulative Drift', fired: true, score: cdScore, reason: `Current value significantly above frozen origin baseline` })
+      anomalyScore += cdScore
     }
   }
 
