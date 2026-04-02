@@ -26,13 +26,13 @@ export default function DemoScenario2Slide() {
               <div className="flex justify-between text-lg">
                 <span className="text-gray-300">Claude</span>
                 <span className="text-red-400 font-semibold">
-                  DENIED (99%)
+                  DENIED
                 </span>
               </div>
               <div className="flex justify-between text-lg">
                 <span className="text-gray-300">GPT-4</span>
                 <span className="text-red-400 font-semibold">
-                  DENIED (99%)
+                  DENIED
                 </span>
               </div>
               <p className="text-sm text-gray-500 mt-2">
