@@ -148,8 +148,7 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
                       <div className="flex items-center gap-2">
                         <span className="text-base text-gray-500">Anomaly Score:</span>
                         <span className={`text-base font-bold px-2 py-0.5 rounded ${
-                          v.anomalyScore >= threshold ? 'text-red-400 bg-red-400/10' :
-                          v.anomalyScore >= 25 ? 'text-orange-400 bg-orange-400/10' :
+                          v.anomalyFlagged ? 'text-red-400 bg-red-400/10' :
                           'text-green-400 bg-green-400/10'
                         }`}>
                           {v.anomalyFlagged ? 'FLAGGED' : 'NORMAL'}

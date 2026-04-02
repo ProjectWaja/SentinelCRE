@@ -284,9 +284,7 @@ export default function ThreatTimeline({
                                     className={`px-2 py-0.5 rounded font-bold ${
                                       v.anomalyFlagged
                                         ? 'bg-orange-400/10 text-orange-400 border border-orange-400/30'
-                                        : v.anomalyScore >= threshold
-                                          ? 'bg-yellow-400/10 text-yellow-400 border border-yellow-400/30'
-                                          : 'bg-gray-700/50 text-gray-400 border border-gray-600/30'
+                                        : 'bg-gray-700/50 text-gray-400 border border-gray-600/30'
                                     }`}
                                   >
                                     {v.anomalyFlagged ? 'FLAGGED' : 'NORMAL'}
