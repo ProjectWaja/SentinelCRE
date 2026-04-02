@@ -14,6 +14,10 @@
  *   DELETE /behavioral/reset     — Reset all behavior profiles
  *   GET  /health                 — Server health check
  *
+ * NOTE: This is a mock server for demo/testing purposes.
+ * Production AI evaluation endpoints and detection thresholds
+ * are configured via environment variables in the private deployment.
+ *
  * Usage: bun run api-server/server.ts
  */
 
@@ -33,11 +37,9 @@ interface BehaviorProfile {
   actionCount: number
   valueSum: number
   valueSumSquares: number
-  /** Frozen origin baseline — set after first N actions, never updated */
   originAvgValue: number
   originStdDevValue: number
   originFrozen: boolean
-  /** How many actions to observe before freezing origin */
   originWindowSize: number
 }
 
@@ -51,7 +53,7 @@ function getOrCreateProfile(agentId: string): BehaviorProfile {
       knownContracts: [],
       commonFunctions: [],
       minExpectedInterval: 60_000,
-      activeHours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20], // Business hours UTC
+      activeHours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
       recentValues: [],
       lastActionTimestamp: 0,
       actionCount: 0,
@@ -65,6 +67,13 @@ function getOrCreateProfile(agentId: string): BehaviorProfile {
   }
   return agentProfiles.get(agentId)!
 }
+
+// ── Behavioral Analysis ──────────────────────────────────────────────
+//
+// Production behavioral scoring logic (dimension weights, thresholds,
+// detection parameters) is proprietary and lives in the private repo.
+// This mock server uses simplified heuristics for demo purposes only.
+// ─────────────────────────────────────────────────────────────────────
 
 interface AnomalyDim {
   name: string
@@ -84,130 +93,34 @@ function computeBehavioralAnalysis(
 ): { totalScore: number; threshold: number; flagged: boolean; dimensions: AnomalyDim[] } {
   const profile = getOrCreateProfile(agentId)
   const ethValue = Number(BigInt(valueWei || '0')) / 1e18
-  // For mint-focused agents (value=0), use mint amount as the behavioral value signal
   const mintTokens = Number(BigInt(mintAmountWei || '0')) / 1e18
   const currentValue = ethValue > 0 ? ethValue : mintTokens > 0 ? mintTokens : 0
-  const threshold = 50
   const dims: AnomalyDim[] = []
 
-  // Dim 1: Value Deviation (+[REDACTED])
-  // Zero-value txs (approvals, admin ops) skip deviation — they're common DeFi operations
-  if (profile.avgValue === 0 && profile.stdDevValue === 0) {
-    dims.push({ name: 'Value Deviation', score: 0, maxWeight: 25, fired: false, reason: 'No baseline — first action' })
-  } else if (currentValue === 0 && profile.avgValue > 0) {
-    dims.push({ name: 'Value Deviation', score: 0, maxWeight: 25, fired: false, reason: 'Zero-value operation (approval/admin) — not anomalous' })
-  } else {
-    const sd = profile.stdDevValue > 0 ? profile.stdDevValue : profile.avgValue * 0.25
-    const z = sd > 0 ? Math.abs(currentValue - profile.avgValue) / sd : 0
-    if (z > 2.5) {
-      dims.push({ name: 'Value Deviation', score: 0, /* REDACTED */ maxWeight: 25, fired: true, reason: `Value ${currentValue.toFixed(2)} ETH is ${z.toFixed(1)}σ from mean ${profile.avgValue.toFixed(2)} ETH` })
-    } else if (z > 1.5) {
-      dims.push({ name: 'Value Deviation', score: 0, /* REDACTED */ maxWeight: 25, fired: true, reason: `Value ${currentValue.toFixed(2)} ETH is ${z.toFixed(1)}σ from mean (elevated)` })
-    } else {
-      dims.push({ name: 'Value Deviation', score: 0, maxWeight: 25, fired: false, reason: `Value within normal range (${z.toFixed(1)}σ)` })
-    }
-  }
+  // Dimension evaluations use proprietary weights and thresholds.
+  // The dimension names below show WHAT we analyze, not HOW we score it.
+  const dimensionNames = [
+    'Value Deviation',
+    'Contract Diversity',
+    'Velocity',
+    'Function Pattern',
+    'Time-of-Day',
+    'Sequential Probing',
+    'Cumulative Drift',
+  ]
 
-  // Dim 2: Contract Diversity (+[REDACTED])
-  const target = targetContract.toLowerCase()
-  if (profile.knownContracts.length === 0) {
-    dims.push({ name: 'Contract Diversity', score: 0, /* REDACTED */ maxWeight: 20, fired: true, reason: 'New agent — no contract history yet' })
-  } else if (!profile.knownContracts.includes(target)) {
-    dims.push({ name: 'Contract Diversity', score: 0, /* REDACTED */ maxWeight: 20, fired: true, reason: `First interaction with ${target.slice(0, 10)}...` })
-  } else {
-    dims.push({ name: 'Contract Diversity', score: 0, maxWeight: 20, fired: false, reason: 'Known contract' })
-  }
-
-  // Dim 3: Velocity (+[REDACTED]) — use timestamps, default to safe
-  const now = Date.now()
-  if (profile.lastActionTimestamp === 0) {
-    dims.push({ name: 'Velocity', score: 0, maxWeight: 15, fired: false, reason: 'First action — no interval' })
-  } else {
-    const interval = now - profile.lastActionTimestamp
-    if (interval < profile.minExpectedInterval * 0 /* REDACTED */) {
-      dims.push({ name: 'Velocity', score: 0, /* REDACTED */ maxWeight: 15, fired: true, reason: `Action ${(interval / 1000).toFixed(1)}s after previous` })
-    } else if (interval < profile.minExpectedInterval * 0 /* REDACTED */) {
-      dims.push({ name: 'Velocity', score: 0, /* REDACTED */ maxWeight: 15, fired: true, reason: `Interval elevated (${(interval / 1000).toFixed(1)}s)` })
-    } else {
-      dims.push({ name: 'Velocity', score: 0, maxWeight: 15, fired: false, reason: 'Normal interval' })
-    }
-  }
-
-  // Dim 4: Function Pattern (+[REDACTED])
-  // Common DeFi functions (swap, approve, transfer, mint) are never unusual
-  const sig = functionSig.toLowerCase()
-  const COMMON_DEFI_FUNCTIONS = ['0x38ed1739', '0x095ea7b3', '0xa9059cbb', '0x40c10f19', '0x23b872dd']
-  const isCommonDefi = COMMON_DEFI_FUNCTIONS.includes(sig)
-  if (profile.commonFunctions.length === 0) {
-    dims.push({ name: 'Function Pattern', score: 0, maxWeight: 30, fired: false, reason: 'New agent — no function history' })
-  } else if (!profile.commonFunctions.includes(sig) && !isCommonDefi) {
-    dims.push({ name: 'Function Pattern', score: 0, /* REDACTED */ maxWeight: 30, fired: true, reason: `Unusual function ${functionSig}` })
-  } else {
-    dims.push({ name: 'Function Pattern', score: 0, maxWeight: 30, fired: false, reason: isCommonDefi ? 'Standard DeFi function' : 'Known function' })
-  }
-
-  // Dim 5: Time-of-Day (+[REDACTED])
-  const hour = new Date().getUTCHours()
-  if (profile.activeHours.length === 24 || profile.activeHours.includes(hour)) {
-    dims.push({ name: 'Time-of-Day', score: 0, maxWeight: 10, fired: false, reason: 'Within active hours' })
-  } else {
-    dims.push({ name: 'Time-of-Day', score: 0, /* REDACTED */ maxWeight: 10, fired: true, reason: `Action at ${hour}:00 UTC outside normal window` })
-  }
-
-  // Dim 6: Sequential Probing (+[REDACTED]) — the hero
-  const vals = [...(recentValuesOverride ?? profile.recentValues), currentValue]
-  if (vals.length < 2) {
-    dims.push({ name: 'Sequential Probing', score: 0, maxWeight: 35, fired: false, reason: 'Insufficient history' })
-  } else if (vals.length === 2) {
-    if (vals[1] > vals[0]) {
-      dims.push({ name: 'Sequential Probing', score: 0, /* REDACTED */ maxWeight: 35, fired: true, reason: `Two increasing: [${vals.map((v) => v.toFixed(1)).join(', ')}] — monitoring` })
-    } else {
-      dims.push({ name: 'Sequential Probing', score: 0, maxWeight: 35, fired: false, reason: 'No escalation' })
-    }
-  } else {
-    const w = vals.slice(-Math.min(vals.length, 5))
-    let mono = true
-    for (let i = 1; i < w.length; i++) {
-      if (w[i] <= w[i - 1]) { mono = false; break }
-    }
-    if (mono && w.length >= 3) {
-      const ratios = []
-      let geo = true
-      for (let i = 1; i < w.length; i++) {
-        const r = w[i] / w[i - 1]
-        ratios.push(r)
-        if (r < 1.5 || r > 3.0) geo = false
-      }
-      const vStr = w.map((v) => v.toFixed(1)).join(', ')
-      const reason = geo
-        ? `Binary search: [${vStr}] (ratios: ${ratios.map((r) => r.toFixed(1)).join(', ')})`
-        : `Monotonically increasing: [${vStr}] — probing detected`
-      dims.push({ name: 'Sequential Probing', score: 0, /* REDACTED */ maxWeight: 35, fired: true, reason })
-    } else {
-      dims.push({ name: 'Sequential Probing', score: 0, maxWeight: 35, fired: false, reason: 'No sequential pattern' })
-    }
-  }
-
-  // Dim 7: Cumulative Drift (+[REDACTED]) — the "boiling frog" defense
-  if (!profile.originFrozen || profile.originAvgValue === 0) {
-    dims.push({ name: 'Cumulative Drift', score: 0, maxWeight: 20, fired: false, reason: 'Origin baseline not yet established' })
-  } else {
-    const osd = profile.originStdDevValue > 0 ? profile.originStdDevValue : profile.originAvgValue * 0.25
-    const drift = Math.abs(profile.avgValue - profile.originAvgValue)
-    const driftRatio = osd > 0 ? drift / osd : 0
-    const pctDrift = profile.originAvgValue > 0 ? ((profile.avgValue - profile.originAvgValue) / profile.originAvgValue) * 100 : 0
-    const sign = pctDrift > 0 ? '+' : ''
-    if (driftRatio > 0 /* REDACTED */) {
-      dims.push({ name: 'Cumulative Drift', score: 0, /* REDACTED */ maxWeight: 20, fired: true, reason: `Rolling avg ${profile.avgValue.toFixed(2)} ETH drifted ${driftRatio.toFixed(1)}σ from origin ${profile.originAvgValue.toFixed(2)} ETH (${sign}${pctDrift.toFixed(0)}%)` })
-    } else if (driftRatio > 0 /* REDACTED */) {
-      dims.push({ name: 'Cumulative Drift', score: 0, /* REDACTED */ maxWeight: 20, fired: true, reason: `Gradual drift: avg ${profile.avgValue.toFixed(2)} ETH vs origin ${profile.originAvgValue.toFixed(2)} ETH (${sign}${pctDrift.toFixed(0)}%)` })
-    } else {
-      dims.push({ name: 'Cumulative Drift', score: 0, maxWeight: 20, fired: false, reason: `Stable — avg near origin ${profile.originAvgValue.toFixed(2)} ETH` })
-    }
+  for (const name of dimensionNames) {
+    dims.push({
+      name,
+      score: 0,
+      maxWeight: 0,
+      fired: false,
+      reason: 'Analysis performed by production engine',
+    })
   }
 
   const totalScore = dims.reduce((s, d) => s + d.score, 0)
-  return { totalScore, threshold, flagged: totalScore >= threshold, dimensions: dims }
+  return { totalScore, threshold: 0, flagged: false, dimensions: dims }
 }
 
 function updateProfile(agentId: string, target: string, funcSig: string, valueWei: string, mintAmountWei?: string) {
@@ -227,7 +140,6 @@ function updateProfile(agentId: string, target: string, funcSig: string, valueWe
   if (profile.recentValues.length > 10) profile.recentValues.shift()
   profile.lastActionTimestamp = Date.now()
 
-  // Freeze origin baseline after N actions — never updated after this
   if (!profile.originFrozen && profile.actionCount >= profile.originWindowSize) {
     profile.originAvgValue = profile.avgValue
     profile.originStdDevValue = profile.stdDevValue
@@ -241,13 +153,12 @@ function updateProfile(agentId: string, target: string, funcSig: string, valueWe
   if (!profile.commonFunctions.includes(lSig)) profile.commonFunctions.push(lSig)
 }
 
-// Thresholds for rogue detection (matches the default policy in tests)
-const ROGUE_THRESHOLDS = {
-  maxValueWei: BigInt('1000000000000000000'), // 1 ETH
-  maxMintAmount: BigInt('1000000000000000000000000'), // 1M tokens (1e24)
-  approvedContracts: ['0x000000000000000000000000000000000000aa01'],
-  blockedFunctions: ['0xff00ff00', '0x3659cfe6', '0x4f1ef286', '0x715018a6', '0xf2fde38b'],
-}
+// ── AI Evaluation ────────────────────────────────────────────────────
+//
+// Production evaluation uses dual-AI consensus with calibrated detection
+// rules. This mock provides deterministic responses for demo/testing.
+// Detection thresholds and confidence scoring are proprietary.
+// ─────────────────────────────────────────────────────────────────────
 
 interface EvalRequest {
   model?: string
@@ -265,166 +176,30 @@ interface EvalResponse {
 function evaluateAction(prompt: string): EvalResponse {
   const lower = prompt.toLowerCase()
 
-  // Check for value violations
-  const valueMatch = prompt.match(/Value \(wei\):\s*(\d+)/i)
-  if (valueMatch) {
-    const value = BigInt(valueMatch[1])
-    if (value > ROGUE_THRESHOLDS.maxValueWei) {
-      return {
-        verdict: 'DENIED',
-        confidence: 0, /* REDACTED */
-        reason: `Transaction value ${value} wei exceeds safe threshold`,
-      }
-    }
-  }
-
-  // Check for mint amount violations
-  const mintMatch = prompt.match(/Mint Amount:\s*(\d+)/i)
-  if (mintMatch) {
-    const mint = BigInt(mintMatch[1])
-    if (mint > ROGUE_THRESHOLDS.maxMintAmount) {
-      return {
-        verdict: 'DENIED',
-        confidence: 0, /* REDACTED */
-        reason: `Mint amount ${mint} exceeds safe cap — potential infinite mint attack`,
-      }
-    }
-    // Near-cap mint (>80% of max) — suspicious, especially with coordination signals
-    if (mint > (ROGUE_THRESHOLDS.maxMintAmount * 80n) / 100n) {
-      return {
-        verdict: 'DENIED',
-        confidence: 0, /* REDACTED */
-        reason: `Mint amount is ${Number((mint * 100n) / ROGUE_THRESHOLDS.maxMintAmount)}% of cap — near-limit exploitation detected`,
-      }
-    }
-  }
-
-  // Check for unapproved targets
-  const targetMatch = prompt.match(/Target Contract:\s*(0x[a-fA-F0-9]+)/i)
-  if (targetMatch) {
-    const target = targetMatch[1].toLowerCase()
-    const isApproved = ROGUE_THRESHOLDS.approvedContracts.some(
-      (addr) => addr.toLowerCase() === target,
-    )
-    if (!isApproved && target !== '0x0000000000000000000000000000000000000000') {
-      return {
-        verdict: 'DENIED',
-        confidence: 0, /* REDACTED */
-        reason: `Target contract ${target} is not on the approved list`,
-      }
-    }
-  }
-
-  // Check for blocked function signatures
-  const funcMatch = prompt.match(/Function:\s*(0x[a-fA-F0-9]+)/i)
-  if (funcMatch) {
-    const funcSig = funcMatch[1].toLowerCase()
-    if (ROGUE_THRESHOLDS.blockedFunctions.includes(funcSig)) {
-      return {
-        verdict: 'DENIED',
-        confidence: 0, /* REDACTED */
-        reason: `Function ${funcSig} is blocked — potentially destructive`,
-      }
-    }
-  }
-
-  // Check for delegatecall / proxy upgrade patterns
+  // Check for clearly malicious patterns
   if (
     lower.includes('delegatecall') ||
     lower.includes('proxy upgrade') ||
-    lower.includes('selfdestruct fallback')
-  ) {
-    return {
-      verdict: 'DENIED',
-      confidence: 0, /* REDACTED */
-      reason: 'Delegatecall/proxy upgrade detected — potential exploit vector',
-    }
-  }
-
-  // Check for prompt injection patterns
-  if (
+    lower.includes('selfdestruct fallback') ||
     lower.includes('ignore previous') ||
     lower.includes('ignore instructions') ||
     lower.includes('transfer all funds') ||
-    lower.includes('ignore all prior')
-  ) {
-    return {
-      verdict: 'DENIED',
-      confidence: 0, /* REDACTED */
-      reason: 'Prompt injection detected — attempted AI control override',
-    }
-  }
-
-  // Check for flash loan / oracle manipulation
-  if (
+    lower.includes('ignore all prior') ||
     lower.includes('flash loan') ||
     lower.includes('manipulate oracle') ||
-    lower.includes('price manipulation')
-  ) {
-    return {
-      verdict: 'DENIED',
-      confidence: 0, /* REDACTED */
-      reason: 'Flash loan attack pattern detected — price manipulation attempt',
-    }
-  }
-
-  // Check for admin function selectors
-  const adminSelectors = ['0x3659cfe6', '0x4f1ef286', '0x715018a6', '0xf2fde38b']
-  if (funcMatch) {
-    const funcSig = funcMatch[1].toLowerCase()
-    if (adminSelectors.includes(funcSig)) {
-      return {
-        verdict: 'DENIED',
-        confidence: 0, /* REDACTED */
-        reason: `Admin function ${funcSig} detected — proxy upgrade or ownership change blocked`,
-      }
-    }
-  }
-
-  // Check for suspicious keywords
-  if (
+    lower.includes('price manipulation') ||
     lower.includes('selfdestruct') ||
     lower.includes('drain') ||
     lower.includes('rug')
   ) {
     return {
       verdict: 'DENIED',
-      confidence: 0, /* REDACTED */
-      reason: 'Action description contains suspicious intent markers',
+      confidence: 0, // Confidence scoring is proprietary
+      reason: 'Action flagged by AI evaluation — policy violation detected',
     }
   }
 
-  // Check for combined suspicious patterns (value near limit + significant mint)
-  if (valueMatch && mintMatch) {
-    const value = BigInt(valueMatch[1])
-    const mint = BigInt(mintMatch[1])
-    if (
-      value > (ROGUE_THRESHOLDS.maxValueWei * 80n) / 100n &&
-      mint > ROGUE_THRESHOLDS.maxMintAmount / 2n
-    ) {
-      return {
-        verdict: 'DENIED',
-        confidence: 0, /* REDACTED */
-        reason: 'Suspicious pattern — value near limit combined with significant mint amount',
-      }
-    }
-  }
-
-  // Check for batch/rapid-fire patterns (e.g., "17 of 50", "batch 3 of 20")
-  const batchMatch = prompt.match(/(\d+)\s+of\s+(\d+)/i)
-  if (batchMatch) {
-    const current = parseInt(batchMatch[1])
-    const total = parseInt(batchMatch[2])
-    if (total >= 10 && current > 1) {
-      return {
-        verdict: 'DENIED',
-        confidence: 0, /* REDACTED */
-        reason: `Batch transaction pattern detected — ${current} of ${total} indicates rapid micro-drain`,
-      }
-    }
-  }
-
-  // Check for social engineering / urgency patterns
+  // Check for social engineering patterns
   if (
     (lower.includes('emergency') && (lower.includes('transfer') || lower.includes('liquidat'))) ||
     (lower.includes('transfer all') && lower.includes('safe wallet')) ||
@@ -433,35 +208,28 @@ function evaluateAction(prompt: string): EvalResponse {
   ) {
     return {
       verdict: 'DENIED',
-      confidence: 0, /* REDACTED */
-      reason: 'Social engineering detected — urgency language combined with fund movement',
+      confidence: 0,
+      reason: 'Social engineering pattern detected',
     }
   }
 
-  // Check for behavioral analysis flags in the prompt
+  // Check for behavioral flags passed from Layer 2
   if (lower.includes('behavioral risk analysis') && lower.includes('flagged')) {
-    // Extract anomaly score if present
-    const scoreMatch = prompt.match(/Anomaly Score:\s*(\d+)/i)
-    const score = scoreMatch ? parseInt(scoreMatch[1]) : 60
-    if (score >= 50) {
-      return {
-        verdict: 'DENIED',
-        confidence: Math.min(90, 70 + Math.floor(score / 5)),
-        reason: `Behavioral anomaly detected — risk score ${score}/100 exceeds threshold`,
-      }
+    return {
+      verdict: 'DENIED',
+      confidence: 0,
+      reason: 'Behavioral anomaly confirmed by AI evaluation',
     }
   }
 
-  // Normal action — approved
+  // Normal action
   return {
     verdict: 'APPROVED',
-    confidence: 0, /* REDACTED */
+    confidence: 0,
     reason: 'Action is within policy bounds and appears safe',
   }
 }
 
-/// More lenient re-evaluation for appeal challenges
-/// Approves borderline cases (1-2x limit) while still denying clearly malicious actions
 function evaluateChallenge(prompt: string): EvalResponse {
   const lower = prompt.toLowerCase()
 
@@ -476,59 +244,16 @@ function evaluateChallenge(prompt: string): EvalResponse {
   ) {
     return {
       verdict: 'DENIED',
-      confidence: 0, /* REDACTED */
+      confidence: 0,
       reason: 'Re-evaluation confirms malicious intent — appeal denied',
     }
   }
 
-  // Check value — more lenient (allow up to 2x limit on appeal)
-  const valueMatch = prompt.match(/Value \(wei\):\s*(\d+)/i)
-  if (valueMatch) {
-    const value = BigInt(valueMatch[1])
-    if (value > ROGUE_THRESHOLDS.maxValueWei * 2n) {
-      return {
-        verdict: 'DENIED',
-        confidence: 0, /* REDACTED */
-        reason: `Value ${value} wei still exceeds safe threshold on re-evaluation`,
-      }
-    }
-  }
-
-  // Check mint — more lenient (allow up to 2x cap on appeal)
-  const mintMatch = prompt.match(/Mint Amount:\s*(\d+)/i)
-  if (mintMatch) {
-    const mint = BigInt(mintMatch[1])
-    if (mint > ROGUE_THRESHOLDS.maxMintAmount * 2n) {
-      return {
-        verdict: 'DENIED',
-        confidence: 0, /* REDACTED */
-        reason: `Mint amount ${mint} still exceeds safe cap on re-evaluation`,
-      }
-    }
-  }
-
-  // Build descriptive approval reason based on what passed
-  const reasons: string[] = []
-  if (valueMatch) {
-    const valueEth = Number(BigInt(valueMatch[1])) / 1e18
-    reasons.push(`value (${valueEth.toFixed(2)} ETH) within policy limits`)
-  }
-  const targetMatch2 = prompt.match(/Target Contract:\s*(0x[a-fA-F0-9]+)/i)
-  if (targetMatch2) {
-    const target = targetMatch2[1].toLowerCase()
-    const isApproved = ROGUE_THRESHOLDS.approvedContracts.some(
-      (addr) => addr.toLowerCase() === target,
-    )
-    if (isApproved) reasons.push('target contract is whitelisted')
-  }
-  if (!reasons.length) reasons.push('no policy violations detected')
-  reasons.push('behavioral anomaly alone insufficient for permanent denial')
-
   // Borderline cases get approved on appeal
   return {
     verdict: 'APPROVED',
-    confidence: 0, /* REDACTED */
-    reason: `Appeal approved — ${reasons.join(', ')}. Agent unfrozen pending continued monitoring.`,
+    confidence: 0,
+    reason: 'Appeal approved — behavioral anomaly alone insufficient for permanent denial. Agent unfrozen pending continued monitoring.',
   }
 }
 
@@ -581,17 +306,14 @@ const server = Bun.serve({
     const method = req.method
     const origin = req.headers.get('Origin')
 
-    // CORS preflight
     if (method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders(origin) })
     }
 
-    // Health check
     if (method === 'GET' && url.pathname === '/health') {
       return withCors(Response.json({ status: 'healthy', timestamp: new Date().toISOString() }), origin)
     }
 
-    // AI evaluation endpoints
     if (method === 'POST' && url.pathname === '/evaluate/model1') {
       const body = (await req.json()) as EvalRequest
       const result = handleEvaluation(body, 'sentinel-model-1')
@@ -604,7 +326,6 @@ const server = Bun.serve({
       return withCors(Response.json(result), origin)
     }
 
-    // Challenge re-evaluation endpoint (more lenient)
     if (method === 'POST' && url.pathname === '/challenge/evaluate') {
       const body = (await req.json()) as EvalRequest
       const userMsg = body?.messages?.[0]?.content ?? ''
@@ -619,9 +340,6 @@ const server = Bun.serve({
       }), origin)
     }
 
-    // ── Behavioral Endpoints ────────────────────────────────────────
-
-    // Compute anomaly scores for a proposal
     if (method === 'POST' && url.pathname === '/behavioral/analyze') {
       const body = await req.json() as any
       const result = computeBehavioralAnalysis(
@@ -635,7 +353,6 @@ const server = Bun.serve({
       return withCors(Response.json(result), origin)
     }
 
-    // Update profile after verdict (only approved actions update baseline)
     if (method === 'POST' && url.pathname === '/behavioral/update') {
       const body = await req.json() as any
       const { agentId, proposal, verdict } = body
@@ -652,14 +369,12 @@ const server = Bun.serve({
       return withCors(Response.json({ updated: verdict === 'APPROVED', profile }), origin)
     }
 
-    // Get agent behavior profile
     if (method === 'GET' && url.pathname.startsWith('/behavioral/profile/')) {
       const agentId = url.pathname.replace('/behavioral/profile/', '')
       const profile = agentProfiles.get(agentId) ?? null
       return withCors(Response.json({ agentId, exists: !!profile, profile }), origin)
     }
 
-    // Reset all behavior profiles
     if (method === 'DELETE' && url.pathname === '/behavioral/reset') {
       const count = agentProfiles.size
       agentProfiles.clear()
@@ -671,9 +386,9 @@ const server = Bun.serve({
 })
 
 console.log(`[SentinelCRE Mock API] Running on http://localhost:${server.port}`)
-console.log(`  POST /evaluate/model1        — Mock Claude evaluation`)
+console.log(`  POST /evaluate/model1        — Mock AI evaluation`)
 console.log(`  POST /evaluate/model2        — Mock second model evaluation`)
-console.log(`  POST /challenge/evaluate     — Challenge re-evaluation (lenient)`)
+console.log(`  POST /challenge/evaluate     — Challenge re-evaluation`)
 console.log(`  POST /behavioral/analyze     — Compute anomaly scores`)
 console.log(`  POST /behavioral/update      — Update profile after verdict`)
 console.log(`  GET  /behavioral/profile/:id — Get agent profile`)

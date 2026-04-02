@@ -77,17 +77,17 @@ graph LR
     H -->|Score < threshold| J[PASS]
 ```
 
-| Dimension | What It Detects | Detection |
-|-----------|----------------|-------------|
-| Value Deviation | Transaction value > 2.5σ from historical mean | [REDACTED] |
-| Contract Diversity | First interaction with unknown contract | [REDACTED] |
-| Velocity | Action submitted in < 50% of expected interval | [REDACTED] |
-| Function Pattern | Unusual function signature for this agent | [REDACTED] |
-| Time-of-Day | Activity outside agent's normal hours | [REDACTED] |
-| Sequential Probing | 3+ monotonically increasing values (binary search detection) | [REDACTED] |
-| Cumulative Drift | Rolling average drifted > 3σ from frozen origin baseline | [REDACTED] |
+| Dimension | What It Detects |
+|-----------|----------------|
+| Value Deviation | Transaction value significantly deviates from historical mean |
+| Contract Diversity | First interaction with unknown contract |
+| Velocity | Action submitted faster than expected interval |
+| Function Pattern | Unusual function signature for this agent |
+| Time-of-Day | Activity outside agent's normal hours |
+| Sequential Probing | Monotonically increasing values (binary search detection) |
+| Cumulative Drift | Rolling average drifted from frozen origin baseline |
 
-**Key insight**: A threshold-only system can be binary-searched. Behavioral analysis detects the search pattern itself within 3-4 probes. The probing detection dimension (+[REDACTED]) is the highest-weighted signal because it directly counters the primary attack vector against invisible thresholds.
+**Key insight**: A threshold-only system can be binary-searched. Behavioral analysis detects the search pattern itself before the agent discovers real limits. Scoring weights, thresholds, and dimension interactions are proprietary.
 
 ### Layer 3: Multi-AI Consensus (Independent, Redundant)
 
@@ -278,14 +278,14 @@ sequenceDiagram
     
     PE->>BA: Policy failed — evaluate behavior anyway for forensics
     
-    Note over BA: Anomaly score: 95/100<br/>+[REDACTED] (value 40σ from mean)<br/>+[REDACTED] (unknown contract)<br/>+[REDACTED] (unusual function)<br/>+10 (time anomaly)<br/>+10 (velocity spike)
+    Note over BA: Anomaly score: CRITICAL<br/>Multiple dimensions triggered:<br/>value deviation, unknown contract,<br/>unusual function, timing anomaly
     
     BA->>AI: Evaluate with full context
     
     par Confidential HTTP
-        AI->>AI: Claude: DENIED (98% confidence, CRITICAL)
+        AI->>AI: Claude: DENIED (CRITICAL)
     and
-        AI->>AI: Model 2: DENIED (96% confidence, CRITICAL)
+        AI->>AI: Model 2: DENIED (CRITICAL)
     end
     
     Note over AI: Consensus: UNANIMOUS DENY

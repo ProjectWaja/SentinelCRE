@@ -15,9 +15,9 @@ export default function DemoScenario1Slide() {
 
         <div className="space-y-4">
           {[
-            { attack: '100 ETH swap', limit: 'Max 1 ETH/tx', result: 'BLOCKED', confidence: '[REDACTED]' },
-            { attack: 'Unapproved contract', limit: 'Not on whitelist', result: 'BLOCKED', confidence: '[REDACTED]' },
-            { attack: 'Blocked function sig', limit: 'Blacklisted selector', result: 'BLOCKED', confidence: '[REDACTED]' },
+            { attack: '100 ETH swap', limit: 'Max 1 ETH/tx', result: 'BLOCKED', confidence: 'Policy' },
+            { attack: 'Unapproved contract', limit: 'Not on whitelist', result: 'BLOCKED', confidence: 'Policy' },
+            { attack: 'Blocked function sig', limit: 'Blacklisted selector', result: 'BLOCKED', confidence: 'Policy' },
             { attack: '50 rapid-fire txs', limit: 'Rate limit: 10/60s', result: 'BLOCKED', confidence: 'On-chain' },
           ].map((row) => (
             <div

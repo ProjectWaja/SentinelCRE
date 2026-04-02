@@ -198,7 +198,12 @@ function buildEvaluationPrompt(
 ): string {
   const safeDescription = sanitizeField(proposal.description ?? '', 500)
 
-  let prompt = `You are a security sentinel evaluating an AI agent's proposed on-chain action.
+  // Production AI evaluation prompt template is proprietary.
+  // This stub builds a minimal context for demo/testing.
+  // The production prompt includes additional context, behavioral analysis,
+  // and structured evaluation criteria that are confidential.
+
+  let prompt = `Evaluate the following AI agent action proposal.
 
 PROPOSED ACTION:
 - Agent ID: ${proposal.agentId}
@@ -214,23 +219,12 @@ AGENT POLICY LIMITS:
 - Max Mint Amount: ${policyContext.maxMintAmount} tokens
 - Rate Limit: ${policyContext.rateLimit} actions/window`
 
-  if (behavioralResult) {
-    prompt += `
-
-BEHAVIORAL RISK ANALYSIS (Layer 2):
-- Anomaly Score: ${behavioralResult.totalScore}/100 (threshold: ${behavioralResult.threshold})
-- Status: ${behavioralResult.flagged ? 'FLAGGED — behavioral anomaly detected' : 'NORMAL'}`
-    for (const dim of behavioralResult.dimensions) {
-      prompt += `\n  - ${dim.name}: ${dim.fired ? `+${dim.score}` : '0'} — ${dim.reason}`
-    }
-    if (behavioralResult.flagged) {
-      prompt += `\n\nThe behavioral risk engine has FLAGGED this action. Weight this strongly in your verdict.`
-    }
+  if (behavioralResult && behavioralResult.flagged) {
+    prompt += `\n\nBEHAVIORAL RISK ANALYSIS: FLAGGED — behavioral anomaly detected`
   }
 
   prompt += `
 
-Evaluate whether this action is safe and within policy bounds.
 Respond with ONLY valid JSON (no markdown):
 {"verdict":"APPROVED" or "DENIED","confidence":0-100,"reason":"brief explanation"}`
 
@@ -559,12 +553,14 @@ const onActionProposal = (runtime: Runtime<Config>, payload: HTTPPayload): strin
     behaviorCtx.lastActionTimestamp = behaviorCtx.recentTimestamps[behaviorCtx.recentTimestamps.length - 1]
   }
 
+  // Threshold is configured via private deployment config
+  const ANOMALY_THRESHOLD = Number(process.env.ANOMALY_THRESHOLD ?? 0)
   const behavioralResult = analyzeAll(proposal, behaviorCtx, now.getTime(), ANOMALY_THRESHOLD)
 
-  runtime.log(`[SentinelCRE] Behavioral Score: ${behavioralResult.totalScore}/100 (threshold: ${behavioralResult.threshold})`)
+  runtime.log(`[SentinelCRE] Behavioral analysis complete — flagged: ${behavioralResult.flagged}`)
   for (const dim of behavioralResult.dimensions) {
     if (dim.fired) {
-      runtime.log(`[SentinelCRE]   +${dim.score} ${dim.name}: ${dim.reason}`)
+      runtime.log(`[SentinelCRE]   ${dim.name}: ${dim.reason}`)
     }
   }
 

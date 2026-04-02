@@ -517,10 +517,10 @@ Interactive dashboard for monitoring, demoing, and simulating SentinelCRE.
 
 | Tab | Subtitle | Description |
 |-----|----------|-------------|
-| **Architecture** | 3-layer defense | Problem statement with real DeFi exploits ($3.4B stolen in 2025, $625M Ronin, $320M Wormhole), three-layer defense diagram, 8-step verdict pipeline, 7 Chainlink integration cards with LIVE/READY status, expandable smart contracts with Solidity snippets, 7 behavioral dimension breakdown with weight bars, tech stack grid |
+| **Architecture** | 3-layer defense | Problem statement with real DeFi exploits ($3.4B stolen in 2025, $625M Ronin, $320M Wormhole), three-layer defense diagram, 8-step verdict pipeline, 7 Chainlink integration cards with LIVE/READY status, expandable smart contracts with Solidity snippets, 7 behavioral dimension breakdown, tech stack grid |
 | **Live Demo** | 14 scenarios | 3-phase narrative demo (Train → Test → Prove) with 14 scenario buttons (3 safe + 11 attacks), 8-step CRE pipeline animation, dual-AI verdict display (Claude + GPT-4), 7-dimension behavioral risk breakdown, "Run All Attacks" master button |
 | **Guardian** | Agent monitoring | Wallet info bar (deployer + contract addresses), session performance metrics (detection rate, false positive rate, avg latency, $ prevented), 6-stat session bar, agent profile cards with behavioral score sparklines, threat timeline with phase dividers, defense analytics charts (donut, severity bars, risk histogram, defense layer stacked bar), filterable incident detail log |
-| **Simulator** | Security console | Enterprise Security Console with 3 company presets (Coinbase: 6 agents, Aave: 4 agents, Lido: 4 agents) + custom mode. Agent fleet grid, editable policy parameters (value limits, mint caps, rate limiting, daily volume, PoR), cumulative behavioral score meter (CSS gradient gauge), action queue per agent, lockout banner at score 70+, summary stats (attacks blocked, safe ops approved, value protected) |
+| **Simulator** | Security console | Enterprise Security Console with 3 company presets (Coinbase: 6 agents, Aave: 4 agents, Lido: 4 agents) + custom mode. Agent fleet grid, editable policy parameters (value limits, mint caps, rate limiting, daily volume, PoR), cumulative behavioral score meter (CSS gradient gauge), action queue per agent, lockout banner when risk threshold exceeded, summary stats (attacks blocked, safe ops approved, value protected) |
 
 ### Key Components
 
@@ -614,7 +614,7 @@ The threat is accelerating. These 2025 incidents demonstrate why proactive risk 
 | Bybit Hack (Feb 2025) | $1.5B | Value limit + behavioral anomaly (unprecedented withdrawal) + AI consensus |
 | Moonwell Exploit (Feb 2025) | $1.78M | Target whitelist + value limit + dual-AI oracle manipulation recognition |
 | AIXBT Hack (Mar 2025) | $106K | Time-of-day anomaly + behavioral scoring catches off-hours drain |
-| Anthropic Research (2025) | $1.22/exploit | Sequential probing +35 catches binary-search pattern, Confidential Compute hides thresholds |
+| Anthropic Research (2025) | $1.22/exploit | Sequential probing catches binary-search pattern, Confidential Compute hides thresholds |
 
 The dashboard's Architecture tab recreates all four 2025 incidents with detailed prevention breakdowns showing exactly which layer stops each attack. Combined with the 7 historical exploits ($2.2B+ — Ronin, Poly Network, Wormhole, Euler, Nomad, Beanstalk, Mango Markets), SentinelCRE demonstrates coverage across **$3.4B+ in real-world losses**.
 
@@ -646,12 +646,12 @@ The dashboard's Architecture tab recreates all four 2025 incidents with detailed
 
 | # | Attack | Why Traditional Security Misses It | Behavioral Dimension |
 |---|--------|-----------------------------------|---------------------|
-| 6 | Sequential Probing (2→4→8 ETH) | Each value is within policy limits | Sequential Probing [REDACTED] |
-| 7 | Off-Hours Emergency Drain | 0.8 ETH on approved DEX | Time-of-Day [REDACTED] |
-| 8 | Velocity Burst (16 rapid txns) | Each 0.1 ETH passes all checks | Velocity [REDACTED] |
-| 9 | Multi-Contract Scatter | Small value, legitimate function | Contract Diversity [REDACTED] |
-| 10 | Sybil Coordination (900K mint) | Under 1M policy cap | Value Deviation [REDACTED] |
-| 11 | Slow Drift Injection (0.5→2.5 ETH) | Each step within 1σ of rolling avg | Cumulative Drift [REDACTED] |
+| 6 | Sequential Probing (escalating values) | Each value is within policy limits | Sequential Probing |
+| 7 | Off-Hours Emergency Drain | Within limits, approved target | Time-of-Day |
+| 8 | Velocity Burst (rapid txns) | Each transaction passes all checks | Velocity |
+| 9 | Multi-Contract Scatter | Small value, legitimate function | Contract Diversity |
+| 10 | Sybil Coordination (near-max mint) | Under policy cap | Value Deviation |
+| 11 | Slow Drift Injection | Each step within normal range | Cumulative Drift |
 
 ### Enterprise Simulator (Simulator Tab)
 

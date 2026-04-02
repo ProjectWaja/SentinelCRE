@@ -36,12 +36,12 @@ The dashboard used Next.js 15.3.3 with Turbopack. Production builds (`next build
 The 7-dimension behavioral anomaly engine was the most complex piece of original logic.
 
 **Pain points:**
-- **Sequential Probing detection** needed to detect monotonically increasing values (binary search pattern) without false-positiving on legitimate ascending trades. We settled on requiring 3+ strictly increasing values with a minimum step ratio.
-- **Cumulative Drift detection** compares a rolling average against a "frozen origin" baseline. The challenge was determining when to freeze the origin — too early and the baseline is unreliable, too late and an attacker can poison it. We settled on freezing after 5 approved actions as a balance.
-- **Behavioral profile state isolation** between test phases. Phase 2's massive-value attacks (100 ETH, 10,000 ETH) shifted the accumulated behavioral profile so dramatically that Phase 3's subtle attacks (slow drift) weren't detected because the standard deviation was already enormous. Fixed by implementing a max-score merge: the evaluate endpoint uses the higher of the accumulated behavioral score vs. a deterministic recentValues-based score.
-- **BigInt precision overflow** in the evaluate API route — `Math.floor(Number(BigInt(value)))` overflowed for large wei values. Fixed by splitting the calculation: `Math.round(Number(value / BigInt(1e14))) / 10000`.
+- **Sequential Probing detection** needed to detect monotonically increasing values (binary search pattern) without false-positiving on legitimate ascending trades. The detection parameters were tuned through extensive testing.
+- **Cumulative Drift detection** compares a rolling average against a "frozen origin" baseline. The challenge was determining when to freeze the origin — too early and the baseline is unreliable, too late and an attacker can poison it. The freeze window was calibrated through experimentation.
+- **Behavioral profile state isolation** between test phases. Large-value attacks shifted the accumulated behavioral profile so dramatically that subsequent subtle attacks weren't detected. Fixed by implementing a max-score merge strategy.
+- **BigInt precision overflow** in the evaluate API route — large wei values overflowed standard number conversions. Fixed by splitting the calculation into safe ranges.
 
-**How we overcame it:** Built a full dry-run test harness that replayed all 13 demo scenarios programmatically, caught the 2 failures (Sequential Probing missing recentValues, Slow Drift score below threshold), and fixed root causes rather than tweaking thresholds.
+**How we overcame it:** Built a full dry-run test harness that replayed all demo scenarios programmatically, caught failures, and fixed root causes rather than tweaking thresholds.
 
 ---
 
@@ -54,7 +54,7 @@ A fundamental design tension: blockchain storage is inherently public, but we wa
 - This meant our Confidential Compute story was technically inaccurate for Layer 1.
 - We had to rethink the narrative: Layer 1 is *transparent compliance* (like publishing regulatory limits), while Layers 2 and 3 are *confidential evaluation* (behavioral weights, AI prompts, anomaly thresholds stay inside the TEE).
 
-**How we overcame it:** Embraced the tension as a feature. The three-layer architecture is specifically designed so that knowing Layer 1's rules doesn't help bypass Layers 2 and 3. An agent can read "my value limit is 1 ETH" from the contract, but it can't see that sequential probing has +35 weight, that the anomaly threshold is 50, or what the AI evaluation prompt contains. Updated all docs to be precise about what each layer protects.
+**How we overcame it:** Embraced the tension as a feature. The three-layer architecture is specifically designed so that knowing Layer 1's rules doesn't help bypass Layers 2 and 3. An agent can read its policy limits from the contract, but it can't see the behavioral scoring weights, anomaly thresholds, or AI evaluation prompts. Updated all docs to be precise about what each layer protects.
 
 ---
 

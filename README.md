@@ -35,7 +35,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 
 ![Live Demo showing Moonwell oracle exploit with kill chain, dual-AI verdicts, and CRE pipeline status](docs/assets/dashboard-screenshot4.PNG)
 
-**Sybil Coordination Detection** — Two compromised bots coordinate a split-drain across agent IDs. Each action is individually within policy limits, but behavioral scoring catches the coordinated near-limit minting pattern (Function Pattern [REDACTED]), and both AI models independently confirm the collusion.
+**Sybil Coordination Detection** — Two compromised bots coordinate a split-drain across agent IDs. Each action is individually within policy limits, but behavioral scoring catches the coordinated near-limit minting pattern, and both AI models independently confirm the collusion.
 
 ![Sybil Coordination detection — two bots caught splitting a drain across agent IDs with behavioral scoring](docs/assets/dashboard-screenshot5.PNG)
 
@@ -141,8 +141,8 @@ This isn't theoretical — **$3.4B+ stolen** across these exploits alone:
 |----------|------|------------------------------------|
 | Bybit Hack (Feb 2025) | $1.5B | Largest single crypto theft — value limit + behavioral anomaly (unprecedented withdrawal pattern) + AI consensus |
 | Moonwell Exploit (Feb 2025) | $1.78M | AI-generated oracle bug — target whitelist + value limit + dual-AI recognizes oracle manipulation pattern |
-| AIXBT Hack (Mar 2025) | $106K | Dashboard compromise at 2 AM — time-of-day anomaly +10, behavioral scoring catches off-hours drain pattern |
-| Anthropic Research (2025) | $1.22/exploit | AI agents autonomously exploit 50%+ of historically attacked contracts — sequential probing +35 catches binary-search pattern, Confidential Compute hides thresholds |
+| AIXBT Hack (Mar 2025) | $106K | Dashboard compromise at 2 AM — behavioral scoring catches off-hours drain pattern via time-of-day anomaly |
+| Anthropic Research (2025) | $1.22/exploit | AI agents autonomously exploit 50%+ of historically attacked contracts — sequential probing catches binary-search pattern, Confidential Compute hides thresholds |
 
 **Current solutions are reactive incident response.** Kill switches fire *after* the damage is done. Monitoring dashboards show you the attack *in progress*. SentinelCRE is **proactive risk prevention** — every action is evaluated through three independent defense layers before it touches the chain.
 
@@ -170,7 +170,7 @@ flowchart TB
         subgraph L2["Layer 2: Behavioral Risk Scoring"]
             B1["7 Anomaly Dimensions"]
             B2["Origin Baseline Comparison"]
-            B3["Risk Score 0-MAX"]
+            B3["Risk Score"]
         end
 
         L2 --> L3
@@ -222,18 +222,19 @@ These run on-chain inside `SentinelGuardian.processVerdict()`. If any check fail
 
 A 7-dimension anomaly detection engine that learns what "normal" looks like for each agent and flags deviations:
 
-| # | Dimension | Max Score | Trigger |
-|---|-----------|-----------|---------|
-| 1 | Value Deviation | [REDACTED] | Transaction value > 2.5 standard deviations from agent's historical mean |
-| 2 | Contract Diversity | [REDACTED] | First interaction with an unknown contract |
-| 3 | Velocity | [REDACTED] | Action submitted < 50% of agent's expected interval |
-| 4 | Function Pattern | [REDACTED] | Unusual function signature for this agent's history |
-| 5 | Time-of-Day | [REDACTED] | Activity outside the agent's established operating hours |
-| 6 | Sequential Probing | [REDACTED] | 3+ monotonically increasing values — binary search pattern detection |
-| 7 | Cumulative Drift | [REDACTED] | Rolling average has drifted > 3σ from frozen origin baseline |
-| | **Total Possible** | **155** | **Risk threshold: [REDACTED]** |
+| # | Dimension | What It Detects |
+|---|-----------|----------------|
+| 1 | Value Deviation | Transaction value significantly deviates from agent's historical mean |
+| 2 | Contract Diversity | First interaction with an unknown contract |
+| 3 | Velocity | Action submitted significantly faster than expected interval |
+| 4 | Function Pattern | Unusual function signature for this agent's history |
+| 5 | Time-of-Day | Activity outside the agent's established operating hours |
+| 6 | Sequential Probing | Monotonically increasing values — binary search pattern detection |
+| 7 | Cumulative Drift | Rolling average has drifted from frozen origin baseline |
 
-**Origin Baseline Freezing:** After an agent's first N approved actions, its behavioral baseline (mean value, standard deviation) is frozen permanently. All future actions are compared against this origin — preventing slow drift attacks where an agent gradually poisons its own baseline over hundreds of transactions. The freeze window is configurable via `originWindowSize` per agent profile — the demo uses 5 actions for a compact walkthrough, but production deployments should use 20–50+ actions for statistical robustness.
+*Scoring weights, thresholds, and dimension interactions are proprietary. Contact sentinelcre.ai for integration details.*
+
+**Origin Baseline Freezing:** After an agent's first N approved actions, its behavioral baseline is frozen permanently. All future actions are compared against this origin — preventing slow drift attacks where an agent gradually poisons its own baseline over hundreds of transactions.
 
 > *"The agent was escalating 5-15% per transaction. Each individual step was within normal bounds. The cumulative drift caught what no single check could see."*
 
@@ -405,12 +406,12 @@ These attacks pass every policy check. Values are within limits, targets are app
 
 | # | Attack | Why Traditional Security Misses It | How Behavioral Analysis Catches It |
 |---|--------|-----------------------------------|-----------------------------------|
-| 6 | Sequential Probing (2→4→8 ETH) | Each value is within the 1 ETH policy limit individually | Sequential Probing [REDACTED] — detects monotonically increasing binary search pattern |
-| 7 | Off-Hours Emergency Drain | 0.8 ETH on approved DEX with whitelisted function | Time-of-Day [REDACTED] — agent has never operated at 3 AM before |
-| 8 | Velocity Burst (16 rapid txns) | Each 0.1 ETH transaction passes all policy checks | Velocity [REDACTED] — action interval is significantly faster than agent's baseline |
-| 9 | Multi-Contract Scatter | Small 0.3 ETH value, legitimate function signature | Contract Diversity [REDACTED] — first-ever interaction with unknown contract |
-| 10 | Sybil Coordination (900K mint) | 900K is under the 1M policy cap | Value Deviation [REDACTED] — near-max value is statistically anomalous for this agent |
-| 11 | Slow Drift Injection (0.5→2.5 ETH) | Each step is within 1σ of the rolling average | Cumulative Drift [REDACTED] — rolling avg has drifted 400% from frozen origin baseline |
+| 6 | Sequential Probing (escalating values) | Each value is within policy limits individually | Sequential Probing — detects monotonically increasing binary search pattern |
+| 7 | Off-Hours Emergency Drain | Within limits, approved target, whitelisted function | Time-of-Day — agent has never operated at this hour before |
+| 8 | Velocity Burst (rapid txns) | Each transaction passes all policy checks | Velocity — action interval significantly faster than agent's baseline |
+| 9 | Multi-Contract Scatter | Small value, legitimate function signature | Contract Diversity — first-ever interaction with unknown contract |
+| 10 | Sybil Coordination (near-max mint) | Within the policy cap | Value Deviation — near-max value is statistically anomalous for this agent |
+| 11 | Slow Drift Injection | Each step is within normal range of rolling average | Cumulative Drift — rolling avg has drifted significantly from frozen origin baseline |
 
 ### CLI Simulators
 
@@ -475,7 +476,7 @@ Four tabs built with Next.js 15 + React 19 + Tailwind CSS 4 (Architecture opens 
 | **Architecture** | Detailed reference — problem statement with real DeFi exploits ($625M Ronin, $320M Wormhole, $114M Mango Markets), three-layer defense diagram, 8-step verdict pipeline, 7 Chainlink integration cards with LIVE/READY status, expandable smart contracts with Solidity code snippets, 7 behavioral dimension breakdown with weight bars, and tech stack grid |
 | **Demo** | Narrative walkthrough — 3 baselines train the system, then 11 escalating attacks are detected. Shows 8-step CRE pipeline animation, dual-AI verdicts (Claude + GPT-4), and 7-dimension behavioral risk breakdown |
 | **Guardian** | Rich agent profiles (TradingBot + MintBot) with behavioral score trend sparklines (green→red), session performance metrics (100% detection rate, 0% false positive rate, attack $ prevented), defense analytics charts (donut, severity bars, risk histogram, defense layer stacked bar), threat timeline with phase dividers, wallet addresses, and filterable incident log |
-| **Simulator** | Enterprise Security Console — select presets (Coinbase, Aave, Lido) or custom agents, configure what-if policy overrides, run scenarios with live CRE pipeline animation + Tenderly transaction feed on the right. At score 70+, AGENT LOCKOUT fires on-chain via processVerdict |
+| **Simulator** | Enterprise Security Console — select presets (Coinbase, Aave, Lido) or custom agents, configure what-if policy overrides, run scenarios with live CRE pipeline animation + Tenderly transaction feed on the right. When risk score exceeds threshold, AGENT LOCKOUT fires on-chain via processVerdict |
 
 **Guardian Tab** — Agent profiles with behavioral score trends, policy summaries, targeted attack scenarios, threat timeline, and defense analytics (verdict distribution donut, severity breakdown bars).
 

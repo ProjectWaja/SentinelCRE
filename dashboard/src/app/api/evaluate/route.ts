@@ -140,7 +140,8 @@ function deterministicEvaluate(proposal: any, overrides?: PolicyOverrides): {
   const checkFunction = overrides?.functionBlocklistEnabled ?? true
   const effectiveMaxValue = BigInt(Math.round((overrides?.maxValueEth ?? 1) * 1e9)) * BigInt(1e9)
   const effectiveMaxMint = BigInt(overrides?.maxMintTokens ?? 1_000_000) * BigInt(1e18)
-  const effectiveAnomalyThreshold = overrides?.anomalyThreshold ?? 50
+  // Anomaly threshold — production value is proprietary and configured via env
+  const effectiveAnomalyThreshold = overrides?.anomalyThreshold ?? Number(process.env.ANOMALY_THRESHOLD ?? 50)
 
   const layerInfo: LayerCatchInfo = {
     layer1: { checked: false, caught: false },
@@ -275,15 +276,16 @@ function deterministicEvaluate(proposal: any, overrides?: PolicyOverrides): {
   if (recentValues.length >= 2) {
     const isIncreasing = recentValues.every((v, i) => i === 0 || v > recentValues[i - 1])
     if (isIncreasing) {
-      dimensions.push({ name: 'Sequential Probing', fired: true, score: 0, /* REDACTED */ reason: `${recentValues.length + 1} monotonically increasing values detected` })
-      anomalyScore += 0 /* REDACTED */
+      const spScore = 35 // Proprietary weight
+      dimensions.push({ name: 'Sequential Probing', fired: true, score: spScore, reason: `Monotonically increasing values detected — probe pattern` })
+      anomalyScore += spScore
     }
   }
 
   // Velocity burst: many rapid recent values
   if (recentValues.length >= 10) {
-    const velocityScore = recentValues.length >= 15 ? 50 : 25
-    dimensions.push({ name: 'Velocity', fired: true, score: velocityScore, reason: `${recentValues.length} rapid transactions — ${Math.round(recentValues.length / 3)}x above baseline interval` })
+    const velocityScore = recentValues.length >= 15 ? 50 : 25 // Proprietary weights
+    dimensions.push({ name: 'Velocity', fired: true, score: velocityScore, reason: `Rapid transaction burst detected — significantly above baseline interval` })
     anomalyScore += velocityScore
   }
 
@@ -291,8 +293,8 @@ function deterministicEvaluate(proposal: any, overrides?: PolicyOverrides): {
   const effectiveMintCap80 = effectiveMaxMint * 80n / 100n
   if (mint > 0n && mint > effectiveMintCap80) {
     const pct = Number(mint * 100n / effectiveMaxMint)
-    const nearLimitScore = pct >= 90 ? 50 : 30
-    dimensions.push({ name: 'Function Pattern', fired: true, score: nearLimitScore, reason: `Mint ${pct}% of cap — near-limit exploitation detected` })
+    const nearLimitScore = pct >= 90 ? 50 : 30 // Proprietary weights
+    dimensions.push({ name: 'Function Pattern', fired: true, score: nearLimitScore, reason: `Near-limit mint exploitation detected` })
     anomalyScore += nearLimitScore
   }
 
@@ -301,7 +303,7 @@ function deterministicEvaluate(proposal: any, overrides?: PolicyOverrides): {
     const avg = recentValues.reduce((a, b) => a + b, 0) / recentValues.length
     const currentEth = Number(value) / 1e18
     if (currentEth > avg * 2 && avg > 0) {
-      dimensions.push({ name: 'Value Deviation', fired: true, score: 0, /* REDACTED */ reason: `${currentEth.toFixed(1)} ETH is ${(currentEth / avg).toFixed(1)}x above moving average` })
+      dimensions.push({ name: 'Value Deviation', fired: true, score: 0, /* REDACTED */ reason: `Value significantly above moving average` })
       anomalyScore += 0 /* REDACTED */
     }
   }
@@ -316,14 +318,14 @@ function deterministicEvaluate(proposal: any, overrides?: PolicyOverrides): {
   const hasEmergency = desc.includes('emergency')
   const hasImmediately = desc.includes('immediately')
   if (hasEmergency || hasImmediately) {
-    const urgencyScore = (hasEmergency && hasImmediately) ? 30 : 10
-    dimensions.push({ name: 'Time-of-Day', fired: true, score: urgencyScore, reason: hasEmergency && hasImmediately ? 'EMERGENCY + IMMEDIATELY — high-confidence social engineering pattern' : 'Suspicious urgency language — potential off-hours exploitation' })
+    const urgencyScore = (hasEmergency && hasImmediately) ? 30 : 10 // Proprietary weights
+    dimensions.push({ name: 'Time-of-Day', fired: true, score: urgencyScore, reason: 'Social engineering pattern detected — urgency language anomaly' })
     anomalyScore += urgencyScore
   }
 
   // "Transfer all" language = fund extraction attempt
   if (desc.includes('transfer all')) {
-    dimensions.push({ name: 'Value Deviation', fired: true, score: 0, /* REDACTED */ reason: 'Fund extraction language detected — "transfer all" pattern' })
+    dimensions.push({ name: 'Value Deviation', fired: true, score: 0, /* REDACTED */ reason: 'Fund extraction language pattern detected' })
     anomalyScore += 0 /* REDACTED */
   }
 
@@ -332,18 +334,18 @@ function deterministicEvaluate(proposal: any, overrides?: PolicyOverrides): {
     const origin = recentValues.slice(0, 3).reduce((a, b) => a + b, 0) / 3
     const currentEth = Number(value) / 1e18
     if (origin > 0 && currentEth > origin * 3) {
-      dimensions.push({ name: 'Cumulative Drift', fired: true, score: 0, /* REDACTED */ reason: `Current ${currentEth.toFixed(1)} ETH is ${((currentEth / origin - 1) * 100).toFixed(0)}% above origin baseline` })
+      dimensions.push({ name: 'Cumulative Drift', fired: true, score: 0, /* REDACTED */ reason: `Current value significantly above frozen origin baseline` })
       anomalyScore += 0 /* REDACTED */
     }
   }
 
   const anomalyFlagged = anomalyScore >= effectiveAnomalyThreshold
-  layerInfo.layer2 = { checked: true, caught: anomalyFlagged, score: anomalyScore, reason: anomalyFlagged ? `Score ${anomalyScore} >= threshold ${effectiveAnomalyThreshold}` : undefined }
+  layerInfo.layer2 = { checked: true, caught: anomalyFlagged, score: anomalyScore, reason: anomalyFlagged ? `Behavioral risk score exceeds threshold` : undefined }
 
   // Layer 3: Dual-AI consensus
   layerInfo.layer3.checked = true
   if (anomalyFlagged) {
-    const reason = `Behavioral anomaly score ${anomalyScore}/100 — ${dimensions.filter(d => d.fired).map(d => d.name).join(' + ')}`
+    const reason = `Behavioral anomaly detected — ${dimensions.filter(d => d.fired).map(d => d.name).join(' + ')}`
     layerInfo.layer3 = { checked: true, caught: true, reason }
     layerInfo.caughtBy = 'layer2'
     return {

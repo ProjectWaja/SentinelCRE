@@ -140,7 +140,7 @@ export default function ScoreMeter({ score, maxScore = 100 }: ScoreMeterProps) {
         <span className="text-green-500">0</span>
         <span className="text-yellow-500">25</span>
         <span className="text-white/50 relative" style={{ left: '0%' }}>
-          50 (threshold)
+          threshold
         </span>
         <span className="text-orange-500">70</span>
         <span className="text-red-500">{maxScore}</span>

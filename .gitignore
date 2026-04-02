@@ -44,8 +44,14 @@ dashboard/package-lock.json
 docs/DEMO-SCRIPT*.md
 docs/DEMO_SCRIPT*.md
 docs/PRIVATE-*.md
+docs/SentinelCRE-Session-Summary*.md
 DEMO_SCRIPT.md
 PLAN.md
 
 # Binary files
 *.pptx
+
+# Investor / private materials
+*-Investor-*.pptx
+*-Investor-*.pdf
+CLAUDE.md
