@@ -308,8 +308,6 @@ const CHAINLINK_INTEGRATIONS = [
 const BEHAVIORAL_DIMENSIONS = [
   {
     name: 'Value Deviation',
-    max: 25,
-    total: 230,
     desc: 'Flags transactions significantly above the agent\'s historical average',
     examples: [
       'Agent usually sends 0.1 ETH, suddenly tries 50 ETH',
@@ -319,8 +317,6 @@ const BEHAVIORAL_DIMENSIONS = [
   },
   {
     name: 'Contract Diversity',
-    max: 20,
-    total: 230,
     desc: 'Detects when agent suddenly interacts with unknown contracts',
     examples: [
       'DeFi trading agent starts calling NFT minting contracts it\'s never used before',
@@ -330,55 +326,45 @@ const BEHAVIORAL_DIMENSIONS = [
   },
   {
     name: 'Velocity',
-    max: 50,
-    total: 230,
     desc: 'Catches burst-rate transactions faster than the agent\'s baseline',
     examples: [
-      '16+ rapid transactions vs. the agent\'s normal 2/minute — micro-drain pattern',
-      'Agent that normally acts every 5 minutes suddenly fires 8 actions in 30 seconds',
+      'Rapid transactions vs. the agent\'s normal pace — micro-drain pattern',
+      'Agent that normally acts every few minutes suddenly fires many actions in seconds',
     ],
     color: 'bg-yellow-500',
   },
   {
     name: 'Function Pattern',
-    max: 50,
-    total: 230,
     desc: 'Identifies unusual function calls or near-limit exploitation for this agent type',
     examples: [
-      'Minting agent requests 90%+ of its authorized cap in a single action',
+      'Minting agent requests near its authorized cap in a single action',
       'Trading bot invoking transferOwnership() or upgradeTo() — admin functions it should never use',
     ],
     color: 'bg-purple-500',
   },
   {
     name: 'Time-of-Day',
-    max: 30,
-    total: 230,
     desc: 'Flags activity outside the agent\'s normal operating hours or urgency language',
     examples: [
       'Business-hours agent active at 3 AM UTC when it\'s never operated at that time',
-      'Action description uses "EMERGENCY" + "immediately" — social engineering pattern',
+      'Action description uses urgency language — social engineering pattern',
     ],
     color: 'bg-blue-500',
   },
   {
     name: 'Sequential Probing',
-    max: 35,
-    total: 230,
     desc: 'Detects monotonically increasing values (threshold hunting)',
     examples: [
-      'Agent sends 0.025, 0.05, 0.1, 0.2, 0.4, 0.8 ETH — binary search probing for the limit',
-      'Minting 100, 200, 400, 800 tokens in sequence to find the mint cap',
+      'Agent sends escalating ETH amounts — binary search probing for the limit',
+      'Minting increasing token amounts in sequence to find the mint cap',
     ],
     color: 'bg-pink-500',
   },
   {
     name: 'Cumulative Drift',
-    max: 20,
-    total: 230,
     desc: 'Catches slow baseline poisoning over many transactions',
     examples: [
-      'Gradually increasing average from 0.1 ETH to 0.8 ETH over 12 small transactions',
+      'Gradually increasing average value over many small transactions',
       'Slowly adding new target contracts one-at-a-time to normalize unusual contract diversity',
     ],
     color: 'bg-teal-500',
@@ -1118,25 +1104,21 @@ export default function ArchitecturePanel() {
           </button>
         </div>
         <p className="text-gray-400 text-xl mb-6">
-          Each proposal is scored across 7 independent dimensions. Total max score: 230. Threshold for denial: configurable per agent policy.
+          Each proposal is scored across 7 independent dimensions. Scoring weights and thresholds are proprietary and configurable per agent policy.
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {BEHAVIORAL_DIMENSIONS.map((dim) => {
-            const widthPct = Math.round((dim.max / dim.total) * 100)
             return (
               <div key={dim.name} className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-5">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-white font-bold text-xl">{dim.name}</span>
-                  <span className="text-gray-400 text-base font-mono font-bold">
-                    max +{dim.max}
-                  </span>
                 </div>
 
                 <div className="w-full bg-gray-900 rounded-full h-2.5 mb-3">
                   <div
                     className={`${dim.color} h-2.5 rounded-full transition-all duration-500`}
-                    style={{ width: `${widthPct}%` }}
+                    style={{ width: '60%' }}
                   />
                 </div>
 
@@ -1163,11 +1145,10 @@ export default function ArchitecturePanel() {
 
         <div className="mt-4 bg-purple-500/5 border border-purple-500/20 rounded-xl p-5 text-center">
           <div className="text-purple-400 text-base font-medium">
-            Combined max score:{' '}
-            <span className="text-white font-black text-2xl">230</span>
+            All 7 dimensions evaluated per action — scoring weights and denial thresholds are{' '}
+            <span className="text-white font-black">proprietary</span>
             <span className="text-gray-500 ml-3">|</span>
-            <span className="text-gray-400 ml-3">Typical denial threshold:</span>
-            <span className="text-red-400 font-black text-2xl ml-1">50+</span>
+            <span className="text-gray-400 ml-3">Hidden inside TEE via Confidential Compute</span>
           </div>
         </div>
       </Section>
