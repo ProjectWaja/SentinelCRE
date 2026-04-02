@@ -611,7 +611,6 @@ function VerdictSummary({ verdict }: { verdict: VerdictResult }) {
             <span className={`text-base font-black ${verdict.model1.verdict === 'APPROVED' ? 'text-green-400' : 'text-red-400'}`}>
               {verdict.model1.verdict}
             </span>
-            <span className="text-base text-gray-500 font-bold">{verdict.model1.confidence}%</span>
           </div>
           <p className="text-base text-gray-400 leading-snug">{verdict.model1.reason}</p>
         </div>
@@ -623,7 +622,6 @@ function VerdictSummary({ verdict }: { verdict: VerdictResult }) {
             <span className={`text-base font-black ${verdict.model2.verdict === 'APPROVED' ? 'text-green-400' : 'text-red-400'}`}>
               {verdict.model2.verdict}
             </span>
-            <span className="text-base text-gray-500 font-bold">{verdict.model2.confidence}%</span>
           </div>
           <p className="text-base text-gray-400 leading-snug">{verdict.model2.reason}</p>
         </div>
@@ -661,9 +659,9 @@ function VerdictSummary({ verdict }: { verdict: VerdictResult }) {
               </span>
             ) : (
               <span className={`text-2xl font-black ${
-                verdict.anomalyScore! >= 50 ? 'text-red-400' : verdict.anomalyScore! >= 25 ? 'text-orange-400' : 'text-green-400'
+                verdict.anomalyFlagged ? 'text-red-400' : (verdict.anomalyScore ?? 0) >= 25 ? 'text-orange-400' : 'text-green-400'
               }`}>
-                {verdict.anomalyScore}/100
+                {verdict.anomalyFlagged ? 'TRIGGERED' : 'PASS'}
               </span>
             )}
           </div>
@@ -685,7 +683,7 @@ function VerdictSummary({ verdict }: { verdict: VerdictResult }) {
                     />
                   </div>
                   <span className={`text-base font-bold w-10 text-right ${dim.fired ? 'text-orange-400' : 'text-gray-700'}`}>
-                    {dim.fired ? `+${dim.score}` : '0'}
+                    {dim.fired ? 'HIT' : '—'}
                   </span>
                 </div>
               ))}

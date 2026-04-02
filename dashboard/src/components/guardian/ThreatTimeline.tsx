@@ -251,9 +251,6 @@ export default function ThreatTimeline({
                                   >
                                     {v.model1.verdict}
                                   </span>
-                                  <span className="text-gray-500">
-                                    {v.model1.confidence}%
-                                  </span>
                                 </div>
                                 <p className="text-gray-500 leading-relaxed">
                                   {v.model1.reason}
@@ -272,9 +269,6 @@ export default function ThreatTimeline({
                                     }`}
                                   >
                                     {v.model2.verdict}
-                                  </span>
-                                  <span className="text-gray-500">
-                                    {v.model2.confidence}%
                                   </span>
                                 </div>
                                 <p className="text-gray-500 leading-relaxed">
@@ -295,7 +289,7 @@ export default function ThreatTimeline({
                                           : 'bg-gray-700/50 text-gray-400 border border-gray-600/30'
                                     }`}
                                   >
-                                    {v.anomalyScore}/100
+                                    {v.anomalyFlagged ? 'FLAGGED' : 'NORMAL'}
                                   </span>
                                   {v.anomalyFlagged && (
                                     <span className="text-orange-400 font-bold">FLAGGED</span>

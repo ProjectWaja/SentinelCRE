@@ -107,7 +107,7 @@ export default function VerdictFeedPanel({
                               : 'text-red-400 bg-red-400/10'
                           }`}
                         >
-                          Claude: {v.model1.verdict} {v.model1.confidence}%
+                          Claude: {v.model1.verdict}
                         </span>
                         <span
                           className={`px-3 py-1 rounded font-bold ${
@@ -116,7 +116,7 @@ export default function VerdictFeedPanel({
                               : 'text-red-400 bg-red-400/10'
                           }`}
                         >
-                          GPT-4: {v.model2.verdict} {v.model2.confidence}%
+                          GPT-4: {v.model2.verdict}
                         </span>
                         {sevStyle && (
                           <span
@@ -133,7 +133,7 @@ export default function VerdictFeedPanel({
                                 : 'bg-gray-700/50 text-gray-400 border-gray-600/30'
                             }`}
                           >
-                            Risk: {v.anomalyScore}/100
+                            Risk: {v.anomalyFlagged ? 'FLAGGED' : 'NORMAL'}
                           </span>
                         )}
                       </div>

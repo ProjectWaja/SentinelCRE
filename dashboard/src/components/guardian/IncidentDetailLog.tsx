@@ -135,12 +135,10 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
                       <div>
                         <span className="text-gray-500">Model 1:</span>{' '}
                         <span className="text-red-400 font-bold">{v.model1.verdict}</span>{' '}
-                        <span className="text-gray-500">{v.model1.confidence}%</span>
                       </div>
                       <div>
                         <span className="text-gray-500">Model 2:</span>{' '}
-                        <span className="text-red-400 font-bold">{v.model2.verdict}</span>{' '}
-                        <span className="text-gray-500">{v.model2.confidence}%</span>
+                        <span className="text-red-400 font-bold">{v.model2.verdict}</span>
                       </div>
                     </div>
                     <p className="text-base text-gray-400">
@@ -154,7 +152,7 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
                           v.anomalyScore >= 25 ? 'text-orange-400 bg-orange-400/10' :
                           'text-green-400 bg-green-400/10'
                         }`}>
-                          {v.anomalyScore}/100
+                          {v.anomalyFlagged ? 'FLAGGED' : 'NORMAL'}
                         </span>
                       </div>
                     )}
@@ -162,7 +160,7 @@ export default function IncidentDetailLog({ sessionVerdicts }: Props) {
                       <div className="flex flex-wrap gap-1">
                         {v.anomalyDimensions.filter((d) => d.fired).map((d) => (
                           <span key={d.name} className="text-base text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded">
-                            {d.name} +{d.score}
+                            {d.name}
                           </span>
                         ))}
                       </div>

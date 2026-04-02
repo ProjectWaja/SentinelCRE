@@ -41,7 +41,7 @@ function resolveCatchStep(result: VerdictResult): {
     if (info.caughtBy === 'layer2') {
       return {
         catchStep: 2, // Behavioral Risk Scoring
-        catchReason: `ANOMALY DETECTED — ${info.layer2.reason ?? `Risk Score ${result.anomalyScore ?? 0}/100 exceeds threshold`}`,
+        catchReason: `ANOMALY DETECTED — ${info.layer2.reason ?? 'Behavioral risk score exceeds threshold'}`,
       }
     }
     if (info.caughtBy === 'layer3') {
@@ -56,7 +56,7 @@ function resolveCatchStep(result: VerdictResult): {
   if (result.anomalyFlagged) {
     return {
       catchStep: 2,
-      catchReason: `ANOMALY DETECTED — Risk Score ${result.anomalyScore ?? 0}/100 exceeds threshold`,
+      catchReason: `ANOMALY DETECTED — Behavioral risk score exceeds threshold`,
     }
   }
   return {
