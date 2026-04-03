@@ -17,6 +17,7 @@ Three-layer risk evaluation pipeline that detects and blocks malicious AI agent 
 | **Tenderly Explorer** | [Virtual TestNet Dashboard](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02) — all verdicts, freezes, challenges verifiable on-chain |
 | **Key Contracts** | [`0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x5F938e4c62991Eb4af3Dd89097978A1f376e6CC8) (Guardian) · [`0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0xFA7deF53FEaC45dB96A5B15C32ca4E6B009b25e6) (Registry) |
 | **Deployer** | [`0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446`](https://dashboard.tenderly.co/project-waja/sentinelcre/testnet/9c734d91-b707-484a-a7be-db55b67eac02/contract/0x23fC03ec91D319e4Aa14e90b6d3664540FDf2446) |
+| **Website** | [sentinelcre.ai](https://www.sentinelcre.ai/) |
 | **GitHub Repo** | This README + full source code |
 
 ![SentinelCRE Dashboard — Architecture tab showing three-layer defense model, verdict pipeline, and Chainlink integration cards](docs/assets/dashboard-screenshot.png)
